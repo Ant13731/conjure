@@ -5,8 +5,8 @@ import threading
 from mediapipe.tasks.python.components.containers.landmark import NormalizedLandmark  # type: ignore[import]
 from mediapipe.tasks.python.components.containers.category import Category  # type: ignore[import]
 
-from config_ import HGDConfig
-import gesture_classifier_model
+from src.config_ import HGDConfig
+from src import gesture_classifier_model
 
 
 def start_camera() -> cv2.VideoCapture:

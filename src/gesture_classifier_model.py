@@ -9,7 +9,7 @@ from mediapipe.tasks.python.vision.gesture_recognizer import GestureRecognizer, 
 from mediapipe.python.solutions import drawing_utils, hands, drawing_styles  # type: ignore[import]
 from mediapipe.framework.formats import landmark_pb2  # type: ignore[import]
 
-from config_ import HGDConfig
+from src.config_ import HGDConfig
 
 
 def get_mediapipe_model(config: HGDConfig) -> GestureRecognizer:

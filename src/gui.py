@@ -1,7 +1,7 @@
 import tkinter as tk
 from functools import singledispatch
 
-import config_
+from src import config_
 
 
 def field_to_label(field: str) -> str:
