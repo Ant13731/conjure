@@ -37,11 +37,15 @@ The main interactions of Conjure are as follows:
 
 All of these gestures may be changed with the GUI configuration, made in Tkinter. Movement sensitivity, deadzone sizes, etc., are all configurable through the UI.
 
-\section{Final Model}
+\section{Model}
+% model architecture: 3 of them, 1. SSD, 2. Regression CNN, 3. Classification CNN
 
 
 \section{Results}
 \subsection{Failed Experiments}
+% First tried CNN
+% TOMORROW: Use https://github.com/victordibia/handtracking as a pretrained model to just detect the bounding boxes of hands. then follow the google guide, crop photo (scale image up to original first model size, pad the difference to accommodate diff aspect ratios), predict coordinates, then pass coords to a fully connected NN for classification
+% Final project, using pretrained 1 and 2 models, custom data passed to classifier model
 \section{Conclusion}
 
 
