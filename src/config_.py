@@ -48,7 +48,7 @@ class HGDMouseMovementConfig:
         self.mouse_base_sensitivity: int = 1000  # should not change
 
         self.mouse_deadzone: LocationIdentifier = LocationIdentifier(master, 0.35, 0.35, 0.3, 0.3)
-        self.mouse_sensitivity = DoubleVar(master, value=5)  # scale 1-10
+        self.mouse_sensitivity = DoubleVar(master, value=7)  # scale 1-10
         self.repeated_frames_before_action = IntVar(master, value=2)  # scale 1-4
         self.repeated_frames_to_stop_action = IntVar(master, value=5)  # scale 1-10
 
@@ -88,6 +88,7 @@ class Gestures:
 
     def __init__(self, master) -> None:
         self.enable_palm_direction_checking_for_exit: BooleanVar = BooleanVar(master, value=True)
+        self.show_current_gesture: BooleanVar = BooleanVar(master, value=False)
         self.exit_gesture: StringVar = StringVar(master, value="stop_inverted")
         self.left_click_gesture: StringVar = StringVar(master, value="ok")
         self.right_click_gesture: StringVar = StringVar(master, value="peace")

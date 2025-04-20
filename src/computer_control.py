@@ -145,7 +145,8 @@ def main_camera(config: HGDConfig, end_event: threading.Event) -> None:
         if config.gestures.enable_palm_direction_checking_for_exit.get():
             palm_facing_camera = is_palm_facing_camera(hand_landmarks, is_left_hand)
 
-        print(gesture)
+        if config.gestures.show_current_gesture.get():
+            print("Current gesture:", gesture)
 
         # Stop the camera detection if we see the stop_inverted gesture
         if (

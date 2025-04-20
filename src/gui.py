@@ -180,6 +180,15 @@ def _(config: config_.Gestures, config_frame: tk.Frame) -> None:
     )
     checkbox.pack(pady=5, padx=5, fill=tk.X)
 
+    checkbox = tk.Checkbutton(
+        gestures_frame,
+        text="Show current gesture",
+        variable=config.show_current_gesture,
+        onvalue=True,
+        offvalue=False,
+    )
+    checkbox.pack(pady=5, padx=5, fill=tk.X)
+
 
 def gui() -> tuple[tk.Tk, tk.Canvas, config_.HGDConfig]:
     """Create the tkinter GUI with default configurations but do not run it.
