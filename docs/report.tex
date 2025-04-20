@@ -116,19 +116,39 @@ After spending a few days investigating the poor performance of my own model and
 
 Although I have some experience making CNNs in an academic setting, creating a full SSD model from scratch felt far beyond the scope of this project, especially with limited time, processing power, and overall lack of familiarity in manipulating image data. An alternative scheme wherein a pre-made SSD model is used in conjunction with custom models for stages 2 and 3 of the pipeline would have been manageable, however there were understandably few resources on the topic. Mediapipe only offers end-to-end complete models through their API and GitHub, and the only similar project \cite{Dibia2017} contained several dependency-related issues between tensorflow v1 and v2, preventing access to the weights in a usable form. Because Mediapipe offered a complete, highly performant and customizable classification pipeline, I opted to use their API and architecture, only finetuning hyperparameters and providing training data for the 3rd-stage model.
 
-Therefore, instead of creating deep learning models from source, this project takes a more application-focused approach machine learning. The live video feed, GUI, and extensive configuration all attempt to make the project more usable for its end goal: providing a virtual trackpad with only camera input.
+Therefore, instead of creating deep learning models from source, this project takes a more application-focused approach to machine learning. While imperfect, the live video feed, GUI, and extensive configuration all attempt to make the project more usable for its end goal: providing a virtual trackpad with only camera input.
 
 % model architecture: 3 of them, 1. SSD, 2. Regression CNN, 3. Classification CNN
 
-
 \section{Results}
+The retrained stage 3 classifier model performed well fairly quickly, only requiring 20 iterations of training on a 30,000 image dataset \cite{Alexander_2024} to achieve 90\% accuracy. The classifier model contained 2 relatively small units of fully connected layers, performing best with a learning rate of 0.005 and dropout rate of 0.1. Steady improvements in both training and validation over 50 epochs can be seen in Figure~\ref{fig:graphs}.
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[T]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{loss_graph.png}
+    \end{subfigure}\hfill
+    \begin{subfigure}[T]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{accuracy_graph.png}
+    \end{subfigure}
+    \caption{Results of training and validation of the stage 3 classifier model on 30,000 samples of the HaGRID \cite{Alexander_2024} dataset}
+    \label{fig:graphs}
+\end{figure}
+
+On the interaction side of Conjure, the application is separated into two parts. First, the main GUI controls and updates all configuration changes in real-time. Sliders and dropdown menus are provided to change deadzone properties, gestures, and other similar settings. Then, two buttons control the camera livestream component, which performs classification predictions and gesture-to-action mouse movement.
+
+In the initial stages of testing, the classifier model, although highly accurate for still images, sometimes had trouble identifying frames involving rapid swaps between two similar gestures. For example, a ``peace'' sign may be mistaken for a ``two-fingers-up'' gesture when transitioning from ``peace'' to a closed fist, and vice versa. This could introduce undesired scrolling or clicking behaviours, reducing the reliability of the computer control. However, requiring around 3 consecutive frames of input before performing an action seemed to resolve a large amount of such cases. Explicit landmark calculations for identifying the front/back of hands also helped to resolve differences in, for example, identifying a left-hand's stop versus a right-hand's inverted stop gestures.
+
+
 % First tried CNN, show loss curve
 % TOMORROW: Use https://github.com/victordibia/handtracking as a pretrained model to just detect the bounding boxes of hands. then follow the google guide, crop photo (scale image up to original first model size, pad the difference to accommodate diff aspect ratios), predict coordinates, then pass coords to a fully connected NN for classification.
 % Had a plan, not enough time to execute
 % Final project, using pretrained 1 and 2 models, custom data passed to classifier model, show loss curve for classifier model
 \section{Conclusion}
 
-
+While CNNs are a relatively old concept in the fast-paced field of machine learning, modern interpretations on convolutions may continue to increase the usefulness and viability of computer vision in ever-critical applications. Among the burst of popularity of generative text-based models and image creation, computer vision in particular shows great promise in shaping a more accessible and convenient future. For instance, projects like this one could be trivially extended with gestures to enable speech-to-text input or simplified video game controls for those with limited finger mobility, without the need for dedicated hardware. Although the process of making Conjure did not turn out quite as expected, the final product is more than satisfiable in providing users with a proof-of-concept virtual trackpad interface.
 
 
 
