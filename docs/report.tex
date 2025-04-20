@@ -1,0 +1,50 @@
+\documentclass{article}
+
+\usepackage{minted}
+\usepackage{amsmath, amsthm}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage[svgnames]{xcolor}
+\usepackage{tikz}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage[backend=biber, maxbibnames=9]{biblatex}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{mathtools}
+\usepackage{hyperref}
+
+\addbibresource{report.bib}
+
+\title{Conjure: A Computer Vision Controller Using Hand Gestures}
+\author{Anthony Hunt}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Over the last 20 years, CNNs and computer vision AI have become increasingly critical to the role of automation in both an industrial and personal setting. From self-driving cars to smartphone face recognition, Human-Computer Interaction is practically inseparable from the notion of gestures, or rather, interactions within the space around a computer system. Therefore, this project, named Conjure, aims to further enable visually interactive automation by fully enabling computer control in a hands-free environment.
+
+The main interactions of Conjure are as follows:
+\begin{itemize}
+    \item Hand movement in the camera's 2D projection of 3D space coincides with mouse movement across a computer's monitor. For fine-grained movements and other interactions, Conjure creates a deadzone at the center of the screen, where all hand movements are ignored. Then, as a hand moves out of the deadzone toward the borders of the screen, the mouse will move with increasing velocity in the hand's general direction.
+    \item Simulating a left click can be done by making an "OK" gesture towards the camera. This gesture is closest to the natural pinch gestures of VR headsets while being freely available in many datasets \cite{Alexander_2024, nuzhdin2024hagridv21mimagesstatic, zimmermann2017learningestimate3dhand, gesture_recognizer}.
+    \item A right click conversely uses a "peace" sign, with the index and middle fingers extended and pointing away from each other.
+    \item A click-and-hold motion makes use of a closing fist gesture. As long as the fist remains closed, the mouse will continue holding down the button. Moving around the camera space while maintaining a closed fist allows for drag-and-drop behaviours.
+    \item Exiting the program is done with a "reverse-stop" motion, where the hand is fully extended, fingers close to one another, and the user's palm is facing away from the camera.
+    \item Scrolling coincides with a two-finger-raised gesture, with up and down behaviour following the palm's direction - up when facing towards and down when facing away from the camera respectively. During testing, I found that scrolling behaviours worked best if it was only used in a specific area of the screen. Thus, this gesture only works within the scroll zone (by default, this is the right side of the mouse deadzone).
+\end{itemize}
+
+All of these gestures may be changed with the GUI configuration, made in Tkinter. Movement sensitivity, deadzone sizes, etc., are all configurable through the UI.
+
+\section{Model}
+
+\section{Results}
+\section{Conclusion}
+
+
+\pagebreak
+\nocite{*} % keeps all references, even those not referred to
+\printbibliography %Prints bibliography
+\end{document}
+
