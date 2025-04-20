@@ -32,9 +32,24 @@ Run
 python main.py
 ```
 
+To train your own classifier model on top of Google's Mediapipe gesture landmarker, see `model/mediapipe_classifier_training.py`
+
 ### Controls
 
-- TODO <!--TODO----------------------------------------------------------------------------->
+Hand movement in the camera’s 2D projection of 3D space coincides with mouse movement across a computer’s monitor. For fine-grained movements and other interactions, Conjure creates a deadzone at the center of the screen, where all hand movements are ignored. Then, as a hand moves out of the deadzone toward the borders of the screen, the mouse will move with increasing velocity in the hand’s general direction.
+
+The following is a table detailing the correspondence between gestures and Conjure's actions:
+
+| Gesture                                      | Action           |
+| -------------------------------------------- | ---------------- |
+| ok                                           | Left click       |
+| peace                                        | Right click      |
+| clenching fist                               | click and hold   |
+| backhanded stop                              | exit the program |
+| two fingers up, palm facing towards camera   | scroll up        |
+| two fingers up, palm facing away from camera | scroll down      |
+
+Note that all of these controls are configurable through the GUI.
 
 # References
 
