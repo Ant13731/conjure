@@ -29,6 +29,15 @@ def get_mediapipe_model(config: HGDConfig) -> GestureRecognizer:
     return detector
 
 
+def swap_handedness_for_display(handedness_category: str) -> str:
+    """Swap handedness category for display (since the camera is flipped to mirror the user)."""
+    if handedness_category == "Left":
+        return "Right"
+    elif handedness_category == "Right":
+        return "Left"
+    return handedness_category
+
+
 def draw_landmarks_on_image(
     rgb_image: np.ndarray,
     detection_result: GestureRecognizerResult,
@@ -78,7 +87,7 @@ def draw_landmarks_on_image(
         # Draw handedness (left or right hand) on the image.
         cv2.putText(
             annotated_image,
-            f"{handedness[0].category_name}",
+            f"{swap_handedness_for_display(handedness[0].category_name)}",
             (text_x, text_y),
             cv2.FONT_HERSHEY_DUPLEX,
             config.annotation_config.font_size,
@@ -120,7 +129,7 @@ def draw_landmarks_on_image(
     )
     cv2.putText(
         annotated_image,
-        f"SCROLLING ZONE",
+        f"SCROLL ZONE",
         config.scroll_config.scroll_zone.start_coordinates(width, height),
         # (int(width / 2), int(height / 2 - DEADZONE * height)),
         cv2.FONT_HERSHEY_DUPLEX,

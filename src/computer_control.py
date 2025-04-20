@@ -19,7 +19,7 @@ def start_camera() -> cv2.VideoCapture:
     vc = cv2.VideoCapture(0)
 
     if not vc.isOpened():
-        raise Exception("Error: Could not open video device.")
+        raise Exception("Error: Could not open video device. Please ensure your camera is connected.")
 
     return vc
 
