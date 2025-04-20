@@ -1,7 +1,9 @@
 import pickle
 import tensorflow as tf
-from keras import datasets, layers, models, Model
+from keras import datasets, layers, models, Model, callbacks
 import numpy as np
+import pickle
+import json
 
 import kagglehub
 import pprint
@@ -45,7 +47,7 @@ def preprocess_dataset(
         formatted_image = np.asarray(image)
         images.append(formatted_image)
 
-        normalized_uv = training_annotations[i]["uv_vis"][:, :2] / 320.0
+        normalized_uv = training_annotations[i]["uv_vis"][:21, :2] / 320.0
         # print(normalized_uv.shape)
         # print(normalized_uv)
         # normalized_uv_with_handedness = np.hstack((normalized_uv, np.array([[0.0]] * 21 + [[1.0]] * 21)))
@@ -69,12 +71,14 @@ def get_model() -> Model:
     # model.add(layers.Dropout(0.2))
     # model.add(layers.Dense(128, activation="relu"))
     # model.add(layers.Dropout(0.2))
-    model.add(layers.Dense(42 * 2, activation="relu"))  # 21 points, 2 coordinates (x, y)
-    model.add(layers.Reshape((42, 2)))  # Reshape to (21, 2) for the output layer
+    model.add(layers.Dense(21 * 2, activation="relu"))  # 21 points, 2 coordinates (x, y)
+    model.add(layers.Reshape((21, 2)))  # Reshape to (21, 2) for the output layer
 
-    model.compile(optimizer="adam", loss="mse", metrics=["accuracy"])
+    model.compile(optimizer="adam", loss="mse")
     return model
 
+
+callbacks_ = [callbacks.ModelCheckpoint("landmark_model_val_loss.keras", save_best_only=True, monitor="val_loss")]
 
 path, dataset_dict = load_dataset()
 dataset_x, dataset_y = preprocess_dataset(path, dataset_dict)
@@ -83,9 +87,18 @@ model.summary()
 history = model.fit(
     dataset_x,
     dataset_y,
-    epochs=10,
+    epochs=50,
     batch_size=64,
-    validation_split=0.2,
+    validation_split=0.1,
 )
+model.save("landmark_model.keras")
 print(history)
 print(history.history)
+pickle.dump(
+    history,
+    open("landmark_model_history.pickle", "wb"),
+)
+json.dump(
+    history.history,
+    open("landmark_model_history.json", "w"),
+)
