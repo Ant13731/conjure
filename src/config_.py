@@ -111,7 +111,6 @@ class Gestures:
         ]
 
 
-# @dataclass
 class HGDConfig:
 
     def __init__(self, master: tk.Tk) -> None:

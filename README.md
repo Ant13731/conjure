@@ -51,14 +51,6 @@ The following is a table detailing the correspondence between gestures and Conju
 
 Note that all of these controls are configurable through the GUI.
 
-# References
+### References
 
-- https://opencv.org/
-- https://stackoverflow.com/questions/604749/how-do-i-access-my-webcam-in-python
-- pyautogui
-- https://ai.google.dev/edge/mediapipe/solutions/vision/gesture_recognizer
-- https://ai.google.dev/edge/mediapipe/solutions/customization/gesture_recognizer
-- https://arxiv.org/pdf/1705.01389
-- https://arxiv.org/pdf/2206.08219
-- https://huggingface.co/datasets/cj-mills/hagrid-sample-30k-384p
-- https://arxiv.org/html/2412.01508v1#bib.bib4 or https://arxiv.org/pdf/2412.01508
+See the [report](https://github.com/Ant13731/conjure/blob/main/docs/report.pdf) for a list of references used in this project.
