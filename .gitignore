@@ -196,3 +196,5 @@ cython_debug/
 *-blx.aux
 *-blx.bib
 *.run.xml
+
+.DS_Store
