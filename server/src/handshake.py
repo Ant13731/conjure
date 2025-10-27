@@ -1,9 +1,10 @@
+from queue import Queue
+import asyncio
+
+import cv2
 from aiohttp import web
 from aiortc import RTCSessionDescription, RTCPeerConnection, MediaStreamTrack
 from aiortc.contrib.media import MediaRelay
-from queue import Queue
-import asyncio
-import cv2
 
 from loguru import logger
 
