@@ -98,7 +98,8 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
     private let depthDataOutput = AVCaptureDepthDataOutput()
     private let videoDataOutput = AVCaptureVideoDataOutput()
     private let dataOutputQueue = DispatchQueue(label: "video data queue", qos: .userInitiated, attributes: [], autoreleaseFrequency: .workItem)
-    
+    private var outputSynchronizer: AVCaptureDataOutputSynchronizer?
+    private var isSessionRunning = false
     
     var isCameraAuthorized: Bool {
         get async {
@@ -210,51 +211,108 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
         
         
     }
-    func setupCaptureSession() async -> Result<String, PermissionError> {
+    private var sessionRunningContext = 0
+    func startCameraCapture() async -> Result<String, PermissionError> {
         guard await isCameraAuthorized else { return .failure(.cameraPermError)}
         
         sessionQueue.async {self.configureSession()}
         
-        captureSession.beginConfiguration()
-        captureSession.sessionPreset = .photo
-        
-        guard let depthDevice = AVCaptureDevice.default(
-            .builtInTrueDepthCamera,
-            for: .video,
-            position: .front) else {
-            return .failure(.depthDeviceError)
-        }
-        
-//        guard let videoInput = try? AVCaptureDeviceInput.default(for: .video),
-//              captureSession.canAddInput(videoInput) else {
-//            return .failure(.depthStartError)
+//        captureSession.beginConfiguration()
+//        captureSession.sessionPreset = .photo
+//        
+//        guard let depthDevice = AVCaptureDevice.default(
+//            .builtInTrueDepthCamera,
+//            for: .video,
+//            position: .front) else {
+//            return .failure(.depthDeviceError)
 //        }
-//        captureSession.addInput(videoInput)
-        
-        if captureSession.canAddOutput(videoOutput) {
-            captureSession.addOutput(videoOutput)
-            videoOutput.alwaysDiscardsLateVideoFrames = true
-//            videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
-        }
-        
-        if captureSession.canAddOutput(depthOutput) {
-            captureSession.addOutput(depthOutput)
-            depthOutput.isFilteringEnabled = false
-//            depthOutput.setDelegate(self, callbackQueue: sessionQueue)
-        }
-                
-        // Align depth with video stream
-//        for connection in depthOutput.connections {
-//            connection.isEnabled = true
+//        
+////        guard let videoInput = try? AVCaptureDeviceInput.default(for: .video),
+////              captureSession.canAddInput(videoInput) else {
+////            return .failure(.depthStartError)
+////        }
+////        captureSession.addInput(videoInput)
+//        
+//        if captureSession.canAddOutput(videoOutput) {
+//            captureSession.addOutput(videoOutput)
+//            videoOutput.alwaysDiscardsLateVideoFrames = true
+////            videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
 //        }
-        
-        synchronizer = AVCaptureDataOutputSynchronizer(dataOutputs: [videoOutput, depthOutput])
-        synchronizer?.setDelegate(self, queue: sessionQueue)
+//        
+//        if captureSession.canAddOutput(depthOutput) {
+//            captureSession.addOutput(depthOutput)
+//            depthOutput.isFilteringEnabled = false
+////            depthOutput.setDelegate(self, callbackQueue: sessionQueue)
+//        }
+//                
+//        // Align depth with video stream
+////        for connection in depthOutput.connections {
+////            connection.isEnabled = true
+////        }
+//        
+//        synchronizer = AVCaptureDataOutputSynchronizer(dataOutputs: [videoOutput, depthOutput])
+//        synchronizer?.setDelegate(self, queue: sessionQueue)
+//                
+//        captureSession.commitConfiguration()
+//        captureSession.startRunning()
+       
+            switch self.setupResult {
+            case .success:
+                // Only setup observers and start the session running if setup succeeded
+//                self.addObservers()
+//                self.session.addObserver(self, forKeyPath: "running", options: NSKeyValueObservingOptions.new, context: &self.sessionRunningContext)
                 
-        captureSession.commitConfiguration()
-        captureSession.startRunning()
+//                let videoOrientation = self.videoDataOutput.connection(with: .video)!.videoOrientation
+//                let videoDevicePosition = self.videoDeviceInput.device.position
+//                let interfaceOrientation = UIApplication.shared.statusBarOrientation
+//                let rotation = PreviewMetalView.Rotation(with: interfaceOrientation,
+//                                                         videoOrientation: videoOrientation,
+//                                                         cameraPosition: videoDevicePosition)
+//                self.jetView.mirroring = (videoDevicePosition == .front)
+//                if let rotation = rotation {
+//                    self.jetView.rotation = rotation
+//                }
+//                self.dataOutputQueue.async {
+//                    self.renderingEnabled = true
+//                }
+//                
+                self.session.startRunning()
+                self.isSessionRunning = self.session.isRunning
+                return .success("Camera is now running...")
+                
+            case .notAuthorized:
+                // TODO handle these properly
+                fatalError("Not authorized to use camera: please change privacy permissions")
+//                DispatchQueue.main.async {
+//                    let message = NSLocalizedString("TrueDepthStreamer doesn't have permission to use the camera, please change privacy settings",
+//                                                    comment: "Alert message when the user has denied access to the camera")
+//                    let alertController = UIAlertController(title: "TrueDepthStreamer", message: message, preferredStyle: .alert)
+//                    alertController.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"),
+//                                                            style: .cancel,
+//                                                            handler: nil))
+//                    alertController.addAction(UIAlertAction(title: NSLocalizedString("Settings", comment: "Alert button to open Settings"),
+//                                                            style: .`default`,
+//                                                            handler: { _ in
+//                                                                UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!,
+//                                                                                          options: [:],
+//                                                                                          completionHandler: nil)
+//                    }))
+//                    
+////                    self.present(alertController, animated: true, completion: nil)
+//                }
+                
+            case .configurationFailed:
+                fatalError("ConfigurationFailed")
+//                DispatchQueue.main.async {
+//                    self.cameraUnavailableLabel.isHidden = false
+//                    self.cameraUnavailableLabel.alpha = 0.0
+//                    UIView.animate(withDuration: 0.25) {
+//                        self.cameraUnavailableLabel.alpha = 1.0
+//                    }
+//                }
+           
+        }
         
-        return .success("Camera capture started successfully")
         }
     
     
@@ -270,7 +328,8 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
 
             // RGB frame
             let sampleBuffer = syncedVideoData.sampleBuffer
-            guard let colorBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+            guard let colorBuffer = CMSampleBufferGetImageBuffer(sampleBuffer),
+                  let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer) else { return }
 
             // Depth frame
             let depthData = syncedDepthData.depthData
@@ -313,13 +372,18 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
                 dc.sendData(buffer)
         }
     
+    func stopCameraCapture() {
+        session.stopRunning()
+        isSessionRunning = session.isRunning
+    }
+    
     
     
 }
 
 struct LoginView: View {
-    @State private var ip_address: String = ""
-    @State private var port: String = ""
+    @State private var ip_address: String = "100.115.181.103"
+    @State private var port: String = "5000"
     @State private var connectionResultMessage = ""
     @State private var cameraStreamMessage = ""
     @State private var connected: Bool = false
@@ -444,8 +508,8 @@ struct LoginView: View {
     
     func startCameraStream(){
         Task {cameraStreamMessage = "Starting Camera..."
-            webRTCClient.startCaptureSend()
-            let result = await webRTCClient.setupCaptureSession()
+//            webRTCClient.startCaptureSend()
+            let result = await webRTCClient.startCameraCapture()
             switch result {
             case .failure(let error):
                 switch error {
@@ -455,6 +519,8 @@ struct LoginView: View {
                     cameraStreamMessage = "TrueDepth camera not available"
                 case .depthStartError:
                     cameraStreamMessage = "Failed to start capture session"
+                case .cameraStartError:
+                    cameraStreamMessage = "Failed to start camera"
                 }
                 return
                 
@@ -464,7 +530,7 @@ struct LoginView: View {
             
 //            webRTCClient.videoCapturer = RTCCameraVideoCapturer(delegate: webRTCClient.videoSource)
 //            webRTCClient.videoSource = webRTCClient.factory.videoSource()
-            cameraStreamMessage = "Camera started, streaming frames..."
+//            cameraStreamMessage = "Camera started, streaming frames..."
             
             // Start camera capture session from front facin g camera
             // Start depth camera capture session and fuse together
@@ -473,7 +539,11 @@ struct LoginView: View {
             
         }
     }
-    func stopCameraStream(){}
+    func stopCameraStream(){
+        
+        webRTCClient.stopCameraCapture()
+        cameraStreamMessage = "Camera stream stopped"
+    }
     
 }
 
