@@ -10,7 +10,7 @@ from src.handshake import handshake_server
 def main():
     parser = argparse.ArgumentParser(description="Conjure server - pair with client")
     parser.add_argument("--port", type=int, default=5000, help="Port to run the server on")
-    parser.add_argument("--host", type=str, default="127.0.0.1", help="Host to run the server on")
+    parser.add_argument("--host", type=str, default="100.115.181.103", help="Host to run the server on")
     args = parser.parse_args()
 
     logger.info(f"Starting server on {args.host}:{args.port}")

@@ -28,8 +28,24 @@ class WebRTCClient: NSObject {
     }
 
     func startCapture() {
+//        AVCaptureDevice.requestAccess(for: .video) {granted in
+//            if granted{
+//                
+//            }
+//            else {
+//                
+//            }
+//        }
+        
         //TODO fix
         // Create video source
+//        let videoCapture = AVCaptureDevice.default(for: .video)
+////        let depthCapture = AVCaptureDevice.default(for: .depthData)
+//        let mediaStream = RTCMediaStream(streamId: "localStream")
+//        mediaStream.addVideoTrack(try! RTCVideoTrack(source: videoSource))
+        
+        
+        
         let videoSource = factory.videoSource()
         videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
         localVideoTrack = factory.videoTrack(with: videoSource, trackId: "video0")
@@ -181,7 +197,7 @@ struct LoginView: View {
                     let oldConnectionResultMessage = connectionResultMessage
                     connectionResultMessage.append("\nStarting Camera...")
                         
-                    webRTCClient.startCapture()
+//                    webRTCClient.startCapture()
                     
                     
                 case .failure(let err):

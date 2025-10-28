@@ -14,9 +14,22 @@
 		1627D3C72EAE826D00836F94 /* Conjure.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Conjure.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		16B43A072EB1097D00E4EDE8 /* Exceptions for "Conjure" folder in "Conjure" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 1627D3C62EAE826D00836F94 /* Conjure */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1627D3C92EAE826D00836F94 /* Conjure */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				16B43A072EB1097D00E4EDE8 /* Exceptions for "Conjure" folder in "Conjure" target */,
+			);
 			path = Conjure;
 			sourceTree = "<group>";
 		};
@@ -263,6 +276,7 @@
 				DEVELOPMENT_TEAM = 3UYLKW3D59;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Conjure/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to stream video content to the connected computer.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses the Face ID sensor to stream depth-related information to your computer.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -297,6 +311,7 @@
 				DEVELOPMENT_TEAM = 3UYLKW3D59;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Conjure/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to stream video content to the connected computer.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses the Face ID sensor to stream depth-related information to your computer.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
