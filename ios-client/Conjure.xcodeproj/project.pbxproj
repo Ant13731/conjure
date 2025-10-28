@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		16228CC92EAEA2DD0015672C /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 16228CC82EAEA2DD0015672C /* WebRTC */; };
+		16228CD52EAEBB010015672C /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 16228CD42EAEBB010015672C /* WebRTC */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16228CC92EAEA2DD0015672C /* WebRTC in Frameworks */,
+				16228CD52EAEBB010015672C /* WebRTC in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +70,7 @@
 			);
 			name = Conjure;
 			packageProductDependencies = (
-				16228CC82EAEA2DD0015672C /* WebRTC */,
+				16228CD42EAEBB010015672C /* WebRTC */,
 			);
 			productName = Conjure;
 			productReference = 1627D3C72EAE826D00836F94 /* Conjure.app */;
@@ -101,7 +101,7 @@
 			mainGroup = 1627D3BE2EAE826C00836F94;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				16228CC72EAEA2DD0015672C /* XCRemoteSwiftPackageReference "WebRTC" */,
+				16228CD32EAEBB010015672C /* XCRemoteSwiftPackageReference "WebRTC" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1627D3C82EAE826D00836F94 /* Products */;
@@ -260,6 +260,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3UYLKW3D59;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to stream video content to the connected computer.";
@@ -293,6 +294,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3UYLKW3D59;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to stream video content to the connected computer.";
@@ -343,20 +345,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		16228CC72EAEA2DD0015672C /* XCRemoteSwiftPackageReference "WebRTC" */ = {
+		16228CD32EAEBB010015672C /* XCRemoteSwiftPackageReference "WebRTC" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/stasel/WebRTC.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 141.0.0;
+				kind = exactVersion;
+				version = 140.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		16228CC82EAEA2DD0015672C /* WebRTC */ = {
+		16228CD42EAEBB010015672C /* WebRTC */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 16228CC72EAEA2DD0015672C /* XCRemoteSwiftPackageReference "WebRTC" */;
+			package = 16228CD32EAEBB010015672C /* XCRemoteSwiftPackageReference "WebRTC" */;
 			productName = WebRTC;
 		};
 /* End XCSwiftPackageProductDependency section */
