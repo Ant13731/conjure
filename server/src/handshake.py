@@ -56,24 +56,44 @@ async def offer(request):
 
     @pc.on("track")
     async def on_track(track):
-        logger.info(f"Track received: {track.kind}")
+        logger.info(f"Track received: {track.kind}, id={track.id}")
         if track.kind == "video":
             logger.info(f"Video track received")
-            while True:
-                frame = await track.recv()
-                img = frame.to_ndarray(format="bgr24")
-                cv2.imshow("iPhone Camera", img)
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    break
-            # pc.addTrack(
-            #     VideoReceiverTrack(video_relay.subscribe(track), params=data["video"]),
-            # )
+
+            if track.id == "video0":
+                while True:
+                    frame = await track.recv()
+                    logger.info(f"{track.id}: Received video frame {frame}")
+                    img = frame.to_ndarray(format="bgr24")
+                    cv2.imshow("iPhone Camera", img)
+                    if cv2.waitKey(1) & 0xFF == ord("q"):
+                        break
+            else:
+                while True:
+                    frame = await track.recv()
+                    logger.info(f"{track.id}: Received video frame {frame}")
+                    img = frame.to_ndarray(format="bgra")
+                    cv2.imshow("iPhone Camera Depth", img)
+                    if cv2.waitKey(1) & 0xFF == ord("q"):
+                        break
         else:
             logger.warning(f"Unknown track kind received: {track.kind}")
 
         @track.on("ended")
         async def on_ended():
             logger.info(f"Track ended: {track.kind}")
+
+    @pc.on("datachannel")
+    async def on_data_channel(channel):
+        logger.info(f"Data channel received: {vars(channel)}")
+
+        @channel.on("message")
+        def on_message(message):
+            logger.info(f"Message received on data channel: {message}")
+
+        @channel.on("open")
+        async def on_depth_channel(depth_data):
+            logger.info("Data channel opened")
 
     await pc.setRemoteDescription(rtc_offer)
 
