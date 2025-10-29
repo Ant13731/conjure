@@ -364,7 +364,7 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
             processFrame(colorBuffer: colorBuffer, depthMap: depthMap)
         }
     
-    func depthToGrayscale(depthBuffer: CVPixelBuffer, minDepth: Float16 = 0.001, maxDepth: Float16 = 2.0) -> CVPixelBuffer? {
+    func depthToGrayscale(depthBuffer: CVPixelBuffer, minDepth: Float16 = 0.1, maxDepth: Float16 = 1.0) -> CVPixelBuffer? {
        
         
         let width = CVPixelBufferGetWidth(depthBuffer)
@@ -402,6 +402,7 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
                 for x in 0..<width {
                     var value = srcRow[x]
                     var alpha = UInt8(255)
+                    
                     if value.isNaN { value = maxDepth
                     alpha = UInt8(0)}
                     value = max(min(value, maxDepth), minDepth)
@@ -448,9 +449,9 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
     private func processFrame(colorBuffer: CVPixelBuffer, depthMap: CVPixelBuffer) {
         print("processing frame...")
         // ---- 1. Send RGB frame via WebRTC video track ----
-                let rtcPixelBuffer = RTCCVPixelBuffer(pixelBuffer: colorBuffer)
-                let timestampNs = Int64(Date().timeIntervalSince1970 * 1_000_000_000)
-                let frame = RTCVideoFrame(buffer: rtcPixelBuffer, rotation: ._0, timeStampNs: timestampNs)
+        let rtcPixelBuffer = RTCCVPixelBuffer(pixelBuffer: colorBuffer)
+        let timestampNs = Int64(Date().timeIntervalSince1970 * 1_000_000_000)
+        let frame = RTCVideoFrame(buffer: rtcPixelBuffer, rotation: ._90, timeStampNs: timestampNs)
         
                 
         guard let greyscaleDepthMap = depthToGrayscale(depthBuffer: depthMap) else {
@@ -458,7 +459,7 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
             return
         }
         let rtcPixelBufferDepth = RTCCVPixelBuffer(pixelBuffer: greyscaleDepthMap)
-        let frameDepth = RTCVideoFrame(buffer: rtcPixelBufferDepth, rotation: ._0, timeStampNs: timestampNs)
+        let frameDepth = RTCVideoFrame(buffer: rtcPixelBufferDepth, rotation: ._90, timeStampNs: timestampNs)
 
         videoSource.capturer(videoCapturer, didCapture: frame)
         depthSource.capturer(videoCapturer, didCapture: frameDepth)
@@ -504,8 +505,8 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
 }
 
 struct LoginView: View {
-    @State private var ip_address: String = "100.95.197.55"
-//    @State private var ip_address: String = "100.115.181.103"
+//    @State private var ip_address: String = "100.95.197.55"
+    @State private var ip_address: String = "100.115.181.103"
     @State private var port: String = "5000"
     @State private var connectionResultMessage = ""
     @State private var cameraStreamMessage = ""
