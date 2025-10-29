@@ -23,9 +23,12 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
     
     private var localVideoTrack: RTCVideoTrack!
     private var videoCapturer: RTCCameraVideoCapturer!
+    private var localDepthTrack: RTCVideoTrack!
+    private var depthCapturer: RTCCameraVideoCapturer!
     
     private var depthDataChannel: RTCDataChannel?
     private var videoSource: RTCVideoSource!
+    private var depthSource: RTCVideoSource!
 
     override init() {
         super.init()
@@ -40,15 +43,25 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
         
         let dcConfig = RTCDataChannelConfiguration()
         depthDataChannel = peerConnection.dataChannel(forLabel: "depthChannel", configuration: dcConfig)
+        
+        print("setting up video channel")
+        videoSource = factory.videoSource()
+        localVideoTrack = factory.videoTrack(with: videoSource, trackId: "video0")
+        peerConnection.add(localVideoTrack, streamIds: ["stream0"])
+        
+        depthSource = factory.videoSource()
+        localDepthTrack = factory.videoTrack(with: depthSource, trackId: "video1")
+        peerConnection.add(localDepthTrack, streamIds: ["stream0"])
+        
+//        peerConnection.add(stream)
+        
+        videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
+//        depthCapturer = RTCCameraVideoCapturer(delegate: depthSource)
     }
 
     func startCaptureSend() {
-        videoSource = factory.videoSource()
-        localVideoTrack = factory.videoTrack(with: videoSource, trackId: "video0")
         
-        let stream = factory.mediaStream(withStreamId: "stream0")
-        stream.addVideoTrack(localVideoTrack)
-        peerConnection.add(stream)
+        //            webRTCClient.videoSource = webRTCClient.factory.videoSource()
     }
 
     func createOffer(completion: @escaping (Result<RTCSessionDescription, Error>) -> Void) {
@@ -124,6 +137,7 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
     }
     private var setupResult: SessionSetupResult = .success
     private func configureSession() {
+        print("Configuring Session")
         if setupResult != .success {
             return
         }
@@ -208,6 +222,7 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
         outputSynchronizer = AVCaptureDataOutputSynchronizer(dataOutputs: [videoDataOutput, depthDataOutput])
         outputSynchronizer!.setDelegate(self, queue: dataOutputQueue)
         session.commitConfiguration()
+        print("Configuration complete")
         
         
     }
@@ -215,7 +230,10 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
     func startCameraCapture() async -> Result<String, PermissionError> {
         guard await isCameraAuthorized else { return .failure(.cameraPermError)}
         
-        sessionQueue.async {self.configureSession()}
+        self.configureSession()
+//        sessionQueue.async {self.configureSession()}
+//
+        self.startCaptureSend()
         
 //        captureSession.beginConfiguration()
 //        captureSession.sessionPreset = .photo
@@ -318,18 +336,25 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
     
     func dataOutputSynchronizer(_ synchronizer: AVCaptureDataOutputSynchronizer,
                                     didOutput synchronizedDataCollection: AVCaptureSynchronizedDataCollection) {
-            guard let syncedVideoData = synchronizedDataCollection.synchronizedData(for: videoOutput)
+        print("synchronizing frame...")
+            guard let syncedVideoData = synchronizedDataCollection.synchronizedData(for: videoDataOutput)
                     as? AVCaptureSynchronizedSampleBufferData,
-                  let syncedDepthData = synchronizedDataCollection.synchronizedData(for: depthOutput)
-                    as? AVCaptureSynchronizedDepthData else { return }
+                  let syncedDepthData = synchronizedDataCollection.synchronizedData(for: depthDataOutput)
+                    as? AVCaptureSynchronizedDepthData else {
+                print("failed to sync video/depth data")
+                return }
 
             guard !syncedVideoData.sampleBufferWasDropped,
-                  !syncedDepthData.depthDataWasDropped else { return }
+                  !syncedDepthData.depthDataWasDropped else {
+                print("frame dropped")
+                return }
 
             // RGB frame
             let sampleBuffer = syncedVideoData.sampleBuffer
             guard let colorBuffer = CMSampleBufferGetImageBuffer(sampleBuffer),
-                  let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer) else { return }
+                  let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer) else {
+                print("failed to get colorBuffer and formatDescription")
+                return }
 
             // Depth frame
             let depthData = syncedDepthData.depthData
@@ -338,38 +363,135 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
             // Process or stream them together here
             processFrame(colorBuffer: colorBuffer, depthMap: depthMap)
         }
+    
+    func depthToGrayscale(depthBuffer: CVPixelBuffer, minDepth: Float16 = 0.001, maxDepth: Float16 = 2.0) -> CVPixelBuffer? {
+       
+        
+        let width = CVPixelBufferGetWidth(depthBuffer)
+        let height = CVPixelBufferGetHeight(depthBuffer)
+        let pixelFormat = CVPixelBufferGetPixelFormatType(depthBuffer)
+        guard pixelFormat == kCVPixelFormatType_DepthFloat16 else {
+            print("pixel format changed,,, need to make this function handle diff byte sizes dynamically")
+            return nil
+        }
+        
+        var rgbaBuffer: CVPixelBuffer?
+        let attrs: [CFString: Any] = [
+            kCVPixelBufferCGImageCompatibilityKey: true,
+            kCVPixelBufferCGBitmapContextCompatibilityKey: true
+        ]
+        CVPixelBufferCreate(nil, width, height, kCVPixelFormatType_32BGRA, attrs as CFDictionary, &rgbaBuffer)
+        
+        guard let dst = rgbaBuffer else {
+            print("rgbaBuffer is Null: \(depthBuffer)")
+            return nil }
+        
+        CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
+        CVPixelBufferLockBaseAddress(dst, [])
+        
+        let srcBase = CVPixelBufferGetBaseAddress(depthBuffer)!.assumingMemoryBound(to: Float16.self)
+        let dstBase = CVPixelBufferGetBaseAddress(dst)!.assumingMemoryBound(to: UInt8.self)
+        
+        let srcBytesPerRow = CVPixelBufferGetBytesPerRow(depthBuffer)
+        let dstBytesPerRow = CVPixelBufferGetBytesPerRow(dst)
+        
+        for y in 0..<height {
+                let srcRow = srcBase.advanced(by: y * (srcBytesPerRow / MemoryLayout<Float16>.size))
+                let dstRow = dstBase.advanced(by: y * dstBytesPerRow)
+                
+                for x in 0..<width {
+                    var value = srcRow[x]
+                    var alpha = UInt8(255)
+                    if value.isNaN { value = maxDepth
+                    alpha = UInt8(0)}
+                    value = max(min(value, maxDepth), minDepth)
+                    
+                    let gray = UInt8(((value - minDepth) / (maxDepth - minDepth)) * 255.0)
+                    
+                    dstRow[x*4 + 0] = gray // B
+                    dstRow[x*4 + 1] = gray // G
+                    dstRow[x*4 + 2] = gray // R
+                    dstRow[x*4 + 3] = 255  // A
+                }
+            }
+            
+//            return dst
+//        }
+        
+//        let count = width * height
+//        for i in 0..<count {
+//            var value = srcBase[i]
+//            var alpha = UInt8(255)
+//            // clamp depth to min/max
+//            if value.isNaN {
+//                value = maxDepth
+//                alpha = UInt8(0)
+//            }
+//            value = max(min(value, maxDepth), minDepth)
+//            
+//            
+//            // scale to 0-255
+//            let gray = UInt8(((value - minDepth) / (maxDepth - minDepth+0.00001)) * 255.0)
+//            
+//            dstBase[i*4 + 0] = gray // B
+//            dstBase[i*4 + 1] = gray // G
+//            dstBase[i*4 + 2] = gray // R
+//            dstBase[i*4 + 3] = alpha  // A
+//        }
+        
+        CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly)
+        CVPixelBufferUnlockBaseAddress(dst, [])
+        
+        return dst
+    }
 
     private func processFrame(colorBuffer: CVPixelBuffer, depthMap: CVPixelBuffer) {
+        print("processing frame...")
         // ---- 1. Send RGB frame via WebRTC video track ----
                 let rtcPixelBuffer = RTCCVPixelBuffer(pixelBuffer: colorBuffer)
                 let timestampNs = Int64(Date().timeIntervalSince1970 * 1_000_000_000)
                 let frame = RTCVideoFrame(buffer: rtcPixelBuffer, rotation: ._0, timeStampNs: timestampNs)
+        
                 
-                videoSource.capturer(videoCapturer, didCapture: frame)
+        guard let greyscaleDepthMap = depthToGrayscale(depthBuffer: depthMap) else {
+            print("depthToGreyscale failed")
+            return
+        }
+        let rtcPixelBufferDepth = RTCCVPixelBuffer(pixelBuffer: greyscaleDepthMap)
+        let frameDepth = RTCVideoFrame(buffer: rtcPixelBufferDepth, rotation: ._0, timeStampNs: timestampNs)
+
+        videoSource.capturer(videoCapturer, didCapture: frame)
+        depthSource.capturer(videoCapturer, didCapture: frameDepth)
                 
                 // ---- 2. Send Depth via Data Channel ----
-                guard let dc = depthDataChannel, dc.readyState == .open else { return }
-
-                CVPixelBufferLockBaseAddress(depthMap, .readOnly)
-                let width = CVPixelBufferGetWidth(depthMap)
-                let height = CVPixelBufferGetHeight(depthMap)
-                let bytesPerRow = CVPixelBufferGetBytesPerRow(depthMap)
-                let depthPtr = CVPixelBufferGetBaseAddress(depthMap)!
-                let depthSize = bytesPerRow * height
-                let depthData = Data(bytes: depthPtr, count: depthSize)
-                CVPixelBufferUnlockBaseAddress(depthMap, .readOnly)
-                
-                var payload = Data()
-                var ts = timestampNs
-                var w = Int32(width)
-                var h = Int32(height)
-                payload.append(Data(bytes: &ts, count: MemoryLayout<Int64>.size))
-                payload.append(Data(bytes: &w, count: MemoryLayout<Int32>.size))
-                payload.append(Data(bytes: &h, count: MemoryLayout<Int32>.size))
-                payload.append(depthData)
-
-                let buffer = RTCDataBuffer(data: payload, isBinary: true)
-                dc.sendData(buffer)
+//        guard let dc = depthDataChannel else {
+//            print("depth data channel is null \(depthDataChannel)")
+//            return
+//        }
+//                guard dc.readyState == .open else {
+//                    print("depth data channel not open \(dc)")
+//                    return }
+//
+//                CVPixelBufferLockBaseAddress(depthMap, .readOnly)
+//                let width = CVPixelBufferGetWidth(depthMap)
+//                let height = CVPixelBufferGetHeight(depthMap)
+//                let bytesPerRow = CVPixelBufferGetBytesPerRow(depthMap)
+//                let depthPtr = CVPixelBufferGetBaseAddress(depthMap)!
+//                let depthSize = bytesPerRow * height
+//                let depthData = Data(bytes: depthPtr, count: depthSize)
+//                CVPixelBufferUnlockBaseAddress(depthMap, .readOnly)
+//                
+//                var payload = Data()
+//                var ts = timestampNs
+//                var w = Int32(width)
+//                var h = Int32(height)
+//                payload.append(Data(bytes: &ts, count: MemoryLayout<Int64>.size))
+//                payload.append(Data(bytes: &w, count: MemoryLayout<Int32>.size))
+//                payload.append(Data(bytes: &h, count: MemoryLayout<Int32>.size))
+//                payload.append(depthData)
+//
+//                let buffer = RTCDataBuffer(data: payload, isBinary: true)
+//                dc.sendData(buffer)
         }
     
     func stopCameraCapture() {
@@ -382,13 +504,14 @@ class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
 }
 
 struct LoginView: View {
-    @State private var ip_address: String = "100.115.181.103"
+    @State private var ip_address: String = "100.95.197.55"
+//    @State private var ip_address: String = "100.115.181.103"
     @State private var port: String = "5000"
     @State private var connectionResultMessage = ""
     @State private var cameraStreamMessage = ""
     @State private var connected: Bool = false
     
-    private let webRTCClient = WebRTCClient()
+    @State private var webRTCClient: WebRTCClient!
     
     var body: some View {
             VStack(spacing: 20) {
@@ -452,6 +575,9 @@ struct LoginView: View {
         }
 
         func handleLogin() {
+            print("Initiating webRTCClient")
+            webRTCClient = WebRTCClient()
+            
             // TODO: structurally validate input (ip must have 4 dots and numbers, port must have 4 numbers)
             connected = false
             guard URL(string: "http://\(ip_address):\(port)/offer") != nil else {
