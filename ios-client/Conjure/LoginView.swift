@@ -10,509 +10,16 @@ import WebRTC
 import ARKit
 import AVFoundation
 
-enum PermissionError: Error {
-    case cameraPermError
-    case cameraStartError
-    case depthDeviceError
-    case depthStartError
-}
-
-class WebRTCClient: NSObject, AVCaptureDataOutputSynchronizerDelegate {
-    private var peerConnection: RTCPeerConnection!
-    private let factory = RTCPeerConnectionFactory()
-    
-    private var localVideoTrack: RTCVideoTrack!
-    private var videoCapturer: RTCCameraVideoCapturer!
-    private var localDepthTrack: RTCVideoTrack!
-    private var depthCapturer: RTCCameraVideoCapturer!
-    
-    private var depthDataChannel: RTCDataChannel?
-    private var videoSource: RTCVideoSource!
-    private var depthSource: RTCVideoSource!
-
-    override init() {
-        super.init()
-        
-        // Peer-to-peer connection settings
-        // Use STUN connectivity port offered by google to find peer-to-peer connections over the internet
-        // DTLS to negotiate keys for encrypting SRTP media streams
-        let config = RTCConfiguration()
-        config.iceServers = [RTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])]
-        let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: ["DtlsSrtpKeyAgreement": "true"])
-        peerConnection = factory.peerConnection(with: config, constraints: constraints, delegate: nil)
-        
-        let dcConfig = RTCDataChannelConfiguration()
-        depthDataChannel = peerConnection.dataChannel(forLabel: "depthChannel", configuration: dcConfig)
-        
-        print("setting up video channel")
-        videoSource = factory.videoSource()
-        localVideoTrack = factory.videoTrack(with: videoSource, trackId: "video0")
-        peerConnection.add(localVideoTrack, streamIds: ["stream0"])
-        
-        depthSource = factory.videoSource()
-        localDepthTrack = factory.videoTrack(with: depthSource, trackId: "video1")
-        peerConnection.add(localDepthTrack, streamIds: ["stream0"])
-        
-//        peerConnection.add(stream)
-        
-        videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
-//        depthCapturer = RTCCameraVideoCapturer(delegate: depthSource)
-    }
-
-    func startCaptureSend() {
-        
-        //            webRTCClient.videoSource = webRTCClient.factory.videoSource()
-    }
-
-    func createOffer(completion: @escaping (Result<RTCSessionDescription, Error>) -> Void) {
-        let constraints = RTCMediaConstraints(
-            mandatoryConstraints: ["OfferToReceiveAudio": "false", "OfferToReceiveVideo": "false"],
-            optionalConstraints: nil
-        )
-        
-        // async with closures
-        peerConnection.offer(for: constraints) { sdp, error in
-            // check sdp is not nil
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-            
-            guard let sdp = sdp else {
-                let error = NSError(
-                    domain: "WebRTCOffer",
-                    code: -3,
-                    userInfo: [NSLocalizedDescriptionKey: "Failed to create offer: no SDP returned"]
-                )
-                completion(.failure(error))
-                return
-            }
-            // set local description and run complete function
-            self.peerConnection.setLocalDescription(sdp) { error in
-                completion(.success(sdp))
-            }
-        }
-    }
-
-    func addAnswer(_ sdp: RTCSessionDescription) {
-        peerConnection.setRemoteDescription(sdp, completionHandler: { _ in })
-    }
-    
-    private var captureSession = AVCaptureSession()
-    private let sessionQueue = DispatchQueue(label: "session queue", attributes: [], autoreleaseFrequency: .workItem)
-    private var videoOutput = AVCaptureVideoDataOutput()
-    private var depthOutput = AVCaptureDepthDataOutput()
-    private var synchronizer: AVCaptureDataOutputSynchronizer?
-    private let videoDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInTrueDepthCamera],
-                                                                               mediaType: .video,
-                                                                               position: .front)
-    private var videoDeviceInput: AVCaptureDeviceInput!
-    private let session = AVCaptureSession()
-    private let depthDataOutput = AVCaptureDepthDataOutput()
-    private let videoDataOutput = AVCaptureVideoDataOutput()
-    private let dataOutputQueue = DispatchQueue(label: "video data queue", qos: .userInitiated, attributes: [], autoreleaseFrequency: .workItem)
-    private var outputSynchronizer: AVCaptureDataOutputSynchronizer?
-    private var isSessionRunning = false
-    
-    var isCameraAuthorized: Bool {
-        get async {
-            let status = AVCaptureDevice.authorizationStatus(for: .video)
-            
-            // Determine if the user previously authorized camera access.
-            var isAuthorized = status == .authorized
-            
-            // If the system hasn't determined the user's authorization status,
-            // explicitly prompt them for approval.
-            if status == .notDetermined {
-                isAuthorized = await AVCaptureDevice.requestAccess(for: .video)
-            }
-            
-            return isAuthorized
-        }
-    }
-    private enum SessionSetupResult {
-        case success
-        case notAuthorized
-        case configurationFailed
-    }
-    private var setupResult: SessionSetupResult = .success
-    private func configureSession() {
-        print("Configuring Session")
-        if setupResult != .success {
-            return
-        }
-        let defaultVideoDevice: AVCaptureDevice? = videoDeviceDiscoverySession.devices.first
-        
-        guard let videoDevice = defaultVideoDevice else {
-            print("Could not find any video device")
-            setupResult = .configurationFailed
-            return
-        }
-        
-        do {
-            videoDeviceInput = try AVCaptureDeviceInput(device: videoDevice)
-        } catch {
-            print("Could not create video device input: \(error)")
-            setupResult = .configurationFailed
-            return
-        }
-        
-        session.beginConfiguration()
-        
-        session.sessionPreset = AVCaptureSession.Preset.vga640x480
-        
-        // Add a video input
-        guard session.canAddInput(videoDeviceInput) else {
-            print("Could not add video device input to the session")
-            setupResult = .configurationFailed
-            session.commitConfiguration()
-            return
-        }
-        session.addInput(videoDeviceInput)
-        
-        // Add a video data output
-        if session.canAddOutput(videoDataOutput) {
-            session.addOutput(videoDataOutput)
-            videoDataOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
-        } else {
-            print("Could not add video data output to the session")
-            setupResult = .configurationFailed
-            session.commitConfiguration()
-            return
-        }
-        
-        // Add a depth data output
-        if session.canAddOutput(depthDataOutput) {
-            session.addOutput(depthDataOutput)
-            depthDataOutput.isFilteringEnabled = false
-            if let connection = depthDataOutput.connection(with: .depthData) {
-                connection.isEnabled = true
-            } else {
-                print("No AVCaptureConnection")
-            }
-        } else {
-            print("Could not add depth data output to the session")
-            setupResult = .configurationFailed
-            session.commitConfiguration()
-            return
-        }
-        
-        // Search for highest resolution with half-point depth values
-        let depthFormats = videoDevice.activeFormat.supportedDepthDataFormats
-        let filtered = depthFormats.filter({
-            CMFormatDescriptionGetMediaSubType($0.formatDescription) == kCVPixelFormatType_DepthFloat16
-        })
-        let selectedFormat = filtered.max(by: {
-            first, second in CMVideoFormatDescriptionGetDimensions(first.formatDescription).width < CMVideoFormatDescriptionGetDimensions(second.formatDescription).width
-        })
-        
-        do {
-            try videoDevice.lockForConfiguration()
-            videoDevice.activeDepthDataFormat = selectedFormat
-            videoDevice.unlockForConfiguration()
-        } catch {
-            print("Could not lock device for configuration: \(error)")
-            setupResult = .configurationFailed
-            session.commitConfiguration()
-            return
-        }
-        
-        // Use an AVCaptureDataOutputSynchronizer to synchronize the video data and depth data outputs.
-        // The first output in the dataOutputs array, in this case the AVCaptureVideoDataOutput, is the "master" output.
-        outputSynchronizer = AVCaptureDataOutputSynchronizer(dataOutputs: [videoDataOutput, depthDataOutput])
-        outputSynchronizer!.setDelegate(self, queue: dataOutputQueue)
-        session.commitConfiguration()
-        print("Configuration complete")
-        
-        
-    }
-    private var sessionRunningContext = 0
-    func startCameraCapture() async -> Result<String, PermissionError> {
-        guard await isCameraAuthorized else { return .failure(.cameraPermError)}
-        
-        self.configureSession()
-//        sessionQueue.async {self.configureSession()}
-//
-        self.startCaptureSend()
-        
-//        captureSession.beginConfiguration()
-//        captureSession.sessionPreset = .photo
-//        
-//        guard let depthDevice = AVCaptureDevice.default(
-//            .builtInTrueDepthCamera,
-//            for: .video,
-//            position: .front) else {
-//            return .failure(.depthDeviceError)
-//        }
-//        
-////        guard let videoInput = try? AVCaptureDeviceInput.default(for: .video),
-////              captureSession.canAddInput(videoInput) else {
-////            return .failure(.depthStartError)
-////        }
-////        captureSession.addInput(videoInput)
-//        
-//        if captureSession.canAddOutput(videoOutput) {
-//            captureSession.addOutput(videoOutput)
-//            videoOutput.alwaysDiscardsLateVideoFrames = true
-////            videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
-//        }
-//        
-//        if captureSession.canAddOutput(depthOutput) {
-//            captureSession.addOutput(depthOutput)
-//            depthOutput.isFilteringEnabled = false
-////            depthOutput.setDelegate(self, callbackQueue: sessionQueue)
-//        }
-//                
-//        // Align depth with video stream
-////        for connection in depthOutput.connections {
-////            connection.isEnabled = true
-////        }
-//        
-//        synchronizer = AVCaptureDataOutputSynchronizer(dataOutputs: [videoOutput, depthOutput])
-//        synchronizer?.setDelegate(self, queue: sessionQueue)
-//                
-//        captureSession.commitConfiguration()
-//        captureSession.startRunning()
-       
-            switch self.setupResult {
-            case .success:
-                // Only setup observers and start the session running if setup succeeded
-//                self.addObservers()
-//                self.session.addObserver(self, forKeyPath: "running", options: NSKeyValueObservingOptions.new, context: &self.sessionRunningContext)
-                
-//                let videoOrientation = self.videoDataOutput.connection(with: .video)!.videoOrientation
-//                let videoDevicePosition = self.videoDeviceInput.device.position
-//                let interfaceOrientation = UIApplication.shared.statusBarOrientation
-//                let rotation = PreviewMetalView.Rotation(with: interfaceOrientation,
-//                                                         videoOrientation: videoOrientation,
-//                                                         cameraPosition: videoDevicePosition)
-//                self.jetView.mirroring = (videoDevicePosition == .front)
-//                if let rotation = rotation {
-//                    self.jetView.rotation = rotation
-//                }
-//                self.dataOutputQueue.async {
-//                    self.renderingEnabled = true
-//                }
-//                
-                self.session.startRunning()
-                self.isSessionRunning = self.session.isRunning
-                return .success("Camera is now running...")
-                
-            case .notAuthorized:
-                // TODO handle these properly
-                fatalError("Not authorized to use camera: please change privacy permissions")
-//                DispatchQueue.main.async {
-//                    let message = NSLocalizedString("TrueDepthStreamer doesn't have permission to use the camera, please change privacy settings",
-//                                                    comment: "Alert message when the user has denied access to the camera")
-//                    let alertController = UIAlertController(title: "TrueDepthStreamer", message: message, preferredStyle: .alert)
-//                    alertController.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"),
-//                                                            style: .cancel,
-//                                                            handler: nil))
-//                    alertController.addAction(UIAlertAction(title: NSLocalizedString("Settings", comment: "Alert button to open Settings"),
-//                                                            style: .`default`,
-//                                                            handler: { _ in
-//                                                                UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!,
-//                                                                                          options: [:],
-//                                                                                          completionHandler: nil)
-//                    }))
-//                    
-////                    self.present(alertController, animated: true, completion: nil)
-//                }
-                
-            case .configurationFailed:
-                fatalError("ConfigurationFailed")
-//                DispatchQueue.main.async {
-//                    self.cameraUnavailableLabel.isHidden = false
-//                    self.cameraUnavailableLabel.alpha = 0.0
-//                    UIView.animate(withDuration: 0.25) {
-//                        self.cameraUnavailableLabel.alpha = 1.0
-//                    }
-//                }
-           
-        }
-        
-        }
-    
-    
-    func dataOutputSynchronizer(_ synchronizer: AVCaptureDataOutputSynchronizer,
-                                    didOutput synchronizedDataCollection: AVCaptureSynchronizedDataCollection) {
-        print("synchronizing frame...")
-            guard let syncedVideoData = synchronizedDataCollection.synchronizedData(for: videoDataOutput)
-                    as? AVCaptureSynchronizedSampleBufferData,
-                  let syncedDepthData = synchronizedDataCollection.synchronizedData(for: depthDataOutput)
-                    as? AVCaptureSynchronizedDepthData else {
-                print("failed to sync video/depth data")
-                return }
-
-            guard !syncedVideoData.sampleBufferWasDropped,
-                  !syncedDepthData.depthDataWasDropped else {
-                print("frame dropped")
-                return }
-
-            // RGB frame
-            let sampleBuffer = syncedVideoData.sampleBuffer
-            guard let colorBuffer = CMSampleBufferGetImageBuffer(sampleBuffer),
-                  let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer) else {
-                print("failed to get colorBuffer and formatDescription")
-                return }
-
-            // Depth frame
-            let depthData = syncedDepthData.depthData
-            let depthMap = depthData.depthDataMap
-
-            // Process or stream them together here
-            processFrame(colorBuffer: colorBuffer, depthMap: depthMap)
-        }
-    
-    func depthToGrayscale(depthBuffer: CVPixelBuffer, minDepth: Float16 = 0.1, maxDepth: Float16 = 1.0) -> CVPixelBuffer? {
-       
-        
-        let width = CVPixelBufferGetWidth(depthBuffer)
-        let height = CVPixelBufferGetHeight(depthBuffer)
-        let pixelFormat = CVPixelBufferGetPixelFormatType(depthBuffer)
-        guard pixelFormat == kCVPixelFormatType_DepthFloat16 else {
-            print("pixel format changed,,, need to make this function handle diff byte sizes dynamically")
-            return nil
-        }
-        
-        var rgbaBuffer: CVPixelBuffer?
-        let attrs: [CFString: Any] = [
-            kCVPixelBufferCGImageCompatibilityKey: true,
-            kCVPixelBufferCGBitmapContextCompatibilityKey: true
-        ]
-        CVPixelBufferCreate(nil, width, height, kCVPixelFormatType_32BGRA, attrs as CFDictionary, &rgbaBuffer)
-        
-        guard let dst = rgbaBuffer else {
-            print("rgbaBuffer is Null: \(depthBuffer)")
-            return nil }
-        
-        CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
-        CVPixelBufferLockBaseAddress(dst, [])
-        
-        let srcBase = CVPixelBufferGetBaseAddress(depthBuffer)!.assumingMemoryBound(to: Float16.self)
-        let dstBase = CVPixelBufferGetBaseAddress(dst)!.assumingMemoryBound(to: UInt8.self)
-        
-        let srcBytesPerRow = CVPixelBufferGetBytesPerRow(depthBuffer)
-        let dstBytesPerRow = CVPixelBufferGetBytesPerRow(dst)
-        
-        for y in 0..<height {
-                let srcRow = srcBase.advanced(by: y * (srcBytesPerRow / MemoryLayout<Float16>.size))
-                let dstRow = dstBase.advanced(by: y * dstBytesPerRow)
-                
-                for x in 0..<width {
-                    var value = srcRow[x]
-                    var alpha = UInt8(255)
-                    
-                    if value.isNaN { value = maxDepth
-                    alpha = UInt8(0)}
-                    value = max(min(value, maxDepth), minDepth)
-                    
-                    let gray = UInt8(((value - minDepth) / (maxDepth - minDepth)) * 255.0)
-                    
-                    dstRow[x*4 + 0] = gray // B
-                    dstRow[x*4 + 1] = gray // G
-                    dstRow[x*4 + 2] = gray // R
-                    dstRow[x*4 + 3] = 255  // A
-                }
-            }
-            
-//            return dst
-//        }
-        
-//        let count = width * height
-//        for i in 0..<count {
-//            var value = srcBase[i]
-//            var alpha = UInt8(255)
-//            // clamp depth to min/max
-//            if value.isNaN {
-//                value = maxDepth
-//                alpha = UInt8(0)
-//            }
-//            value = max(min(value, maxDepth), minDepth)
-//            
-//            
-//            // scale to 0-255
-//            let gray = UInt8(((value - minDepth) / (maxDepth - minDepth+0.00001)) * 255.0)
-//            
-//            dstBase[i*4 + 0] = gray // B
-//            dstBase[i*4 + 1] = gray // G
-//            dstBase[i*4 + 2] = gray // R
-//            dstBase[i*4 + 3] = alpha  // A
-//        }
-        
-        CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly)
-        CVPixelBufferUnlockBaseAddress(dst, [])
-        
-        return dst
-    }
-
-    private func processFrame(colorBuffer: CVPixelBuffer, depthMap: CVPixelBuffer) {
-        print("processing frame...")
-        // ---- 1. Send RGB frame via WebRTC video track ----
-        let rtcPixelBuffer = RTCCVPixelBuffer(pixelBuffer: colorBuffer)
-        let timestampNs = Int64(Date().timeIntervalSince1970 * 1_000_000_000)
-        let frame = RTCVideoFrame(buffer: rtcPixelBuffer, rotation: ._90, timeStampNs: timestampNs)
-        
-                
-        guard let greyscaleDepthMap = depthToGrayscale(depthBuffer: depthMap) else {
-            print("depthToGreyscale failed")
-            return
-        }
-        let rtcPixelBufferDepth = RTCCVPixelBuffer(pixelBuffer: greyscaleDepthMap)
-        let frameDepth = RTCVideoFrame(buffer: rtcPixelBufferDepth, rotation: ._90, timeStampNs: timestampNs)
-
-        videoSource.capturer(videoCapturer, didCapture: frame)
-        depthSource.capturer(videoCapturer, didCapture: frameDepth)
-                
-                // ---- 2. Send Depth via Data Channel ----
-//        guard let dc = depthDataChannel else {
-//            print("depth data channel is null \(depthDataChannel)")
-//            return
-//        }
-//                guard dc.readyState == .open else {
-//                    print("depth data channel not open \(dc)")
-//                    return }
-//
-//                CVPixelBufferLockBaseAddress(depthMap, .readOnly)
-//                let width = CVPixelBufferGetWidth(depthMap)
-//                let height = CVPixelBufferGetHeight(depthMap)
-//                let bytesPerRow = CVPixelBufferGetBytesPerRow(depthMap)
-//                let depthPtr = CVPixelBufferGetBaseAddress(depthMap)!
-//                let depthSize = bytesPerRow * height
-//                let depthData = Data(bytes: depthPtr, count: depthSize)
-//                CVPixelBufferUnlockBaseAddress(depthMap, .readOnly)
-//                
-//                var payload = Data()
-//                var ts = timestampNs
-//                var w = Int32(width)
-//                var h = Int32(height)
-//                payload.append(Data(bytes: &ts, count: MemoryLayout<Int64>.size))
-//                payload.append(Data(bytes: &w, count: MemoryLayout<Int32>.size))
-//                payload.append(Data(bytes: &h, count: MemoryLayout<Int32>.size))
-//                payload.append(depthData)
-//
-//                let buffer = RTCDataBuffer(data: payload, isBinary: true)
-//                dc.sendData(buffer)
-        }
-    
-    func stopCameraCapture() {
-        session.stopRunning()
-        isSessionRunning = session.isRunning
-    }
-    
-    
-    
-}
-
 struct LoginView: View {
-//    @State private var ip_address: String = "100.95.197.55"
-    @State private var ip_address: String = "100.115.181.103"
-    @State private var port: String = "5000"
+    @State private var ip_address: String = LoginConfig.defaultIPAddress
+    @State private var port: String = LoginConfig.defaultPort
+    
     @State private var connectionResultMessage = ""
     @State private var cameraStreamMessage = ""
     @State private var connected: Bool = false
     
     @State private var webRTCClient: WebRTCClient!
+    @State private var cameraManager: CameraManager!
     
     var body: some View {
             VStack(spacing: 20) {
@@ -634,41 +141,46 @@ struct LoginView: View {
         }
     
     func startCameraStream(){
-        Task {cameraStreamMessage = "Starting Camera..."
-//            webRTCClient.startCaptureSend()
-            let result = await webRTCClient.startCameraCapture()
-            switch result {
-            case .failure(let error):
-                switch error {
-                case .cameraPermError:
-                    cameraStreamMessage = "Camera permission error"
-                case .depthDeviceError:
-                    cameraStreamMessage = "TrueDepth camera not available"
-                case .depthStartError:
-                    cameraStreamMessage = "Failed to start capture session"
-                case .cameraStartError:
-                    cameraStreamMessage = "Failed to start camera"
-                }
-                return
-                
-            case .success(let message):
-                cameraStreamMessage = message
+        if cameraManager != nil && cameraManager.isSessionRunning {
+            cameraManager.stopSession()
+        }
+        
+        cameraStreamMessage = "Setting up camera..."
+        cameraManager = CameraManager()
+        
+        let res = cameraManager.setupSession()
+        
+        switch res {
+        case .failure(let error):
+            print("Error setting up camera:",error)
+            cameraStreamMessage = "Error setting up camera: \(error)"
+            switch error {
+            case .notAuthorized:
+                cameraStreamMessage = "Camera permission error"
+            case .configurationFailed:
+                cameraStreamMessage = "Camera configuration failed"
+            case .failedToAddCamera:
+                cameraStreamMessage = "Failed to add camera to capture session"
+            case .failedToAddDepthSensor:
+                cameraStreamMessage = "Failed to add depth sensor to capture session"
             }
+            return
             
-//            webRTCClient.videoCapturer = RTCCameraVideoCapturer(delegate: webRTCClient.videoSource)
-//            webRTCClient.videoSource = webRTCClient.factory.videoSource()
-//            cameraStreamMessage = "Camera started, streaming frames..."
-            
-            // Start camera capture session from front facin g camera
-            // Start depth camera capture session and fuse together
-            // Send fused video frames through webRTC
-            
+        case _:
+            break
+        }
+        
+        cameraStreamMessage = "Starting Camera..."
+        try! cameraManager.startSession()
+        cameraStreamMessage = "Camera started"
             
         }
-    }
+    
     func stopCameraStream(){
-        
-        webRTCClient.stopCameraCapture()
+        if cameraManager == nil {
+            return
+        }
+        cameraManager.stopSession()
         cameraStreamMessage = "Camera stream stopped"
     }
     
