@@ -6,8 +6,8 @@
 //
 
 struct LoginConfig {
-//    static let default_ip_addres = "100.95.197.55"
-    static let defaultIPAddress = "100.115.181.103"
+    static let defaultIPAddress = "100.95.197.55"
+//    static let defaultIPAddress = "100.115.181.103"
     static let defaultPort = "5000"
     static let defaultConnectionMethod = "WebRTC"
 }
@@ -18,5 +18,7 @@ struct DataConfig {
     static let landmarkDepthPixelRadius = 2
     static let webRTCChannelLabel = "hand_landmarks"
     static let numHands = 1
+    static let minDepth = 0.1
+    static let maxDepth = 1.5
 //    static let minHandDetectionConfidence =
 }

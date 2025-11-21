@@ -14,22 +14,24 @@ struct Landmark: Codable {
     let y: Float
     let depth: Float?
     let mediapipeConfidence: Float
+     //0 for right hand, 1 for left
 }
 
 struct Frame: Codable {
-    let id: UInt32
-    let timestamp: UInt64
+    let handedness: Bool?
+//    let id: UInt32
+    let timestamp: Int
     // Key corresponds to mediapipe digit labels (1 for thumb tip, etc.)
     let landmarks: [UInt8: Landmark]
 }
 
 
 struct IntermediateCameraFrame {
-    let rgb: CMSampleBuffer
+    let rgb: MPImage
     let depth: AVDepthData
-    let ts: CMTime
+    let ts: Int
 }
 struct IntermediateLandmarkFrame {
     let result: HandLandmarkerResult
-    let ts: CMTime
+    let ts: Int
 }

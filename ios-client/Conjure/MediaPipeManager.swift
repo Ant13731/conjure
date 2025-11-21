@@ -12,11 +12,12 @@ import Combine
 
 
 class MediaPipeManager: NSObject {
-    private var handLandmarker: HandLandmarker!
-    var cameraManagerCallback: ((HandLandmarkerResult) -> Void)!
+    var handLandmark: HandLandmarker!
+    unowned var frameFuser: FrameFuser!
     
-    override init() {
+    init(frameFuser: FrameFuser) {
         super.init()
+        self.frameFuser = frameFuser
         
 //        let modelPath = Bundle.main.path(forResource: "hand_landmarker", ofType: "task")
         let modelPath = "hand_landmarker.task"
@@ -30,7 +31,7 @@ class MediaPipeManager: NSObject {
         options.numHands = DataConfig.numHands
         options.handLandmarkerLiveStreamDelegate = self
 
-        handLandmarker = try! HandLandmarker(options: options)
+        handLandmark = try! HandLandmarker(options: options)
         
     }
 
@@ -51,7 +52,11 @@ extension MediaPipeManager: HandLandmarkerLiveStreamDelegate {
                 return
             }
             
-            cameraManagerCallback(result!)
+//            let ts = CMTimeMake(value: CMTimeValue(timestampInMilliseconds), timescale: 1000)
+            
+            let mediapipeFrame = IntermediateLandmarkFrame(result: result!, ts: timestampInMilliseconds)
+            
+            Task {await frameFuser.sendMediaPipeFrame(mediapipeFrame)}
             
       }
 }

@@ -20,6 +20,7 @@ struct LoginView: View {
     
     @State private var webRTCClient: WebRTCClient!
     @State private var cameraManager: CameraManager!
+    @State private var frameFuser: FrameFuser!
     
     var body: some View {
             VStack(spacing: 20) {
@@ -146,7 +147,8 @@ struct LoginView: View {
         }
         
         cameraStreamMessage = "Setting up camera..."
-        cameraManager = CameraManager()
+        frameFuser = FrameFuser()
+        cameraManager = CameraManager(frameFuser: frameFuser)
         
         let res = cameraManager.setupSession()
         
@@ -163,6 +165,8 @@ struct LoginView: View {
                 cameraStreamMessage = "Failed to add camera to capture session"
             case .failedToAddDepthSensor:
                 cameraStreamMessage = "Failed to add depth sensor to capture session"
+            case .failedToAddDepthSensorCapture:
+                cameraStreamMessage = "Failed to add depth sensor input"
             }
             return
             
