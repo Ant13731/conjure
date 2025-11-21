@@ -152,7 +152,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
             print("Failed to cast frame into MPImage")
             return
         }
-        let lastDepthFrame = syncedDepth.depthData
+        let lastDepthFrame = syncedDepth.depthData.depthDataMap
         let timestamp = CMSampleBufferGetPresentationTimeStamp(syncedVideo.sampleBuffer)
         let ts = Int(timestamp.seconds) * 1000
         

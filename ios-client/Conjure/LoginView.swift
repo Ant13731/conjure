@@ -147,7 +147,7 @@ struct LoginView: View {
         }
         
         cameraStreamMessage = "Setting up camera..."
-        frameFuser = FrameFuser()
+        frameFuser = FrameFuser(webRTCClient)
         cameraManager = CameraManager(frameFuser: frameFuser)
         
         let res = cameraManager.setupSession()
