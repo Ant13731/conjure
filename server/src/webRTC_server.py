@@ -31,6 +31,36 @@ video_relay = MediaRelay()
 #         # Here you can process the frame as needed, e.g., resizing, filtering, etc.
 #         return frame
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def decode_rgba_to_depth(rgba_image):
+    # Combine R and G into 16-bit unsigned integers
+    R = rgba_image[..., 0].astype(np.uint16)
+    G = rgba_image[..., 1].astype(np.uint16)
+    depth_uint16 = (R << 8) | G
+
+    # Convert to float16 (proper IEEE 754 decoding)
+    depth_float16 = depth_uint16.view(np.float16)
+
+    # Convert to float32 for processing
+    depth_float32 = depth_float16.astype(np.float32)
+    return depth_float32
+
+
+def depth_to_heatmap(depth_float32, min_depth=0.0, max_depth=5.0):
+    # Clip to expected depth range
+    depth_clipped = np.clip(depth_float32, min_depth, max_depth)
+
+    # Normalize to 0–1
+    normalized = (depth_clipped - min_depth) / (max_depth - min_depth)
+
+    # Apply a colormap
+    heatmap = plt.cm.jet(normalized)[:, :, :3]  # RGB only
+    heatmap = (heatmap * 255).astype(np.uint8)
+    return heatmap
+
 
 async def offer(request):
     data = await request.json()
@@ -43,6 +73,52 @@ async def offer(request):
 
     logger.info(f"Handling RTC connection offer...")
     rtc_offer = RTCSessionDescription(sdp=data["sdp"], type=data["type"])
+
+    print("RTC Offer SDP:", rtc_offer.sdp)
+
+    # Increase bandwidth:
+    new_lines = rtc_offer.sdp.splitlines()
+
+    for l in range(len(rtc_offer.sdp.splitlines())):
+        if new_lines[l].startswith("m=video"):
+            found_m = l
+            break
+    else:
+        found_m = len(rtc_offer.sdp.splitlines()) - 1
+    found_m += 1
+    while new_lines[found_m].startswith("i=") or new_lines[found_m].startswith("c="):
+        found_m += 1
+    if new_lines[found_m].startswith("b="):
+        new_lines[found_m] = "b=AS:300000"
+    else:
+        # Insert bandwidth line after m=video
+        new_lines.insert(found_m, "b=AS:300000")
+
+    # Patch H264 fmtp line
+    # if line.startswith("a=fmtp:") and "H264" in rtc_offer.sdp:
+    #     if "profile-level-id" in line:
+    #         # Example: add ultra-high bitrate and frame size settings
+    #         new_line = line + ";max-fs=12288;max-fr=60;max-br=5000000;max-mbps=5000000"
+    #         new_lines[-1] = new_line
+
+    # # Patch VP8/VP9
+    # if line.startswith("a=rtpmap:") and "VP8" in line:
+    #     new_lines.append("a=fmtp:{} max-fs=12288;max-fr=60".format(line.split(":")[1].split(" ")[0]))
+    rtc_offer = RTCSessionDescription(sdp="\n".join(new_lines), type=rtc_offer.type)
+
+    # Prefer USB connection if available
+    # if "172.20.10" in rtc_offer.sdp:
+    #     logger.info("USB connection found in SDP, filtering out non-USB candidates...")
+    #     filtered_sdp_lines = []
+    #     for line in rtc_offer.sdp.splitlines():
+    #         if line.startswith("a=candidate:"):
+    #             if "172.20.10" not in line:
+    #                 continue
+    #             filtered_sdp_lines.append(line)
+    #         else:
+    #             filtered_sdp_lines.append(line)
+    #     filtered_sdp = "\n".join(filtered_sdp_lines)
+    #     rtc_offer = RTCSessionDescription(sdp=filtered_sdp, type=rtc_offer.type)
 
     pc = RTCPeerConnection()
     pcs.add(pc)
@@ -72,7 +148,8 @@ async def offer(request):
                 while True:
                     frame = await track.recv()
                     logger.info(f"{track.id}: Received video frame {frame}")
-                    img = frame.to_ndarray(format="bgra")
+                    img = depth_to_heatmap(decode_rgba_to_depth(frame.to_ndarray(format="rgba")))
+                    # img = frame.to_ndarray(format="bgra")
                     cv2.imshow("iPhone Camera Depth", img)
                     if cv2.waitKey(1) & 0xFF == ord("q"):
                         break
