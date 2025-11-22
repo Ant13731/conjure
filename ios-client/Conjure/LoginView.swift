@@ -11,8 +11,8 @@ import ARKit
 import AVFoundation
 
 enum ConnectionMode: String, CaseIterable, Identifiable {
-    case webRTC = "WebRTC"
-    case usb = "USB"
+    case onDevice = "On-device ML"
+    case streamed = "Image Transfer Only"
     
     var id: String {self.rawValue}
 }
@@ -27,7 +27,7 @@ struct LoginView: View {
     
     @State private var connectedWebRTC: Bool = false
     @State private var connectedUSB: Bool = false
-    @State private var connectionMode: ConnectionMode = .usb
+    @State private var connectionMode: ConnectionMode = .streamed
     
     @State private var webRTCClient: WebRTCClient!
     @State private var cameraManager: CameraManager!
@@ -53,8 +53,6 @@ struct LoginView: View {
                     .padding()
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(8)
-                    .disabled(connectionMode == .usb)
-                    .opacity(connectionMode == .usb ? 0.5 : 1.0)
 
                 TextField("Server Port", text: $port)
                     .padding()
@@ -106,12 +104,13 @@ struct LoginView: View {
         }
     
     func handleLogin() {
-        switch connectionMode {
-        case .webRTC:
-            handleLoginWebRTC()
-        case .usb:
-            handleLoginUSB()
-        }
+        handleLoginWebRTC()
+//        switch connectionMode {
+//        case .onDevice:
+//            handleLoginWebRTC()
+//        case .streamed:
+//            handleLoginUSB()
+//        }
     }
     
     func handleLoginUSB() {
@@ -197,11 +196,13 @@ struct LoginView: View {
         
         cameraStreamMessage = "Setting up camera..."
         
-        if connectionMode == .webRTC {
+        if connectionMode == .onDevice {
+            print("Starting On-device ML Streaming")
             frameFuser = FrameFuser(webRTCClient)
             cameraManager = CameraManager(frameFuser: frameFuser)
         } else {
-            cameraManager = CameraManager(usbSender: usbSender)
+            print("Starting Image-only streaming")
+            cameraManager = CameraManager(webRTCClient: webRTCClient)
         }
         
         

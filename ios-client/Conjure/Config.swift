@@ -6,7 +6,8 @@
 //
 
 struct LoginConfig {
-    static let defaultIPAddress = "100.95.197.55"
+    static let defaultIPAddress = "172.20.10.7"
+//    static let defaultIPAddress = "100.95.197.55"
 //    static let defaultIPAddress = "100.115.181.103"
     static let defaultPort = "5000"
     static let defaultConnectionMethod = "WebRTC"

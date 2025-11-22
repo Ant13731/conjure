@@ -15,7 +15,7 @@ class USBSender {
     
     private var connection: NWConnection?
     private let port: UInt16
-    private let host: NWEndpoint.Host = "127.0.0.1" // loopback for iproxy
+    private let host: NWEndpoint.Host = "172.20.10.7" // loopback for iproxy
     private var compressionSession: VTCompressionSession?
     
     init(port: Int) {
@@ -44,7 +44,9 @@ class USBSender {
                 completion(true)
             case .failed(_), .cancelled:
                 completion(false)
-            default: break
+            default:
+                print("Connection state", state)
+                break
             }
         }
         connection?.start(queue: .global())
@@ -145,6 +147,7 @@ class USBSender {
         // --- Extract depth buffer as UInt16 ---
         CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
         let depthSize = CVPixelBufferGetDataSize(depthBuffer)
+        print(CVPixelBufferGetPlaneCount(depthBuffer))
         let depthPtr = CVPixelBufferGetBaseAddress(depthBuffer)!
         let depthData = Data(bytes: depthPtr, count: depthSize)
         CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly)

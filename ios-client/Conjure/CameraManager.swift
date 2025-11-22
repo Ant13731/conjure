@@ -32,6 +32,7 @@ class CameraManager: NSObject {
     
     let mediapipeManager: MediaPipeManager?
     unowned var frameFuser: FrameFuser?
+    var webRTCClient: WebRTCClient?
     
     let usbSender: USBSender?
     
@@ -39,12 +40,20 @@ class CameraManager: NSObject {
         self.frameFuser = frameFuser
         self.mediapipeManager = MediaPipeManager(frameFuser: frameFuser)
         self.usbSender = nil
+        self.webRTCClient = nil
     }
-    init(usbSender: USBSender) {
-        self.usbSender = usbSender
+    init(webRTCClient: WebRTCClient) {
+        self.webRTCClient = webRTCClient
+        print("Test:", webRTCClient)
         self.mediapipeManager = nil
         self.frameFuser = nil
+        self.usbSender = nil
     }
+//    init(usbSender: USBSender) {
+//        self.usbSender = usbSender
+//        self.mediapipeManager = nil
+//        self.frameFuser = nil
+//    }
 //    var webRTCClient: WebRTCClient!
 //    
 //    init(webRTCClient: WebRTCClient) {
@@ -89,9 +98,41 @@ class CameraManager: NSObject {
         
         
         // Depth camera
-        guard let depthCam = AVCaptureDevice.default(.builtInTrueDepthCamera, for: .video, position: .front),
-              let depthInput = try? AVCaptureDeviceInput(device: depthCam),
-              captureSession.canAddInput(depthInput) else { return .failure(.failedToAddDepthSensorCapture)}
+        guard let depthCam = AVCaptureDevice.default(.builtInTrueDepthCamera, for: .video, position: .front) else { return .failure(.failedToAddDepthSensorCapture)}
+        
+//        var depthFormats: [AVCaptureDevice.Format] = []
+//
+//        for format in depthCam.formats {
+//            for depthFormat in format.supportedDepthDataFormats {
+//                depthFormats.append(depthFormat)
+//            }
+//        }
+//        if let float16Format = depthCam.activeFormat.supportedDepthDataFormats.first(where: {
+//            CMFormatDescriptionGetMediaSubType($0.formatDescription) == kCVPixelFormatType_DepthFloat16
+//        }) {
+//            try! depthCam.lockForConfiguration()
+//            depthCam.activeDepthDataFormat = float16Format
+//            depthCam.unlockForConfiguration()
+//        } else {print("Failed to edit depth format")}
+        let depthFormats = depthCam.activeFormat.supportedDepthDataFormats
+                let filtered = depthFormats.filter({
+                    CMFormatDescriptionGetMediaSubType($0.formatDescription) == kCVPixelFormatType_DepthFloat16
+                })
+                let selectedFormat = filtered.max(by: {
+                    first, second in CMVideoFormatDescriptionGetDimensions(first.formatDescription).width < CMVideoFormatDescriptionGetDimensions(second.formatDescription).width
+                })
+                
+                do {
+                    try depthCam.lockForConfiguration()
+                    depthCam.activeDepthDataFormat = selectedFormat
+                    depthCam.unlockForConfiguration()
+                } catch {
+                    print("Could not lock device for configuration: \(error)")
+                    return .failure(.configurationFailed)
+                }
+            
+        guard let depthInput = try? AVCaptureDeviceInput(device: depthCam), captureSession.canAddInput(depthInput) else { return .failure(.failedToAddDepthSensorCapture)}
+        
         captureSession.addInput(depthInput)
         
         // RGB output
@@ -156,13 +197,13 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
             print("frame dropped")
             return }
         
-        
-        let lastDepthFrame = syncedDepth.depthData.depthDataMap
+        let colorFrame = syncedVideo.sampleBuffer
+        let depthFrame = syncedDepth.depthData.depthDataMap
         let timestamp = CMSampleBufferGetPresentationTimeStamp(syncedVideo.sampleBuffer)
         let ts = Int(timestamp.seconds) * 1000
         
         if mediapipeManager != nil {
-            guard let lastFrame = try? MPImage(sampleBuffer: syncedVideo.sampleBuffer) else {
+            guard let lastFrame = try? MPImage(sampleBuffer: colorFrame) else {
                 print("Failed to cast frame into MPImage")
                 return
             }
@@ -172,27 +213,40 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
                 return
             }
             
-            let cameraFrame = IntermediateCameraFrame(rgb: lastFrame, depth: lastDepthFrame, ts: ts)
+            let cameraFrame = IntermediateCameraFrame(rgb: lastFrame, depth: depthFrame, ts: ts)
             
             Task {await frameFuser!.sendCameraFrame(cameraFrame)}
         } else {
-            guard let videoBuffer = CMSampleBufferGetImageBuffer(syncedVideo.sampleBuffer) else {
-                print("Failed to get CVPixelBuffer from image frame")
+            guard let colorBuffer = CMSampleBufferGetImageBuffer(colorFrame) else {
+                print("Failed to convert colorFrame to colorBuffer")
                 return
             }
-//            CVPixelBufferLockBaseAddress(videoBuffer, .readOnly)
-//                CVPixelBufferLockBaseAddress(lastDepthFrame, .readOnly)
+            
+            
+            
+//            webRTCClient!.send(colorBuffer: colorBuffer, depthBuffer: colorBuffer)
+            webRTCClient!.send(colorBuffer: colorBuffer, depthBuffer: depthFrame)
+            
+//            Task {await webRTCClient!.send(colorBuffer: colorBuffer, depthBuffer: depthFrame)}
+            
+            // Old USBSender version
+//            guard let videoBuffer = CMSampleBufferGetImageBuffer(syncedVideo.sampleBuffer) else {
+//                print("Failed to get CVPixelBuffer from image frame")
+//                return
+//            }
+////            CVPixelBufferLockBaseAddress(videoBuffer, .readOnly)
+////                CVPixelBufferLockBaseAddress(lastDepthFrame, .readOnly)
+////
+////                defer {
+////                    CVPixelBufferUnlockBaseAddress(videoBuffer, .readOnly)
+////                    CVPixelBufferUnlockBaseAddress(lastDepthFrame, .readOnly)
+////                }
+////
+////                let videoData = videoBuffer.extractNV12Data() // helper: converts NV12 pixel buffer to Data
+////                let depthData = lastDepthFrame.extractUInt16Data() // helper: converts depth buffer to Data
 //
-//                defer {
-//                    CVPixelBufferUnlockBaseAddress(videoBuffer, .readOnly)
-//                    CVPixelBufferUnlockBaseAddress(lastDepthFrame, .readOnly)
-//                }
-//
-//                let videoData = videoBuffer.extractNV12Data() // helper: converts NV12 pixel buffer to Data
-//                let depthData = lastDepthFrame.extractUInt16Data() // helper: converts depth buffer to Data
-
-                // --- Send over USB ---
-                usbSender!.send(videoBuffer: videoBuffer, depthBuffer: lastDepthFrame)
+//                // --- Send over USB ---
+//                usbSender!.send(videoBuffer: videoBuffer, depthBuffer: lastDepthFrame)
 
         }
     }
