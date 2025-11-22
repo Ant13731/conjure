@@ -3,37 +3,45 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		16143FBC2ECE8A0300D5BDFC /* RTCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */; };
+		16143FBE2ECE965E00D5BDFC /* MediaPipeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */; };
+		16143FC02ECEA1CC00D5BDFC /* FrameFuser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBF2ECEA1C900D5BDFC /* FrameFuser.swift */; };
 		16228CD52EAEBB010015672C /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 16228CD42EAEBB010015672C /* WebRTC */; };
+		1627FB832ECD53B600C91671 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB7B2ECD53B600C91671 /* Assets.xcassets */; };
+		1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7C2ECD53B600C91671 /* CameraManager.swift */; };
+		1627FB872ECD53B600C91671 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7D2ECD53B600C91671 /* Config.swift */; };
+		1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7E2ECD53B600C91671 /* ConjureApp.swift */; };
+		1627FB892ECD53B600C91671 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB802ECD53B600C91671 /* LoginView.swift */; };
+		1627FB8A2ECD53B600C91671 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB812ECD53B600C91671 /* Schema.swift */; };
+		1627FB8C2ECD5CC000C91671 /* Podfile in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB8B2ECD5CC000C91671 /* Podfile */; };
+		1627FB8E2ECD5DDA00C91671 /* hand_landmarker.task in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */; };
+		16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B234042ED00BCF007D4D4C /* USBSender.swift */; };
+		5D0B6217767CE50368E4B453 /* Pods_Conjure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25E7A4018ABAB710BCBC838E /* Pods_Conjure.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTCClient.swift; sourceTree = "<group>"; };
+		16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPipeManager.swift; sourceTree = "<group>"; };
+		16143FBF2ECEA1C900D5BDFC /* FrameFuser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameFuser.swift; sourceTree = "<group>"; };
 		1627D3C72EAE826D00836F94 /* Conjure.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Conjure.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1627FB7B2ECD53B600C91671 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1627FB7C2ECD53B600C91671 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
+		1627FB7D2ECD53B600C91671 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		1627FB7E2ECD53B600C91671 /* ConjureApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConjureApp.swift; sourceTree = "<group>"; };
+		1627FB7F2ECD53B600C91671 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1627FB802ECD53B600C91671 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		1627FB812ECD53B600C91671 /* Schema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
+		1627FB8B2ECD5CC000C91671 /* Podfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Podfile; sourceTree = SOURCE_ROOT; };
+		1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = hand_landmarker.task; sourceTree = "<group>"; };
+		16B234042ED00BCF007D4D4C /* USBSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBSender.swift; sourceTree = "<group>"; };
+		25E7A4018ABAB710BCBC838E /* Pods_Conjure.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Conjure.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B7C7DD7AFFF38B39D7A225B9 /* Pods-Conjure.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Conjure.release.xcconfig"; path = "Target Support Files/Pods-Conjure/Pods-Conjure.release.xcconfig"; sourceTree = "<group>"; };
+		BE2FD19F2306636C3E4A10BE /* Pods-Conjure.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Conjure.debug.xcconfig"; path = "Target Support Files/Pods-Conjure/Pods-Conjure.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		16B43A072EB1097D00E4EDE8 /* Exceptions for "Conjure" folder in "Conjure" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 1627D3C62EAE826D00836F94 /* Conjure */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		1627D3C92EAE826D00836F94 /* Conjure */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				16B43A072EB1097D00E4EDE8 /* Exceptions for "Conjure" folder in "Conjure" target */,
-			);
-			path = Conjure;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		1627D3C42EAE826D00836F94 /* Frameworks */ = {
@@ -41,6 +49,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				16228CD52EAEBB010015672C /* WebRTC in Frameworks */,
+				5D0B6217767CE50368E4B453 /* Pods_Conjure.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,8 +59,10 @@
 		1627D3BE2EAE826C00836F94 = {
 			isa = PBXGroup;
 			children = (
-				1627D3C92EAE826D00836F94 /* Conjure */,
+				1627FB822ECD53B600C91671 /* Conjure */,
 				1627D3C82EAE826D00836F94 /* Products */,
+				CA6BE904A512FF8EB81FB835 /* Pods */,
+				7069F41FA41C14DFC2565E01 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -63,6 +74,43 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		1627FB822ECD53B600C91671 /* Conjure */ = {
+			isa = PBXGroup;
+			children = (
+				1627FB7B2ECD53B600C91671 /* Assets.xcassets */,
+				1627FB7F2ECD53B600C91671 /* Info.plist */,
+				1627FB8B2ECD5CC000C91671 /* Podfile */,
+				1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */,
+				1627FB7D2ECD53B600C91671 /* Config.swift */,
+				1627FB812ECD53B600C91671 /* Schema.swift */,
+				1627FB7E2ECD53B600C91671 /* ConjureApp.swift */,
+				1627FB802ECD53B600C91671 /* LoginView.swift */,
+				16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */,
+				1627FB7C2ECD53B600C91671 /* CameraManager.swift */,
+				16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */,
+				16143FBF2ECEA1C900D5BDFC /* FrameFuser.swift */,
+				16B234042ED00BCF007D4D4C /* USBSender.swift */,
+			);
+			path = Conjure;
+			sourceTree = "<group>";
+		};
+		7069F41FA41C14DFC2565E01 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				25E7A4018ABAB710BCBC838E /* Pods_Conjure.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		CA6BE904A512FF8EB81FB835 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				BE2FD19F2306636C3E4A10BE /* Pods-Conjure.debug.xcconfig */,
+				B7C7DD7AFFF38B39D7A225B9 /* Pods-Conjure.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -70,6 +118,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1627D3D22EAE827000836F94 /* Build configuration list for PBXNativeTarget "Conjure" */;
 			buildPhases = (
+				1B88867B04EF529E8B75B469 /* [CP] Check Pods Manifest.lock */,
 				1627D3C32EAE826D00836F94 /* Sources */,
 				1627D3C42EAE826D00836F94 /* Frameworks */,
 				1627D3C52EAE826D00836F94 /* Resources */,
@@ -77,9 +126,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				1627D3C92EAE826D00836F94 /* Conjure */,
 			);
 			name = Conjure;
 			packageProductDependencies = (
@@ -105,6 +151,7 @@
 				};
 			};
 			buildConfigurationList = 1627D3C22EAE826C00836F94 /* Build configuration list for PBXProject "Conjure" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,11 +159,9 @@
 				Base,
 			);
 			mainGroup = 1627D3BE2EAE826C00836F94;
-			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				16228CD32EAEBB010015672C /* XCRemoteSwiftPackageReference "WebRTC" */,
 			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 1627D3C82EAE826D00836F94 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -131,16 +176,53 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1627FB8E2ECD5DDA00C91671 /* hand_landmarker.task in Resources */,
+				1627FB8C2ECD5CC000C91671 /* Podfile in Resources */,
+				1627FB832ECD53B600C91671 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1B88867B04EF529E8B75B469 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Conjure-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1627D3C32EAE826D00836F94 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16143FBE2ECE965E00D5BDFC /* MediaPipeManager.swift in Sources */,
+				1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */,
+				1627FB872ECD53B600C91671 /* Config.swift in Sources */,
+				16143FC02ECEA1CC00D5BDFC /* FrameFuser.swift in Sources */,
+				1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */,
+				1627FB892ECD53B600C91671 /* LoginView.swift in Sources */,
+				16143FBC2ECE8A0300D5BDFC /* RTCClient.swift in Sources */,
+				16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */,
+				1627FB8A2ECD53B600C91671 /* Schema.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,6 +350,7 @@
 		};
 		1627D3D32EAE827000836F94 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BE2FD19F2306636C3E4A10BE /* Pods-Conjure.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -303,6 +386,7 @@
 		};
 		1627D3D42EAE827000836F94 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B7C7DD7AFFF38B39D7A225B9 /* Pods-Conjure.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

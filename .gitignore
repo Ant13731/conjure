@@ -198,3 +198,4 @@ cython_debug/
 *.run.xml
 
 .DS_Store
+ios-client/Pods/
