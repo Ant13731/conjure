@@ -30,12 +30,20 @@ class CameraManager: NSObject {
     var isSessionSetup: Bool = false
     var isSessionRunning: Bool = false
     
-    let mediapipeManager: MediaPipeManager!
-    unowned var frameFuser: FrameFuser!
+    let mediapipeManager: MediaPipeManager?
+    unowned var frameFuser: FrameFuser?
+    
+    let usbSender: USBSender?
     
     init(frameFuser: FrameFuser) {
         self.frameFuser = frameFuser
         self.mediapipeManager = MediaPipeManager(frameFuser: frameFuser)
+        self.usbSender = nil
+    }
+    init(usbSender: USBSender) {
+        self.usbSender = usbSender
+        self.mediapipeManager = nil
+        self.frameFuser = nil
     }
 //    var webRTCClient: WebRTCClient!
 //    
@@ -148,44 +156,44 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
             print("frame dropped")
             return }
         
-        guard let lastFrame = try? MPImage(sampleBuffer: syncedVideo.sampleBuffer) else {
-            print("Failed to cast frame into MPImage")
-            return
-        }
+        
         let lastDepthFrame = syncedDepth.depthData.depthDataMap
         let timestamp = CMSampleBufferGetPresentationTimeStamp(syncedVideo.sampleBuffer)
         let ts = Int(timestamp.seconds) * 1000
         
-        
-        guard let _ = try? mediapipeManager.handLandmark.detectAsync(image: lastFrame, timestampInMilliseconds: ts) else {
-//            print("Mediapipe discarded frame")
-            return
+        if mediapipeManager != nil {
+            guard let lastFrame = try? MPImage(sampleBuffer: syncedVideo.sampleBuffer) else {
+                print("Failed to cast frame into MPImage")
+                return
+            }
+            
+            guard let _ = try? mediapipeManager!.handLandmark.detectAsync(image: lastFrame, timestampInMilliseconds: ts) else {
+                //            print("Mediapipe discarded frame")
+                return
+            }
+            
+            let cameraFrame = IntermediateCameraFrame(rgb: lastFrame, depth: lastDepthFrame, ts: ts)
+            
+            Task {await frameFuser!.sendCameraFrame(cameraFrame)}
+        } else {
+            guard let videoBuffer = CMSampleBufferGetImageBuffer(syncedVideo.sampleBuffer) else {
+                print("Failed to get CVPixelBuffer from image frame")
+                return
+            }
+//            CVPixelBufferLockBaseAddress(videoBuffer, .readOnly)
+//                CVPixelBufferLockBaseAddress(lastDepthFrame, .readOnly)
+//
+//                defer {
+//                    CVPixelBufferUnlockBaseAddress(videoBuffer, .readOnly)
+//                    CVPixelBufferUnlockBaseAddress(lastDepthFrame, .readOnly)
+//                }
+//
+//                let videoData = videoBuffer.extractNV12Data() // helper: converts NV12 pixel buffer to Data
+//                let depthData = lastDepthFrame.extractUInt16Data() // helper: converts depth buffer to Data
+
+                // --- Send over USB ---
+                usbSender!.send(videoBuffer: videoBuffer, depthBuffer: lastDepthFrame)
+
         }
-        
-        let cameraFrame = IntermediateCameraFrame(rgb: lastFrame, depth: lastDepthFrame, ts: ts)
-        
-        Task {await frameFuser.sendCameraFrame(cameraFrame)}
-//        mediapipeManager.cameraManagerCallback = {landmarkResult in
-//            //TODO match landmark to depthmap, attach to results
-//            
-//            
-//            
-////            lamdmarkFrame = Frame(...)
-////            self.webRTCClient.send(frame: frame)
-//        }
-//        guard let res = try? mediapipeManager.handLandmark.detectAsync(image: lastFrame, timestampInMilliseconds: Int(ts.seconds)*1000) else {
-//            print("DetectAsync threw an error")
-//            return
-//        }
-        //somehow get the current frame here? maybe we need channels?
-        
-        //Then parse the image and result, map only necessary data into a frame
-        
-        
-        //TODO:
-        //Camera controls mediapipe
-        // Idea: change mediapipe to use video and just synchronously wait for it to finish? or modify the callback function within here
-        // If camera also "owns" webrtcclient, just send the frame from within this function
-       
     }
 }

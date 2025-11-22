@@ -10,17 +10,29 @@ import WebRTC
 import ARKit
 import AVFoundation
 
+enum ConnectionMode: String, CaseIterable, Identifiable {
+    case webRTC = "WebRTC"
+    case usb = "USB"
+    
+    var id: String {self.rawValue}
+}
+
+
 struct LoginView: View {
     @State private var ip_address: String = LoginConfig.defaultIPAddress
     @State private var port: String = LoginConfig.defaultPort
     
     @State private var connectionResultMessage = ""
     @State private var cameraStreamMessage = ""
-    @State private var connected: Bool = false
+    
+    @State private var connectedWebRTC: Bool = false
+    @State private var connectedUSB: Bool = false
+    @State private var connectionMode: ConnectionMode = .usb
     
     @State private var webRTCClient: WebRTCClient!
     @State private var cameraManager: CameraManager!
     @State private var frameFuser: FrameFuser!
+    @State private var usbSender: USBSender!
     
     var body: some View {
             VStack(spacing: 20) {
@@ -29,10 +41,20 @@ struct LoginView: View {
                     .font(.largeTitle)
                     .bold()
                 
+                Picker("Connection Mode", selection: $connectionMode) {
+                                ForEach(ConnectionMode.allCases) { mode in
+                                    Text(mode.rawValue).tag(mode)
+//                                        .disabled(mode == .usb && !USBSender.isUSBAvailable())
+                                }
+                            }
+                            .pickerStyle(SegmentedPickerStyle())
+                
                 TextField("Server IP Address", text: $ip_address)
                     .padding()
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(8)
+                    .disabled(connectionMode == .usb)
+                    .opacity(connectionMode == .usb ? 0.5 : 1.0)
 
                 TextField("Server Port", text: $port)
                     .padding()
@@ -82,13 +104,40 @@ struct LoginView: View {
             }
             .padding()
         }
+    
+    func handleLogin() {
+        switch connectionMode {
+        case .webRTC:
+            handleLoginWebRTC()
+        case .usb:
+            handleLoginUSB()
+        }
+    }
+    
+    func handleLoginUSB() {
+        connectedUSB = false
+        guard let int_port = Int(port) else {
+            connectionResultMessage = "Invalid port given (must be an integer)"
+            return
+        }
+        usbSender = USBSender(port: int_port)
+        usbSender.connect {success in
+            if success {
+                connectionResultMessage = "Connection Result: USB connected"
+                    connectedUSB = true
+            }
+            else {
+                connectionResultMessage = "Connection Result: USB connection failed"
+            }
+        }
+    }
 
-        func handleLogin() {
+        func handleLoginWebRTC() {
             print("Initiating webRTCClient")
             webRTCClient = WebRTCClient()
             
             // TODO: structurally validate input (ip must have 4 dots and numbers, port must have 4 numbers)
-            connected = false
+            connectedWebRTC = false
             guard URL(string: "http://\(ip_address):\(port)/offer") != nil else {
                 connectionResultMessage = "Connection Result: Malformed input http://\(ip_address):\(port)/offer: Please check IP address and port"
                 return
@@ -133,7 +182,7 @@ struct LoginView: View {
                         webRTCClient.addAnswer(answer)
                     }.resume()
                     connectionResultMessage = "Connection Result: Connection successful"
-                    connected = true
+                    connectedWebRTC = true
                     
                 case .failure(let err):
                     connectionResultMessage = "Connection Result: Failed to create offer: \(err)"
@@ -147,8 +196,15 @@ struct LoginView: View {
         }
         
         cameraStreamMessage = "Setting up camera..."
-        frameFuser = FrameFuser(webRTCClient)
-        cameraManager = CameraManager(frameFuser: frameFuser)
+        
+        if connectionMode == .webRTC {
+            frameFuser = FrameFuser(webRTCClient)
+            cameraManager = CameraManager(frameFuser: frameFuser)
+        } else {
+            cameraManager = CameraManager(usbSender: usbSender)
+        }
+        
+        
         
         let res = cameraManager.setupSession()
         
