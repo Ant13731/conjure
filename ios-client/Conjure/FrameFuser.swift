@@ -14,14 +14,14 @@ actor FrameFuser {
     private var cameraBuffer: [Int: IntermediateCameraFrame] = [:]
     private var mpBuffer: [Int: IntermediateLandmarkFrame] = [:]
     private let maxBufferSize = 6
-    
+
     unowned private var webRTCClient: WebRTCClient!
 
     init(_ webRTCClient: WebRTCClient) {
            self.webRTCClient = webRTCClient
        }
-    
-    
+
+
     func sendCameraFrame(_ frame: IntermediateCameraFrame) {
         cameraBuffer[frame.ts] = frame
         Task {await tryFuse(at: frame.ts)}
@@ -45,8 +45,8 @@ actor FrameFuser {
         // Remove matched entries
         cameraBuffer[ts] = nil
         mpBuffer[ts] = nil
-        
-        
+
+
         let firstHand = await MainActor.run {m.result.handedness}
         if firstHand.isEmpty || firstHand[0].isEmpty {
             print("No hands detected")
@@ -54,32 +54,32 @@ actor FrameFuser {
         }
         let confidence = firstHand[0][0].score
         let handedness = firstHand[0][0].categoryName == "Left"
-        
+
         var landmarks: [UInt8: Landmark] = [:]
         let awaited_landmarks = await MainActor.run {m.result.landmarks[0]}
         for (i, landmark) in awaited_landmarks.enumerated() {
             let depth = depthAt(x: landmark.x, y: landmark.y, from: await MainActor.run {c.depth})
             landmarks[UInt8(i)] = Landmark(x: landmark.x, y: landmark.y, depth: depth)
         }
-        
+
         let frame = Frame(handedness: handedness, mediapipeConfidence: confidence, timestamp: ts, landmarks:landmarks)
-        
+
         Task {await webRTCClient.send(frame: frame)}
-        
+
         print("Fuser reached this point", c, m)
 
         // Emit final fused frame
-        
+
     }
-    
+
     func depthAt(x: Float, y: Float, from depthBuffer: CVPixelBuffer) -> Float? {
         let depthWidth = CVPixelBufferGetWidth(depthBuffer)
         let depthHeight = CVPixelBufferGetHeight(depthBuffer)
-        
+
         let px = Int(x * Float(depthWidth))
          let py = Int(y * Float(depthHeight))
 
-        
+
         CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly) }
 

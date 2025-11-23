@@ -12,17 +12,17 @@ import Network
 import UIKit
 
 class USBSender {
-    
+
     private var connection: NWConnection?
     private let port: UInt16
     private let host: NWEndpoint.Host = "172.20.10.7" // loopback for iproxy
     private var compressionSession: VTCompressionSession?
-    
+
     init(port: Int) {
         self.port = UInt16(port)
         setupCompression()
     }
-    
+
     /// Check if USB connection is possible (e.g., iproxy running)
     static func isUSBAvailable() -> Bool {
         UIDevice.current.isBatteryMonitoringEnabled = true
@@ -30,7 +30,7 @@ class USBSender {
         return UIDevice.current.batteryState == .charging
 //        return true
     }
-    
+
     /// Connect TCP to host
     func connect(completion: @escaping (Bool) -> Void) {
         connection = NWConnection(
@@ -51,7 +51,7 @@ class USBSender {
         }
         connection?.start(queue: .global())
     }
-    
+
     /// Set up H.264 compression for video frames
     private func setupCompression() {
         let width = 640
@@ -66,7 +66,7 @@ class USBSender {
                                    outputCallback: compressionCallback,
                                    refcon: UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()),
                                    compressionSessionOut: &compressionSession)
-        
+
         guard let session = compressionSession else {
             print("Failed to set up compression Session")
             return }
@@ -75,7 +75,7 @@ class USBSender {
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ProfileLevel, value: kVTProfileLevel_H264_Baseline_AutoLevel)
         VTCompressionSessionPrepareToEncodeFrames(session)
     }
-    
+
     /// Send a single frame over USB
     func send(videoBuffer: CVImageBuffer, depthBuffer: CVPixelBuffer) {
         guard let connection = connection else {
@@ -84,7 +84,7 @@ class USBSender {
         guard let session = compressionSession else {
             print("Compression session not initialized")
             return }
-        
+
         var flags: VTEncodeInfoFlags = []
         let status = VTCompressionSessionEncodeFrame(session,
                                         imageBuffer: videoBuffer,
@@ -98,7 +98,7 @@ class USBSender {
             return
         }
     }
-    
+
     /// H.264 compression callback
     private let compressionCallback: VTCompressionOutputCallback = { (outputCallbackRefCon,
                                                                      sourceFrameRefCon,
@@ -117,10 +117,10 @@ class USBSender {
                 print("[CompressionCallback]: sampleBuffer data not ready")
                 return
             }
-        
+
         let sender = Unmanaged<USBSender>.fromOpaque(outputCallbackRefCon!).takeUnretainedValue()
         let depthBuffer = Unmanaged<CVPixelBuffer>.fromOpaque(sourceFrameRefCon!).takeUnretainedValue()
-        
+
         // --- Extract H.264 NAL data ---
         guard let dataBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return }
         var length: Int = 0
@@ -143,7 +143,7 @@ class USBSender {
             return
         }
         let videoData = Data(bytes: ptr, count: length)
-        
+
         // --- Extract depth buffer as UInt16 ---
         CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
         let depthSize = CVPixelBufferGetDataSize(depthBuffer)
@@ -151,7 +151,7 @@ class USBSender {
         let depthPtr = CVPixelBufferGetBaseAddress(depthBuffer)!
         let depthData = Data(bytes: depthPtr, count: depthSize)
         CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly)
-        
+
         // --- Build packet ---
         // [depthSize (4 bytes) | videoSize (4 bytes) | depthData | videoData]
         var packet = Data()
@@ -159,7 +159,7 @@ class USBSender {
         packet.append(withUnsafeBytes(of: UInt32(videoData.count).littleEndian, { Data($0) }))
         packet.append(depthData)
         packet.append(videoData)
-        
+
         // --- Send over TCP ---
         sender.connection?.send(content: packet, completion: .contentProcessed({ sendError in
             if let sendError = sendError {
@@ -167,7 +167,7 @@ class USBSender {
             }
         }))
     }
-    
+
     /// Close connection
     func disconnect() {
         connection?.cancel()

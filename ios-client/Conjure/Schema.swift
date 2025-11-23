@@ -13,7 +13,7 @@ struct Landmark: Codable {
     let x: Float
     let y: Float
     let depth: Float?
-    
+
      //0 for right hand, 1 for left
 }
 

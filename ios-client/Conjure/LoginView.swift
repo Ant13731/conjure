@@ -12,9 +12,9 @@ import AVFoundation
 
 enum ConnectionMode: String, CaseIterable, Identifiable {
     case onDevice = "On-device ML"
-    case streamed = "Image Transfer via WebRTC"
-    case streamedUSB = "Image Transfer via TCP"
-    
+    case streamed = "WebRTC Stream"
+    case streamedUSB = "TCP Stream"
+
     var id: String {self.rawValue}
 }
 
@@ -22,34 +22,33 @@ enum ConnectionMode: String, CaseIterable, Identifiable {
 struct LoginView: View {
     @State private var ip_address: String = LoginConfig.defaultIPAddress
     @State private var port: String = LoginConfig.defaultPort
-    
+
     @State private var connectionResultMessage = ""
     @State private var cameraStreamMessage = ""
-    
+
     @State private var connectedWebRTC: Bool = false
     @State private var connectedUSB: Bool = false
     @State private var connectionMode: ConnectionMode = .streamed
-    
+
     @State private var webRTCClient: WebRTCClient!
     @State private var cameraManager: CameraManager!
     @State private var frameFuser: FrameFuser!
     @State private var usbSender: USBSender!
-    
+
     var body: some View {
             VStack(spacing: 20) {
                 Spacer()
                 Text("Conjure Client")
                     .font(.largeTitle)
                     .bold()
-                
+
                 Picker("Connection Mode", selection: $connectionMode) {
                                 ForEach(ConnectionMode.allCases) { mode in
                                     Text(mode.rawValue).tag(mode)
-//                                        .disabled(mode == .usb && !USBSender.isUSBAvailable())
                                 }
                             }
                             .pickerStyle(SegmentedPickerStyle())
-                
+
                 TextField("Server IP Address", text: $ip_address)
                     .padding()
                     .background(Color(.secondarySystemBackground))
@@ -59,7 +58,7 @@ struct LoginView: View {
                     .padding()
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(8)
-                
+
                 Button(action: handleLogin) {
                     Text("Connect")
                         .frame(width: 0.7 * UIScreen.main.bounds.width)
@@ -68,7 +67,7 @@ struct LoginView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                
+
                 Button(action: startCameraStream) {
                     Text("Start Camera Stream")
                         .frame(width: 0.7 * UIScreen.main.bounds.width)
@@ -92,18 +91,18 @@ struct LoginView: View {
                     .padding(.top, 10)
 
                 Spacer()
-                
+
                 Text(cameraStreamMessage)
                     .font(.subheadline)
                     .padding(.top, 10)
 
                 Spacer()
-                
-               
+
+
             }
             .padding()
         }
-    
+
     func handleLogin() {
 //        handleLoginWebRTC()
         switch connectionMode {
@@ -113,7 +112,7 @@ struct LoginView: View {
             handleLoginWebRTC()
         }
     }
-    
+
     func handleLoginUSB() {
         connectedUSB = false
         guard let int_port = Int(port) else {
@@ -139,7 +138,7 @@ struct LoginView: View {
                 return
             }
             webRTCClient = WebRTCClient(turboShader: turboShader)
-            
+
             // TODO: structurally validate input (ip must have 4 dots and numbers, port must have 4 numbers)
             connectedWebRTC = false
             guard URL(string: "http://\(ip_address):\(port)/offer") != nil else {
@@ -147,8 +146,8 @@ struct LoginView: View {
                 return
             }
             let url = URL(string: "http://\(ip_address):\(port)/offer")!
-            
-            
+
+
             webRTCClient.createOffer { res in
                 switch res {
                 case .success(let offer):
@@ -158,13 +157,13 @@ struct LoginView: View {
                     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                     let body: [String: Any] = ["sdp": offer.sdp, "type": "offer"]
                     request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-                    
+
                     URLSession.shared.dataTask(with: request) { data, _, err in
                         if let err = err {
                             connectionResultMessage = "Connection Result: Failed to send URL connection request: \(err)"
                             return
                         }
-                        
+
                         guard let data = data else {
                             connectionResultMessage = "Connection Result: Failed to get URL response. Got \(data)"
                             return
@@ -181,26 +180,26 @@ struct LoginView: View {
                                   connectionResultMessage = "Connection Result: Expected fields `sdp` and `type` are not in the json response: \(json)"
                                   return
                               }
-                        
+
                         let answer = RTCSessionDescription(type: .answer, sdp: sdpString)
                         webRTCClient.addAnswer(answer)
                     }.resume()
                     connectionResultMessage = "Connection Result: Connection successful"
                     connectedWebRTC = true
-                    
+
                 case .failure(let err):
                     connectionResultMessage = "Connection Result: Failed to create offer: \(err)"
                 }
             }
         }
-    
+
     func startCameraStream(){
         if cameraManager != nil && cameraManager.isSessionRunning {
             cameraManager.stopSession()
         }
-        
+
         cameraStreamMessage = "Setting up camera..."
-        
+
         switch connectionMode {
         case .onDevice:
             print("Starting On-device ML Streaming")
@@ -212,10 +211,10 @@ struct LoginView: View {
         case .streamedUSB:
             print("Starting Image-only streaming via TCP")
         }
-        
-        
+
+
         let res = cameraManager.setupSession()
-        
+
         switch res {
         case .failure(let error):
             print("Error setting up camera:",error)
@@ -233,17 +232,17 @@ struct LoginView: View {
                 cameraStreamMessage = "Failed to add depth sensor input"
             }
             return
-            
+
         case _:
             break
         }
-        
+
         cameraStreamMessage = "Starting Camera..."
         try! cameraManager.startSession()
         cameraStreamMessage = "Camera started"
-            
+
         }
-    
+
     func stopCameraStream(){
         if cameraManager == nil {
             return
@@ -251,7 +250,7 @@ struct LoginView: View {
         cameraManager.stopSession()
         cameraStreamMessage = "Camera stream stopped"
     }
-    
+
 }
 
 #Preview {

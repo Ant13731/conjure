@@ -16,7 +16,7 @@ import Foundation
 
 
 class TurboLUTManager {
-    
+
     // The 256-entry Turbo table as (r,g,b) UInt8 triples (same order you already have)
 //    static let turboTableUInt8: [(UInt8, UInt8, UInt8)] = [
 //        (48,18,59),(50,21,67),(51,24,74),(52,27,81),(53,30,88),
@@ -109,7 +109,7 @@ class TurboLUTManager {
 //        (51,247,163),(53,248,165),(54,249,167),(56,250,170),(58,251,172),
 //        (59,252,174),(61,252,176),(63,253,178),(65,254,181),(67,255,183)
 //    ]
-    
+
     static let turboTableFloat: [(Float, Float, Float, Float)] = [
         (0.18995, 0.07176, 0.23217, 1.0),
         (0.19483, 0.08339, 0.26149, 1.0),
@@ -373,36 +373,36 @@ class TurboLUTManager {
         let (r,g,b,a) = TurboLUTManager.turboTableFloat[Int(i)]
         return (UInt8(r)*255, UInt8(g)*255, UInt8(b)*255, UInt8(a)*255)
     }
-    
+
     let turboLUTTexture: MTLTexture?
     var metalTextureCache: CVMetalTextureCache?
-    
+
     let device: MTLDevice!
     let commandQueue: MTLCommandQueue!
-    
+
     let defaultLibrary: MTLLibrary!
     let pipelineState: MTLComputePipelineState!
-    
-    
+
+
     init() throws {
         device = MTLCreateSystemDefaultDevice()!               // 1
         commandQueue = device.makeCommandQueue()!              // 2
-        
+
         // Load Metal library from the app bundle (the .metal file compiled into the app)
         defaultLibrary = try! device.makeDefaultLibrary(bundle: .main)  // 3
         let fn = defaultLibrary.makeFunction(name: "depthToTurboKernel")!   // 4
         pipelineState = try! device.makeComputePipelineState(function: fn) // 5
-        
+
         // CVMetalTextureCache bridges CVPixelBuffer <-> MTLTexture (no data copy)
         CVMetalTextureCacheCreate(nil, nil, device, nil, &metalTextureCache) // 6
-        
+
         // Create Turbo LUT once
         turboLUTTexture = TurboLUTManager.makeTurboLUTTexture(device: device)!
-        
-        
-        
+
+
+
     }
-    
+
     // Create a 1D RGBA8 LUT texture ready for sampling
     static func makeTurboLUTTexture(device: MTLDevice) -> MTLTexture? {
         // 256 x 1 texture, RGBA8Unorm
@@ -433,12 +433,12 @@ class TurboLUTManager {
                     bytesPerRow: 256 * MemoryLayout<SIMD4<Float>>.size) // 256 * 4 * # of bytes
         return tex
     }
-    
+
     struct DepthParams {
         var minDepth: Float
         var maxDepth: Float
     }
-    
+
     func formatDepthBufferMetal(
         depthBuffer: CVPixelBuffer,
         minDepth: Float = Float(DataConfig.minDepth),
@@ -468,13 +468,13 @@ class TurboLUTManager {
             print("❌ [MetalDepth] outPixelBuffer is nil after creation.")
             return nil
         }
-        
+
         // 2) Use CVMetalTextureCache to wrap input/output buffers.
         guard let cache = metalTextureCache else {
             print("❌ [MetalDepth] metalTextureCache is nil.")
             return nil
         }
-        
+
         // Output texture
         var dstTexRef: CVMetalTexture?
         let dstFmt = MTLPixelFormat.bgra8Unorm
@@ -501,7 +501,7 @@ class TurboLUTManager {
             return nil
         }
 
-        
+
 
         // Input depth texture
         var srcTexRef: CVMetalTexture?
@@ -530,7 +530,7 @@ class TurboLUTManager {
             return nil
         }
 
-        
+
 
         // 3) Build command buffer + encoder
         guard let commandBuffer = commandQueue.makeCommandBuffer() else {

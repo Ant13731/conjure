@@ -14,14 +14,14 @@ import Combine
 class MediaPipeManager: NSObject {
     var handLandmark: HandLandmarker!
     unowned var frameFuser: FrameFuser!
-    
+
     init(frameFuser: FrameFuser) {
         super.init()
         self.frameFuser = frameFuser
-        
+
 //        let modelPath = Bundle.main.path(forResource: "hand_landmarker", ofType: "task")
         let modelPath = "hand_landmarker.task"
-        
+
         let options = HandLandmarkerOptions()
         options.baseOptions.modelAssetPath = modelPath
         options.runningMode = .liveStream
@@ -32,7 +32,7 @@ class MediaPipeManager: NSObject {
         options.handLandmarkerLiveStreamDelegate = self
 
         handLandmark = try! HandLandmarker(options: options)
-        
+
     }
 
 }
@@ -51,12 +51,12 @@ extension MediaPipeManager: HandLandmarkerLiveStreamDelegate {
                 print("No landmark result found")
                 return
             }
-            
+
 //            let ts = CMTimeMake(value: CMTimeValue(timestampInMilliseconds), timescale: 1000)
-            
+
             let mediapipeFrame = IntermediateLandmarkFrame(result: result!, ts: timestampInMilliseconds)
-            
+
             Task {await frameFuser.sendMediaPipeFrame(mediapipeFrame)}
-            
+
       }
 }
