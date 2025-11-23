@@ -198,7 +198,7 @@ class WebRTCClient: NSObject {
 
 
 
-    func formatDepthBuffer(depthBuffer: CVPixelBuffer) -> CVPixelBuffer {
+    func formatDepthBufferSIMDAttempt(depthBuffer: CVPixelBuffer) -> CVPixelBuffer {
         let width = CVPixelBufferGetWidth(depthBuffer)
         let height = CVPixelBufferGetHeight(depthBuffer)
 
@@ -316,14 +316,14 @@ class WebRTCClient: NSObject {
     }
 
 
-    func formatDepthBufferOld(depthBuffer: CVPixelBuffer) -> CVPixelBuffer {
+    func formatDepthBuffer(depthBuffer: CVPixelBuffer) -> CVPixelBuffer {
         // Attempt to get metal working for superfast encoding - no dice
-        if turboShader != nil {
-            if let ret = turboShader.formatDepthBufferMetal(depthBuffer: depthBuffer) {
-                return ret
-            }
-            print("Failed to apply shader to depth frame")
-        }
+//        if turboShader != nil {
+//            if let ret = turboShader.formatDepthBufferMetal(depthBuffer: depthBuffer) {
+//                return ret
+//            }
+//            print("Failed to apply shader to depth frame")
+//        }
 
 
         let width = CVPixelBufferGetWidth(depthBuffer)
