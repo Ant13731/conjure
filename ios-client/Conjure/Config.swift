@@ -19,7 +19,7 @@ struct DataConfig {
     static let landmarkDepthPixelRadius = 2
     static let webRTCChannelLabel = "hand_landmarks"
     static let numHands = 1
-    static let minDepth = 0.1
-    static let maxDepth = 1.5
+    static let minDepth: Float = 0.1
+    static let maxDepth: Float = 1.5
 //    static let minHandDetectionConfidence =
 }

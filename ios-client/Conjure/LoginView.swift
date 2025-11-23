@@ -12,7 +12,8 @@ import AVFoundation
 
 enum ConnectionMode: String, CaseIterable, Identifiable {
     case onDevice = "On-device ML"
-    case streamed = "Image Transfer Only"
+    case streamed = "Image Transfer via WebRTC"
+    case streamedUSB = "Image Transfer via TCP"
     
     var id: String {self.rawValue}
 }
@@ -104,13 +105,13 @@ struct LoginView: View {
         }
     
     func handleLogin() {
-        handleLoginWebRTC()
-//        switch connectionMode {
-//        case .onDevice:
-//            handleLoginWebRTC()
-//        case .streamed:
-//            handleLoginUSB()
-//        }
+//        handleLoginWebRTC()
+        switch connectionMode {
+        case .streamedUSB:
+            handleLoginUSB()
+        case _:
+            handleLoginWebRTC()
+        }
     }
     
     func handleLoginUSB() {
@@ -133,7 +134,11 @@ struct LoginView: View {
 
         func handleLoginWebRTC() {
             print("Initiating webRTCClient")
-            webRTCClient = WebRTCClient()
+            guard let turboShader = try? TurboLUTManager() else {
+                print("Failed to initialize shader")
+                return
+            }
+            webRTCClient = WebRTCClient(turboShader: turboShader)
             
             // TODO: structurally validate input (ip must have 4 dots and numbers, port must have 4 numbers)
             connectedWebRTC = false
@@ -196,15 +201,17 @@ struct LoginView: View {
         
         cameraStreamMessage = "Setting up camera..."
         
-        if connectionMode == .onDevice {
+        switch connectionMode {
+        case .onDevice:
             print("Starting On-device ML Streaming")
             frameFuser = FrameFuser(webRTCClient)
             cameraManager = CameraManager(frameFuser: frameFuser)
-        } else {
-            print("Starting Image-only streaming")
+        case .streamed:
+            print("Starting Image-only streaming via WebRTC")
             cameraManager = CameraManager(webRTCClient: webRTCClient)
+        case .streamedUSB:
+            print("Starting Image-only streaming via TCP")
         }
-        
         
         
         let res = cameraManager.setupSession()

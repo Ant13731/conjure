@@ -8,6 +8,7 @@ import SwiftUI
 import WebRTC
 import ARKit
 import AVFoundation
+import Accelerate
 
 enum WebRTCClientError: Error {
     case FailedToSendFrame
@@ -27,9 +28,11 @@ class WebRTCClient: NSObject {
 //    private var depthCapturer: RTCCameraVideoCapturer!
     
     var isConnected: Bool = false
+    let turboShader: TurboLUTManager!
 
-    override init() {
-        super.init()
+    init(turboShader: TurboLUTManager) {
+//        super.init()
+        self.turboShader = turboShader
         
         // Peer-to-peer connection settings
         // Use STUN connectivity port offered by google to find peer-to-peer connections over the internet
@@ -184,8 +187,8 @@ class WebRTCClient: NSObject {
         let depthFrame = RTCVideoFrame(buffer: depthRTCPixelBuffer, rotation: rotationFromDeviceOrientation(orientation), timeStampNs: timestampNs)
         
 //        print(colorFrame)
-        print(depthFrame)
-        print("Format", CVPixelBufferGetPixelFormatType(depthBuffer))
+//        print(depthFrame)
+//        print("Format", CVPixelBufferGetPixelFormatType(depthBuffer))
         
         colorSource.capturer(videoCapturer, didCapture: colorFrame)
         depthSource.capturer(videoCapturer, didCapture: depthFrame)
@@ -193,9 +196,16 @@ class WebRTCClient: NSObject {
         
     }
     
+    
+    
     func formatDepthBuffer(depthBuffer: CVPixelBuffer) -> CVPixelBuffer {
         let width = CVPixelBufferGetWidth(depthBuffer)
-            let height = CVPixelBufferGetHeight(depthBuffer)
+        let height = CVPixelBufferGetHeight(depthBuffer)
+        
+//        if CVPixelBufferGetPixelFormatType(depthBuffer) != kCVPixelFormatType_DepthFloat16 {
+//                    print("Pixel format not in the expected Float16 depth format")
+////                    return depthBuffer
+//                }
 
             // Create a new RGBA CVPixelBuffer
             var rgbaBufferOptional: CVPixelBuffer?
@@ -216,26 +226,188 @@ class WebRTCClient: NSObject {
             CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
             CVPixelBufferLockBaseAddress(rgbaBuffer, [])
 
-            let depthBase = CVPixelBufferGetBaseAddress(depthBuffer)!.assumingMemoryBound(to: UInt16.self)
+            defer {
+                CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly)
+                CVPixelBufferUnlockBaseAddress(rgbaBuffer, [])
+            }
+
+            let depthBase = CVPixelBufferGetBaseAddress(depthBuffer)!.assumingMemoryBound(to: Float16.self)
             let rgbaBase = CVPixelBufferGetBaseAddress(rgbaBuffer)!.assumingMemoryBound(to: UInt8.self)
 
-            let depthRowBytes = CVPixelBufferGetBytesPerRow(depthBuffer) / 2 // 2 bytes per Float16
+//            let depthRowBytes = CVPixelBufferGetBytesPerRow(depthBuffer)
+//            let rgbaRowBytes = CVPixelBufferGetBytesPerRow(rgbaBuffer)
+
+        
+
+        // Convert Float16 → Float32
+        var depthF32 = [Float](repeating: 0, count: width*height)
+        var srcBuffer = vImage_Buffer(data: depthBase,
+                                      height: vImagePixelCount(height),
+                                      width: vImagePixelCount(width),
+                                      rowBytes: CVPixelBufferGetBytesPerRow(depthBuffer))
+        
+        depthF32.withUnsafeMutableBytes { dstBytes in
+            var dstBuffer = vImage_Buffer(
+                data: dstBytes.baseAddress!,
+                height: vImagePixelCount(height),
+                width: vImagePixelCount(width),
+                rowBytes: width * MemoryLayout<Float>.size
+            )
+
+            vImageConvert_Planar16FtoPlanarF(&srcBuffer, &dstBuffer, 0)
+        }
+//        var dstBuffer = vImage_Buffer(data: &depthF32,
+//                                      height: vImagePixelCount(height),
+//                                      width: vImagePixelCount(width),
+//                                      rowBytes: width*MemoryLayout<Float>.size)
+//        vImageConvert_Planar16FtoPlanarF(&srcBuffer, &dstBuffer, 0)
+
+
+        // Apply normalization and LUT in parallel
+//        DispatchQueue.concurrentPerform(iterations: depthF32.count) { i in
+//            let normalized: Float
+//            let d = depthF32[i]
+//            if d.isNaN {
+//                normalized = 0.0
+//            } else {
+//                let clamped = max(min(depthF32[i], DataConfig.maxDepth), DataConfig.minDepth)
+//                normalized = (clamped - DataConfig.minDepth) / (DataConfig.maxDepth - DataConfig.minDepth)
+//            }
+//
+//                // Get Turbo index
+//            let idx = Int(max(0, min(255, Int(normalized * 255.0))))
+//            let (r,g,b,a) = TurboLUTManager.turboTableUInt8[idx]
+//            // write to output BGRA8 buffer
+//            rgbaBase[i*4+0] = b
+//            rgbaBase[i*4+1] = g
+//            rgbaBase[i*4+2] = r
+//            rgbaBase[i*4+3] = a
+//        }
+        let rowBytes = CVPixelBufferGetBytesPerRow(rgbaBuffer)
+        let bytesPerPixel = 4
+
+        DispatchQueue.concurrentPerform(iterations: height) { y in
+            let rowStart = y * width
+            let outRow = rgbaBase + y * rowBytes
+            
+            for x in 0..<width {
+                let i = rowStart + x
+                let d = depthF32[i]
+                
+                let normalized: Float
+                if d.isNaN {
+                    normalized = 0
+                } else {
+                    let clamped = max(min(d, DataConfig.maxDepth), DataConfig.minDepth)
+                    normalized = (clamped - DataConfig.minDepth) / (DataConfig.maxDepth - DataConfig.minDepth)
+                }
+                
+                let idx = min(max(Int(normalized * 255), 255), 0)
+                let (r,g,b,a) = TurboLUTManager.turboTableUInt8[idx]
+                
+                let p = outRow + x * bytesPerPixel
+                p[0] = b
+                p[1] = g
+                p[2] = r
+                p[3] = a
+            }
+        }
+        return rgbaBuffer
+    }
+    
+    
+    func formatDepthBufferOld(depthBuffer: CVPixelBuffer) -> CVPixelBuffer {
+        // Attempt to get metal working for superfast encoding - no dice
+        if turboShader != nil {
+            if let ret = turboShader.formatDepthBufferMetal(depthBuffer: depthBuffer) {
+                return ret
+            }
+            print("Failed to apply shader to depth frame")
+        }
+        
+        
+        let width = CVPixelBufferGetWidth(depthBuffer)
+        let height = CVPixelBufferGetHeight(depthBuffer)
+        
+        if CVPixelBufferGetPixelFormatType(depthBuffer) != kCVPixelFormatType_DepthFloat16 {
+                    print("Pixel format not in the expected Float16 depth format")
+//                    return depthBuffer
+                }
+
+            // Create a new RGBA CVPixelBuffer
+            var rgbaBufferOptional: CVPixelBuffer?
+            let status = CVPixelBufferCreate(
+                nil,
+                width,
+                height,
+                kCVPixelFormatType_32BGRA, // RGBA 8-bit per channel
+                nil,
+                &rgbaBufferOptional
+            )
+
+            guard status == kCVReturnSuccess, let rgbaBuffer = rgbaBufferOptional else {
+                print("Failed to create RGBA pixel buffer")
+                return depthBuffer
+            }
+
+            CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
+            CVPixelBufferLockBaseAddress(rgbaBuffer, [])
+
+            let depthBase = CVPixelBufferGetBaseAddress(depthBuffer)!.assumingMemoryBound(to: Float16.self)
+            let rgbaBase = CVPixelBufferGetBaseAddress(rgbaBuffer)!.assumingMemoryBound(to: UInt8.self)
+
+            let depthRowBytes = CVPixelBufferGetBytesPerRow(depthBuffer)
             let rgbaRowBytes = CVPixelBufferGetBytesPerRow(rgbaBuffer)
 
             for y in 0..<height {
-                let depthRow = depthBase.advanced(by: y * (depthRowBytes / 2))
+                let depthRow = depthBase.advanced(by: y * (depthRowBytes / MemoryLayout<Float16>.size))
                 let rgbaRow = rgbaBase.advanced(by: y * rgbaRowBytes)
 
                 for x in 0..<width {
-                    let depthValue = depthRow[x]
-                    let highByte = UInt8(depthValue >> 8)
-                    let lowByte = UInt8(depthValue & 0xFF)
+                    // Converting to RG scale method - kind-of works but compression kills it
+//                    let depthValue = depthRow[x]
+//                    var scaledValue: UInt16!
+//                    if depthValue.isNaN {
+//                        scaledValue = 0
+//                    }
+//                    else {
+//                        let clampedValue = max(min(Double(depthValue), DataConfig.maxDepth), DataConfig.minDepth)
+//                        let scaledValueNumerator = clampedValue - DataConfig.minDepth
+//                        let scaledValueDenomenator = DataConfig.maxDepth-DataConfig.minDepth
+//                        let scaledValueFloat = scaledValueNumerator / scaledValueDenomenator * pow(2.0, 2*8)
+//                        
+//                        scaledValue = UInt16(max(min(scaledValueFloat, Double(UInt16.max)), 0))
+//                    }
+//                    
+//                    let highByte = UInt8(scaledValue >> 8)
+//                    let lowByte = UInt8(scaledValue & 0xFF)
+//
+//                    let pixelOffset = x * 4
+//                    rgbaRow[pixelOffset + 0] = highByte // R
+//                    rgbaRow[pixelOffset + 1] = lowByte  // G
+//                    rgbaRow[pixelOffset + 2] = 0        // B
+//                    rgbaRow[pixelOffset + 3] = 0        // A
+                    //Converting to turbo color map (made by google) - but latency kills it
+                    let d = depthRow[x]
+                    let normalized: Float
+                                if d.isNaN {
+                                    normalized = 0.0
+                                } else {
+                                    let v = Float(d)
+                                    let clamped = max(min(v, DataConfig.maxDepth), DataConfig.minDepth)
+                                    normalized = (clamped - DataConfig.minDepth) / (DataConfig.maxDepth - DataConfig.minDepth)
+                                }
 
-                    let pixelOffset = x * 4
-                    rgbaRow[pixelOffset + 0] = highByte // R
-                    rgbaRow[pixelOffset + 1] = lowByte  // G
-                    rgbaRow[pixelOffset + 2] = 0        // B
-                    rgbaRow[pixelOffset + 3] = 0        // A
+                                // Get Turbo index
+                                let idx = Int(max(0, min(255, Int(normalized * 255.0))))
+
+                    let (r, g, b, a) = TurboLUTManager.turboTableUInt8[idx]
+
+                                let px = x * 4
+                                rgbaRow[px + 0] = b     // BGRA
+                                rgbaRow[px + 1] = g
+                                rgbaRow[px + 2] = r
+                                rgbaRow[px + 3] = 255   // full opacity
                 }
             }
 
