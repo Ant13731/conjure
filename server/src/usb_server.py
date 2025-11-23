@@ -5,6 +5,13 @@ import subprocess
 from threading import Thread
 from queue import Queue
 from dataclasses import dataclass
+from loguru import logger
+import cv2
+import numpy as np
+import av
+from PIL import Image
+import io
+from PyQt5 import QtWidgets, QtGui
 
 HOST = "0.0.0.0"
 
@@ -30,11 +37,6 @@ class Frame:
     video_data_size: int
 
 
-def handle_frame(frame: Frame):
-    print("Frame handled")
-    return None
-
-
 def run_websocket_thread(port: int, queue: Queue[Frame]) -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -52,7 +54,7 @@ def run_websocket_thread(port: int, queue: Queue[Frame]) -> None:
                 depth_size, video_size = struct.unpack("<II", header)
                 depth_data = recv_exact(conn, depth_size)
                 video_data = recv_exact(conn, video_size)
-                print(f"[Server] Received frame → depth={depth_size} bytes, video={video_size} bytes")
+                # print(f"[Server] Received frame → depth={depth_size} bytes, video={video_size} bytes")
 
                 if queue.full():
                     queue.get_nowait()
@@ -71,7 +73,37 @@ def run_websocket_thread(port: int, queue: Queue[Frame]) -> None:
         print("[Server] Waiting for next connection...")
 
 
+def handle_frame(frame: Frame) -> None:
+
+    # Trying to figure out if depth data just contains nothing lol
+    # total_ones = 0
+
+    # for b in frame.depth_data:
+    #     total_ones += bin(b).count("1")
+    # print(f"Depth data total 1 bits: {total_ones}")
+
+    depth_map = np.frombuffer(frame.depth_data, np.float16).copy()
+    depth_map = depth_map.reshape((480, 640))
+    # depth_map.setflags(write=True)
+    depth_map[np.isnan(depth_map)] = 0.0
+    depth_map = np.maximum(np.minimum(depth_map, 1.5), 0.1)
+    depth_map = (depth_map - 0.1) / (1.5 - 0.1)  # Normalize to 0-1
+    depth_map = (depth_map * 255).astype(np.uint8)
+    depth_colored = cv2.applyColorMap(depth_map, cv2.COLORMAP_TURBO)
+    cv2.imshow("Depth Map", depth_colored)
+    cv2.waitKey(1)
+
+    color_frame = np.frombuffer(frame.video_data, np.uint8).reshape((480, 640, 3))
+    open_cv_image = cv2.cvtColor(np.array(color_frame), cv2.COLOR_RGB2BGR)
+    cv2.imshow("iPhone Camera", open_cv_image)
+    cv2.waitKey(1)
+
+
 def run_computer_control_thread(queue: Queue[Frame]) -> None:
+    # app = QtWidgets.QApplication([])
+    # label = QtWidgets.QLabel()
+    # label.resize(640, 480)
+    # label.show()
     while True:
         frame = queue.get()
         handle_frame(frame)
@@ -79,30 +111,19 @@ def run_computer_control_thread(queue: Queue[Frame]) -> None:
 
 
 def run(args: argparse.Namespace):
-    try:
-        iproxy_process = subprocess.Popen(["iproxy", str(args.port), str(args.port)])
-    except FileNotFoundError:
-        try:
-            iproxy_process = subprocess.Popen([f"{WINDOWS_IPROXY_PATH}\\iproxy.exe", str(args.port), str(args.port)])
-        except FileNotFoundError:
-            print("[Server] iproxy not found. Ensure it is installed and in your PATH. Exiting...")
-            return
-
     queue: Queue[Frame] = Queue(maxsize=3)
+
     websocket_thread = Thread(target=run_websocket_thread, args=(args.port, queue))
     websocket_thread.start()
-
-    if iproxy_process and iproxy_process.poll() is not None:
-        print("[Server] iproxy process terminated unexpectedly.")
-        print(f"Process exited with {iproxy_process.returncode} STDERR:", iproxy_process.stderr)
-        return
+    computer_control_thread = Thread(target=run_computer_control_thread, args=(queue,))
+    computer_control_thread.start()
 
     while True:
         try:
             websocket_thread.join(3)
+            # computer_control_thread.join(3)
         except KeyboardInterrupt:
             print("[Server] Shutting down...")
-            if iproxy_process:
-                iproxy_process.terminate()
             websocket_thread.join(1)
+            # computer_control_thread.join(1)
             break
