@@ -12,8 +12,8 @@ import AVFoundation
 
 enum ConnectionMode: String, CaseIterable, Identifiable {
     case onDevice = "On-device ML"
-    case streamed = "WebRTC Stream"
-    case streamedUSB = "TCP Stream"
+    case streamWebRTC = "WebRTC Stream"
+    case streamTCP = "TCP Stream"
 
     var id: String {self.rawValue}
 }
@@ -28,7 +28,7 @@ struct LoginView: View {
 
     @State private var connectedWebRTC: Bool = false
     @State private var connectedUSB: Bool = false
-    @State private var connectionMode: ConnectionMode = .streamed
+    @State private var connectionMode: ConnectionMode = .streamTCP
 
     @State private var webRTCClient: WebRTCClient!
     @State private var cameraManager: CameraManager!
@@ -106,7 +106,7 @@ struct LoginView: View {
     func handleLogin() {
 //        handleLoginWebRTC()
         switch connectionMode {
-        case .streamedUSB:
+        case .streamTCP:
             handleLoginUSB()
         case _:
             handleLoginWebRTC()
@@ -205,13 +205,13 @@ struct LoginView: View {
             print("Starting On-device ML Streaming")
             frameFuser = FrameFuser(webRTCClient)
             cameraManager = CameraManager(frameFuser: frameFuser)
-        case .streamed:
+        case .streamWebRTC:
             print("Starting Image-only streaming via WebRTC")
             cameraManager = CameraManager(webRTCClient: webRTCClient)
-        case .streamedUSB:
+        case .streamTCP:
             print("Starting Image-only streaming via TCP")
+            cameraManager = CameraManager(usbSender: usbSender)
         }
-
 
         let res = cameraManager.setupSession()
 

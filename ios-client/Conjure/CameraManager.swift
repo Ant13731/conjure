@@ -137,8 +137,14 @@ class CameraManager: NSObject {
         // RGB output
         videoOutput = AVCaptureVideoDataOutput()
         videoOutput.alwaysDiscardsLateVideoFrames = true
-        videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA),
-                                     kCVPixelBufferMetalCompatibilityKey as String: true]
+        if usbSender == nil {
+            videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA),
+                                         kCVPixelBufferMetalCompatibilityKey as String: true]
+        }
+        else {
+            print(videoOutput.availableVideoPixelFormatTypes)
+            videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
+        }
         videoOutput.setSampleBufferDelegate(self, queue: synchronizerQueue)
 
         guard captureSession.canAddOutput(videoOutput) else {

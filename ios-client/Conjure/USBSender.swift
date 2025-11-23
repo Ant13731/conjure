@@ -10,6 +10,7 @@ import AVFoundation
 import VideoToolbox
 import Network
 import UIKit
+import Accelerate
 
 class USBSender {
 
@@ -73,9 +74,57 @@ class USBSender {
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_RealTime, value: kCFBooleanTrue)
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_MaxKeyFrameInterval, value: 1 as CFTypeRef)
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ProfileLevel, value: kVTProfileLevel_H264_Baseline_AutoLevel)
+        VTSessionSetProperty(session,
+                             key: kVTCompressionPropertyKey_AverageBitRate,
+                             value: nil)
+
+        VTSessionSetProperty(session,
+                             key: kVTCompressionPropertyKey_DataRateLimits,
+                             value: nil)
+        VTSessionSetProperty(session,
+                             key: kVTCompressionPropertyKey_AllowFrameReordering,
+                             value: kCFBooleanFalse)
         VTCompressionSessionPrepareToEncodeFrames(session)
     }
+    func bgraToRgb(pixelBuffer: CVPixelBuffer) -> Data? {
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
 
+        let width  = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        
+        guard let srcBase = CVPixelBufferGetBaseAddress(pixelBuffer) else { return nil }
+        
+        let srcStride = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let destStride = width * 3    // RGB888 = 3 bytes per pixel
+        
+        // Allocate output RGB buffer
+        let rgbDataSize = destStride * height
+        let destBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: rgbDataSize)
+
+        // Wrap source in vImage buffer
+        var srcBuffer = vImage_Buffer(
+            data: srcBase,
+            height: vImagePixelCount(height),
+            width: vImagePixelCount(width),
+            rowBytes: srcStride
+        )
+        
+        var dstBuffer = vImage_Buffer(
+            data: destBuffer,
+            height: vImagePixelCount(height),
+            width: vImagePixelCount(width),
+            rowBytes: destStride
+        )
+        
+        // Convert BGRA → RGB
+        vImageConvert_BGRA8888toRGB888(&srcBuffer, &dstBuffer, vImage_Flags(kvImageNoFlags))
+
+        let output = Data(bytes: destBuffer, count: rgbDataSize)
+        destBuffer.deallocate()
+
+        return output
+    }
     /// Send a single frame over USB
     func send(videoBuffer: CVImageBuffer, depthBuffer: CVPixelBuffer) {
         guard let connection = connection else {
@@ -85,18 +134,47 @@ class USBSender {
             print("Compression session not initialized")
             return }
 
-        var flags: VTEncodeInfoFlags = []
-        let status = VTCompressionSessionEncodeFrame(session,
-                                        imageBuffer: videoBuffer,
-                                        presentationTimeStamp: CMTime.invalid,
-                                        duration: .invalid,
-                                        frameProperties: nil,
-                                        sourceFrameRefcon: UnsafeMutableRawPointer(Unmanaged.passUnretained(depthBuffer).toOpaque()),
-                                        infoFlagsOut: &flags)
-        guard status == noErr else {
-            print("Failed to encode and send frame:", status)
-            return
+//        var flags: VTEncodeInfoFlags = []
+//        let status = VTCompressionSessionEncodeFrame(session,
+//                                        imageBuffer: videoBuffer,
+//                                        presentationTimeStamp: CMTime.invalid,
+//                                        duration: .invalid,
+//                                        frameProperties: nil,
+//                                        sourceFrameRefcon: UnsafeMutableRawPointer(Unmanaged.passRetained(depthBuffer).toOpaque()),
+//                                        infoFlagsOut: &flags)
+//        guard status == noErr else {
+//            print("Failed to encode and send frame:", status)
+//            return
+//        }
+        
+//
+        var videoData: Data?
+        videoData = bgraToRgb(pixelBuffer: videoBuffer)
+        if  videoData == nil {
+            print("Failed to translate bgra to rgb")
+            CVPixelBufferLockBaseAddress(videoBuffer, .readOnly)
+            let videoSize = CVPixelBufferGetDataSize(videoBuffer)
+            let videoPtr = CVPixelBufferGetBaseAddress(videoBuffer)!
+            videoData = Data(bytes: videoPtr, count: videoSize)
+            CVPixelBufferUnlockBaseAddress(videoBuffer, .readOnly)
         }
+        CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
+        let depthSize = CVPixelBufferGetDataSize(depthBuffer)
+        let depthPtr = CVPixelBufferGetBaseAddress(depthBuffer)!
+        let depthData = Data(bytes: depthPtr, count: depthSize)
+        CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly)
+        var packet = Data()
+        packet.append(withUnsafeBytes(of: UInt32(depthData.count).littleEndian, { Data($0) }))
+        packet.append(withUnsafeBytes(of: UInt32(videoData!.count).littleEndian, { Data($0) }))
+        packet.append(depthData)
+        packet.append(videoData!)
+
+        // --- Send over TCP ---
+        connection.send(content: packet, completion: .contentProcessed({ sendError in
+            if let sendError = sendError {
+                print("[CompressionCallback]: TCP send failed: \(sendError)")
+            }
+        }))
     }
 
     /// H.264 compression callback
@@ -119,7 +197,7 @@ class USBSender {
             }
 
         let sender = Unmanaged<USBSender>.fromOpaque(outputCallbackRefCon!).takeUnretainedValue()
-        let depthBuffer = Unmanaged<CVPixelBuffer>.fromOpaque(sourceFrameRefCon!).takeUnretainedValue()
+        let depthBuffer = Unmanaged<CVPixelBuffer>.fromOpaque(sourceFrameRefCon!).takeRetainedValue()
 
         // --- Extract H.264 NAL data ---
         guard let dataBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return }
@@ -147,7 +225,6 @@ class USBSender {
         // --- Extract depth buffer as UInt16 ---
         CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
         let depthSize = CVPixelBufferGetDataSize(depthBuffer)
-        print(CVPixelBufferGetPlaneCount(depthBuffer))
         let depthPtr = CVPixelBufferGetBaseAddress(depthBuffer)!
         let depthData = Data(bytes: depthPtr, count: depthSize)
         CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly)
