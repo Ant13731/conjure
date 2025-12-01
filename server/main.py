@@ -25,15 +25,6 @@ def main():
         logger.info(f"Starting WebRTC server on {args.host}:{args.port}")
         web.run_app(handshake_server, host=args.host, port=args.port)
 
-    # Start the handshake server on the current computer
-    # handshake_server_thread = Thread(target=handshake_server.run, kwargs={"host": "127.0.0.1", "port": args.port})
-    # handshake_server_thread.start()
-    # logger.info(f"Handshake server running on port {args.port}")
-    # # Keep the server running in case of disconnect
-
-    # offer = handshake_handler()
-    # process_offer(offer)
-
 
 if __name__ == "__main__":
     main()

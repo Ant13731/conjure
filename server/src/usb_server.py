@@ -2,20 +2,56 @@ import argparse
 import socket
 import struct
 import subprocess
-from threading import Thread
+from threading import Thread, Event
 from queue import Queue
 from dataclasses import dataclass
 from loguru import logger
 import cv2
 import numpy as np
-import av
+
+# import av
 from PIL import Image
 import io
 from PyQt5 import QtWidgets, QtGui
+import time
+from enum import Enum
+
+from src.gesture_classifier_model import get_mediapipe_model, predict
 
 HOST = "0.0.0.0"
-
 WINDOWS_IPROXY_PATH = "C:\\Users\\hunta\\Documents\\msys64\\mingw64\\bin"
+
+
+# ### Receive USB Data ###
+
+
+class Orientation(Enum):
+    PORTRAIT = 0
+    LANDSCAPE_LEFT = 1
+    PORTRAIT_UPSIDE_DOWN = 2
+    LANDSCAPE_RIGHT = 3
+
+    @staticmethod
+    def from_int(value: int) -> "Orientation":
+        if value == 0:
+            return Orientation.PORTRAIT
+        elif value == 1:
+            return Orientation.LANDSCAPE_LEFT
+        elif value == 2:
+            return Orientation.PORTRAIT_UPSIDE_DOWN
+        elif value == 3:
+            return Orientation.LANDSCAPE_RIGHT
+        else:
+            raise ValueError(f"Invalid orientation value: {value}")
+
+
+@dataclass
+class Frame:
+    orientation: Orientation
+    depth_data_size: int
+    video_data_size: int
+    depth_data: bytes
+    video_data: bytes
 
 
 def recv_exact(sock: socket.socket, length: int):
@@ -29,15 +65,7 @@ def recv_exact(sock: socket.socket, length: int):
     return data
 
 
-@dataclass
-class Frame:
-    depth_data: bytes
-    video_data: bytes
-    depth_data_size: int
-    video_data_size: int
-
-
-def run_websocket_thread(port: int, queue: Queue[Frame]) -> None:
+def run_websocket_thread(port: int, queue: Queue[Frame], event: Event) -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((HOST, port))
@@ -45,20 +73,20 @@ def run_websocket_thread(port: int, queue: Queue[Frame]) -> None:
 
     while True:
         conn, addr = server.accept()
-        print(f"Connection from {addr} has been established!")
+        logger.info(f"Connection from {addr} has been established!")
 
         try:
             while True:
                 # Read from USB
-                header = recv_exact(conn, 8)
-                depth_size, video_size = struct.unpack("<II", header)
+                header = recv_exact(conn, 12)
+                orientation, depth_size, video_size = struct.unpack("<III", header)
                 depth_data = recv_exact(conn, depth_size)
                 video_data = recv_exact(conn, video_size)
-                # print(f"[Server] Received frame → depth={depth_size} bytes, video={video_size} bytes")
 
                 if queue.full():
                     queue.get_nowait()
                 frame = Frame(
+                    orientation=Orientation.from_int(orientation),
                     depth_data=depth_data,
                     video_data=video_data,
                     depth_data_size=depth_size,
@@ -66,25 +94,24 @@ def run_websocket_thread(port: int, queue: Queue[Frame]) -> None:
                 )
                 queue.put_nowait(frame)
 
+                if event.is_set():
+                    logger.info("End event set, closing websocket connection thread")
+                    conn.close()
+                    return
+
         except Exception as e:
-            print(f"[Server] Connection ended: {e}")
+            logger.info(f"Server connection ended: {e}")
 
         conn.close()
-        print("[Server] Waiting for next connection...")
+        logger.info("Server waiting for next connection...")
 
 
-def handle_frame(frame: Frame) -> None:
+# ### Handle USB Data ###
 
-    # Trying to figure out if depth data just contains nothing lol
-    # total_ones = 0
 
-    # for b in frame.depth_data:
-    #     total_ones += bin(b).count("1")
-    # print(f"Depth data total 1 bits: {total_ones}")
-
+def display_frame(frame: Frame) -> None:
     depth_map = np.frombuffer(frame.depth_data, np.float16).copy()
     depth_map = depth_map.reshape((480, 640))
-    # depth_map.setflags(write=True)
     depth_map[np.isnan(depth_map)] = 0.0
     depth_map = np.maximum(np.minimum(depth_map, 1.5), 0.1)
     depth_map = (depth_map - 0.1) / (1.5 - 0.1)  # Normalize to 0-1
@@ -99,31 +126,76 @@ def handle_frame(frame: Frame) -> None:
     cv2.waitKey(1)
 
 
-def run_computer_control_thread(queue: Queue[Frame]) -> None:
-    # app = QtWidgets.QApplication([])
-    # label = QtWidgets.QLabel()
-    # label.resize(640, 480)
-    # label.show()
+def get_image(frame: Frame) -> tuple[np.ndarray, np.ndarray]:
+    depth_map = np.frombuffer(frame.depth_data, np.float16).copy()
+    depth_map = depth_map.reshape((480, 640))
+    depth_map[np.isnan(depth_map)] = 0.0
+    depth_map = np.maximum(np.minimum(depth_map, 1.5), 0.1)
+    depth_map = (depth_map - 0.1) / (1.5 - 0.1)  # Normalize to 0-1
+    # depth_map = (depth_map * 255).astype(np.uint8)
+
+    color_frame = np.frombuffer(frame.video_data, np.uint8).reshape((480, 640, 3))
+    open_cv_image = cv2.cvtColor(np.array(color_frame), cv2.COLOR_RGB2BGR)
+
+    depth_map = depth_map[:, 80:560].copy()  # Crop to center 480 width
+    open_cv_image = open_cv_image[:, 80:560, :].copy()
+
+    match frame.orientation:
+        case Orientation.PORTRAIT:
+            depth_map = cv2.rotate(depth_map, cv2.ROTATE_90_CLOCKWISE)  # type: ignore
+            open_cv_image = cv2.rotate(open_cv_image, cv2.ROTATE_90_CLOCKWISE)
+        case Orientation.LANDSCAPE_LEFT:
+            depth_map = cv2.rotate(depth_map, cv2.ROTATE_180)  # type: ignore
+            open_cv_image = cv2.rotate(open_cv_image, cv2.ROTATE_180)
+        case Orientation.PORTRAIT_UPSIDE_DOWN:
+            depth_map = cv2.rotate(depth_map, cv2.ROTATE_90_COUNTERCLOCKWISE)  # type: ignore
+            open_cv_image = cv2.rotate(open_cv_image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        case Orientation.LANDSCAPE_RIGHT:
+            pass
+
+    depth_map = cv2.flip(depth_map, 1)  # type: ignore
+    open_cv_image = cv2.flip(open_cv_image, 1)
+
+    return depth_map, open_cv_image
+
+
+def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
+    detector = get_mediapipe_model()
+
     while True:
+        if event.is_set():
+            logger.info("End event set, closing computer control thread")
+            cv2.destroyAllWindows()
+            return
+
         frame = queue.get()
-        handle_frame(frame)
+
+        depth_map, color_image = get_image(frame)
         queue.task_done()
+
+        detection_result, annotated_image = predict(color_image, detector, depth_map)
+
+        cv2.imshow("Annotated Image", annotated_image)
+        cv2.waitKey(1)
 
 
 def run(args: argparse.Namespace):
     queue: Queue[Frame] = Queue(maxsize=3)
 
-    websocket_thread = Thread(target=run_websocket_thread, args=(args.port, queue))
+    END_EVENT = Event()
+    END_EVENT.clear()
+
+    websocket_thread = Thread(target=run_websocket_thread, args=(args.port, queue, END_EVENT))
     websocket_thread.start()
-    computer_control_thread = Thread(target=run_computer_control_thread, args=(queue,))
+    computer_control_thread = Thread(target=run_computer_control_thread, args=(queue, END_EVENT))
     computer_control_thread.start()
 
     while True:
         try:
-            websocket_thread.join(3)
-            # computer_control_thread.join(3)
+            time.sleep(5)
         except KeyboardInterrupt:
-            print("[Server] Shutting down...")
-            websocket_thread.join(1)
-            # computer_control_thread.join(1)
+            END_EVENT.set()
+            logger.info("Server shutting down...")
+            websocket_thread.join(2)
+            computer_control_thread.join(2)
             break
