@@ -11,6 +11,7 @@ from mediapipe.framework.formats import landmark_pb2  # type: ignore[import]
 
 from enum import StrEnum
 from dataclasses import dataclass
+from loguru import logger
 
 
 class Gesture(StrEnum):
@@ -94,6 +95,37 @@ class Landmark:
     visibility: float = 0.0
 
 
+def min_depth_in_surrounding_area(depth_map, x_norm, y_norm, area_size=3):
+    H, W = depth_map.shape
+
+    # Convert normalized → continuous pixel coordinates
+    x = x_norm * (W - 1)
+    y = y_norm * (H - 1)
+
+    # Integer pixel locations
+    x_center = int(np.round(x))
+    y_center = int(np.round(y))
+
+    # Define the surrounding area
+    x_start = max(x_center - area_size // 2, 0)
+    x_end = min(x_center + area_size // 2 + 1, W)
+    y_start = max(y_center - area_size // 2, 0)
+    y_end = min(y_center + area_size // 2 + 1, H)
+
+    if x_center > W or x_center < 0 or y_center > H or y_center < 0:
+        return 100
+
+    if x_start >= x_end or y_start >= y_end:
+        logger.warning("Surrounding area is out of bounds, returning center depth")
+        return depth_map[y_center, x_center]
+
+    # Extract the surrounding area
+    surrounding_area = depth_map[y_start:y_end, x_start:x_end]
+
+    # Return the minimum depth in the surrounding area
+    return np.min(surrounding_area)
+
+
 @dataclass
 class GestureRecognizerCustomResult:
     hand_detected: bool
@@ -166,7 +198,7 @@ class GestureRecognizerCustomResult:
                     x=landmark.x,
                     y=landmark.y,
                     # z=depth_at_normalized_interpolated(depth_map, landmark.x, landmark.y),
-                    z=float(depth_map[min(int(landmark.x * 480), 479), min(int(landmark.y * 480), 479)]),
+                    z=min_depth_in_surrounding_area(depth_map, landmark.x, landmark.y),
                     visibility=landmark.visibility,
                 ),
             )
@@ -244,7 +276,7 @@ def apply_glass_for_far_depth(image, depth):
     return result
 
 
-def depth_to_alpha(z, max_depth=1.5):
+def depth_to_alpha(z, max_depth=1.0, power=0.3):
     """
     Maps depth to brightness/opacity:
     - z <= threshold: behind glass → alpha=0
@@ -252,11 +284,18 @@ def depth_to_alpha(z, max_depth=1.5):
     - z >= max_depth: alpha=1
     """
     if z <= DEPTH_THRESHOLD:
-        return 0.0
-    elif z >= max_depth:
         return 1.0
-    else:
-        return (z - DEPTH_THRESHOLD) / (max_depth - DEPTH_THRESHOLD)
+
+    if z >= max_depth:
+        return 0.0
+
+    # Normalize distance from threshold
+    t = (z - DEPTH_THRESHOLD) / (max_depth - DEPTH_THRESHOLD)
+
+    # Exponential falloff for drastic effect
+    alpha = 1.0 - (t**power)
+
+    return alpha
 
 
 def draw_fingertip(image, landmark: Landmark):
@@ -267,9 +306,11 @@ def draw_fingertip(image, landmark: Landmark):
     alpha = depth_to_alpha(landmark.z)
 
     # Map alpha to color (from dark blue to bright blue, for example)
-    base_color = np.array([0, 0, 0])  # dark blue BGR
-    max_color = np.array([255, 200, 0])  # bright blue BGR
-    color = (base_color + (max_color - base_color) * alpha).astype(np.uint8)
+    bright_color = np.array([255, 200, 0], dtype=np.uint8)
+    dark_color = np.array([0, 0, 0], dtype=np.uint8)
+
+    # Interpolate
+    color = (dark_color * (1 - alpha) + bright_color * alpha).astype(np.uint8)
 
     # Circle radius
     radius = 10
@@ -277,9 +318,26 @@ def draw_fingertip(image, landmark: Landmark):
     cv2.circle(image, (px, py), radius, color.tolist(), -1)
 
 
-# TODO for TOMORROW - figure out why the depth mapping for landmarks are off:
-# Check if its just for the index thats wrong
-# Maybe we need interpolation instead of just looking at one value? probably need to go with interpolation/taking the minimum of nearest neighbours
+def draw_circle(image, depth_map, x, y):
+    px = max(min(int(x * image.shape[1]), 479), 0)
+    py = max(min(int(y * image.shape[0]), 479), 0)
+
+    # Get normalized alpha / brightness
+    alpha = depth_to_alpha(depth_map[py, px])
+
+    # Map alpha to color (from dark blue to bright blue, for example)
+    bright_color = np.array([255, 255, 255], dtype=np.uint8)
+    dark_color = np.array([0, 0, 0], dtype=np.uint8)
+
+    # Interpolate
+    color = (dark_color * (1 - alpha) + bright_color * alpha).astype(np.uint8)
+
+    # Circle radius
+    radius = 10
+
+    cv2.circle(image, (px, py), radius, color.tolist(), -1)
+
+
 def draw_landmarks_on_image(
     rgb_image: np.ndarray,
     depth_map: np.ndarray,
@@ -297,18 +355,33 @@ def draw_landmarks_on_image(
     # greyed_image_overlay = cv2.addWeighted(grey_image, GREYED_OUT_ALPHA, rgb_image, 1 - GREYED_OUT_ALPHA, 0)
 
     annotated_image = np.copy(rgb_image)
-    annotated_image = apply_glass_for_far_depth(annotated_image, depth_map)
-    annotated_image = np.copy(annotated_image)
+    # annotated_image = apply_glass_for_far_depth(annotated_image, depth_map)
+    # annotated_image = np.copy(annotated_image)
     # annotated_image[depth_map > DEPTH_THRESHOLD * 255] = greyed_image_overlay[depth_map > DEPTH_THRESHOLD * 255]
 
     if not detection_result.hand_detected:
         return annotated_image
 
-    hand_landmarks = detection_result.landmarks
-    handedness = detection_result.handedness
-    print("Index depth:", detection_result.index_finger_tip.z)
-    print("Index x,y:", detection_result.index_finger_tip.x, detection_result.index_finger_tip.y)
-    draw_fingertip(annotated_image, detection_result.index_finger_tip)  # config)
+    # hand_landmarks = detection_result.landmarks
+    # handedness = detection_result.handedness
+    # print("Index depth:", detection_result.index_finger_tip.z)
+    # print("Index x,y:", detection_result.index_finger_tip.x, detection_result.index_finger_tip.y)
+    for i in range(20):
+        for j in range(20):
+            draw_circle(annotated_image, depth_map, i / 20, j / 20)
+    draw_fingertip(annotated_image, detection_result.index_finger_tip)
+    draw_fingertip(annotated_image, detection_result.thumb_tip)
+    draw_fingertip(annotated_image, detection_result.wrist)
+    draw_fingertip(annotated_image, detection_result.middle_finger_tip)
+    # SEPARATION = 0.01
+    # draw_circle(annotated_image, depth_map, detection_result.wrist.x, detection_result.wrist.y)
+    # draw_circle(annotated_image, depth_map, detection_result.wrist.x + SEPARATION, detection_result.wrist.y)
+    # draw_circle(annotated_image, depth_map, detection_result.wrist.x + SEPARATION, detection_result.wrist.y + SEPARATION)
+    # draw_circle(annotated_image, depth_map, detection_result.wrist.x, detection_result.wrist.y + SEPARATION)
+    # draw_circle(annotated_image, depth_map, detection_result.wrist.x, detection_result.wrist.y - SEPARATION)
+    # draw_circle(annotated_image, depth_map, detection_result.wrist.x - SEPARATION, detection_result.wrist.y - SEPARATION)
+    # draw_circle(annotated_image, depth_map, detection_result.wrist.x - SEPARATION, detection_result.wrist.y)
+    # # draw_fingertip(annotated_image, detection_result.index_finger_tip)  # config)
     # Loop through the detected hands to visualize.
     # for idx in range(len(hand_landmarks_list)):
     # hand_landmarks = hand_landmarks_list[idx]
