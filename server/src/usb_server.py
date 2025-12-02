@@ -284,14 +284,18 @@ def get_image(frame: Frame) -> tuple[np.ndarray, np.ndarray]:
 
 def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
     detector = get_mediapipe_model()
+    pg.PAUSE = 0
 
     cursor_velocity: tuple[float, float] = (0, 0)
     are_dragging = False
-    last_10_records = defaultdict(list)
+    # last_10_records = defaultdict(list)
+    last_10_left_click: list[bool] = []
+    last_10_right_click: list[bool] = []
+    last_10_gestures: list[Gesture] = []
 
-    LEFT_CLICK_RECORD = "left_click"
-    RIGHT_CLICK_RECORD = "right_click"
-    GESTURE_RECORD = "gesture"
+    # LEFT_CLICK_RECORD = "left_click"
+    # RIGHT_CLICK_RECORD = "right_click"
+    # GESTURE_RECORD = "gesture"
 
     REPEATED_FRAMES_BEFORE_ACTION = 2
     CURSOR_VELOCITY_DECAY_RATE = 0.8
@@ -301,6 +305,9 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
     CLICK_DEPTH_LIMIT = MOVE_DEPTH_THRESHOLD - 0.5  # Limits are for visuals only
     MOVE_DEPTH_LIMIT = 1.1  # Limits are for visuals only
     THRESHOLDS = (CLICK_DEPTH_THRESHOLD, MOVE_DEPTH_THRESHOLD, CLICK_DEPTH_LIMIT, MOVE_DEPTH_LIMIT)
+
+    MOUSE_SCALING = 1500
+    SWIPE_SCALING = 1000
 
     prev_index_location = None
 
@@ -330,23 +337,19 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
             pg.mouseUp(button="left")
             continue
 
-        for k, records in last_10_records.items():
-            while len(records) > 10:
-                records.pop(0)
-        last_10_records[GESTURE_RECORD].append(detection_result.gesture)
+        last_10_left_click = last_10_left_click[-10:]
+        last_10_right_click = last_10_right_click[-10:]
+        last_10_gestures = last_10_gestures[-5:]
+        last_10_gestures.append(detection_result.gesture)
 
         # When we see a palm, cancel all actions
-        if (
-            detection_result.gesture in (Gesture.palm, Gesture.stop, Gesture.stop_inverted)
-            and last_10_records[GESTURE_RECORD][5:].count(detection_result.gesture) >= REPEATED_FRAMES_BEFORE_ACTION
-        ):
+        if detection_result.gesture in (Gesture.palm, Gesture.stop, Gesture.stop_inverted) and last_10_gestures.count(detection_result.gesture) >= REPEATED_FRAMES_BEFORE_ACTION:
             logger.info("Palm detected, cancelling actions")
             cursor_velocity = (0, 0)
             are_dragging = False
             pg.mouseUp(button="left")
-            for k, records in last_10_records.items():
-                if k != GESTURE_RECORD:
-                    records.append(None)
+            last_10_left_click.append(False)
+            last_10_right_click.append(False)
             prev_index_location = detection_result.index_finger_tip
             continue
 
@@ -356,32 +359,32 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
         # - Gesture must be poking through click pane
         if (
             detection_result.gesture == Gesture.one
-            and last_10_records[GESTURE_RECORD][5:].count(Gesture.one) >= REPEATED_FRAMES_BEFORE_ACTION
-            and not any(last_10_records[LEFT_CLICK_RECORD])
             and detection_result.index_finger_tip.z < CLICK_DEPTH_THRESHOLD
+            and last_10_gestures.count(Gesture.one) >= REPEATED_FRAMES_BEFORE_ACTION
+            and not any(last_10_left_click)
         ):
             logger.info("Left click")
             pg.click(button="left")
-            last_10_records[LEFT_CLICK_RECORD].append(True)
+            last_10_left_click.append(True)
 
         # Right Click
         # Same conditions as left click but for peace gesture
         if (
             detection_result.gesture == Gesture.peace
-            and last_10_records[GESTURE_RECORD][5:].count(Gesture.peace) >= REPEATED_FRAMES_BEFORE_ACTION
-            and not any(last_10_records[RIGHT_CLICK_RECORD])
             and detection_result.index_finger_tip.z < CLICK_DEPTH_THRESHOLD
+            and last_10_gestures.count(Gesture.peace) >= REPEATED_FRAMES_BEFORE_ACTION
+            and not any(last_10_right_click)
         ):
             logger.info("Right click")
             pg.click(button="right")
-            last_10_records[RIGHT_CLICK_RECORD].append(True)
+            last_10_right_click.append(True)
 
         # Click and hold for dragging
         if (
             detection_result.gesture in (Gesture.ok, Gesture.fist)
-            and last_10_records[GESTURE_RECORD][5:].count(detection_result.gesture) >= REPEATED_FRAMES_BEFORE_ACTION
-            and not are_dragging
             and detection_result.index_finger_tip.z < MOVE_DEPTH_THRESHOLD
+            and last_10_gestures.count(detection_result.gesture) >= REPEATED_FRAMES_BEFORE_ACTION
+            and not are_dragging
         ):
             logger.info("Starting left click drag")
             pg.mouseDown(button="left")
@@ -398,25 +401,19 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
         # - Gesture must be within move pane
         if detection_result.gesture == Gesture.one and detection_result.index_finger_tip.z < MOVE_DEPTH_THRESHOLD and prev_index_location is not None:
             logger.info("Moving cursor with small movements")
-            scaling = 1500
             move_x_relative = prev_index_location.x - detection_result.index_finger_tip.x
             move_y_relative = prev_index_location.y - detection_result.index_finger_tip.y
-            move_x_relative *= scaling
-            move_y_relative *= scaling
+            move_x_relative *= MOUSE_SCALING
+            move_y_relative *= MOUSE_SCALING
             pg.moveRel(-move_x_relative, -move_y_relative, duration=0.1)
 
         # Sweeping, general movements
         if detection_result.gesture in (Gesture.two_up, Gesture.two_up_inverted) and detection_result.index_finger_tip.z < MOVE_DEPTH_THRESHOLD and prev_index_location is not None:
             logger.info("Moving cursor with velocity")
-            scaling = 1000
             cursor_velocity = (
-                cursor_velocity[0] + -(prev_index_location.x - detection_result.index_finger_tip.x) * scaling,
-                cursor_velocity[1] + (prev_index_location.y - detection_result.index_finger_tip.y) * scaling,
+                cursor_velocity[0] + -(prev_index_location.x - detection_result.index_finger_tip.x) * SWIPE_SCALING,
+                cursor_velocity[1] + (prev_index_location.y - detection_result.index_finger_tip.y) * SWIPE_SCALING,
             )
-            # move_x_relative = prev_index_location.x - detection_result.index_finger_tip.x
-            # move_y_relative = prev_index_location.y - detection_result.index_finger_tip.y
-            # move_x_relative *= scaling
-            # move_y_relative *= scaling
 
         prev_index_location = detection_result.index_finger_tip
         pg.moveRel(cursor_velocity[0], -cursor_velocity[1], duration=0.1)

@@ -277,33 +277,6 @@ def apply_glass_for_far_depth(
     return result
 
 
-def depth_to_alpha(
-    z: float,
-    depth_threshold: float,
-    max_depth: float,
-    power: float = 0.3,
-) -> float:
-    """
-    Maps depth to brightness/opacity:
-    - z <= threshold: behind glass → alpha=0
-    - threshold < z < max_depth: gradually increase alpha
-    - z >= max_depth: alpha=1
-    """
-    if z <= depth_threshold:
-        return 1.0
-
-    if z >= max_depth:
-        return 0.0
-
-    # Normalize distance from threshold
-    t = (z - depth_threshold) / (max_depth - depth_threshold)
-
-    # Exponential falloff for drastic effect
-    alpha = 1.0 - (t**power)
-
-    return alpha
-
-
 # def draw_fingertip(
 #     image,
 #     landmark: Landmark,
@@ -360,8 +333,20 @@ def draw_circle(
 ):
     px, py = safe_convert_norm_to_px(x, y)
 
-    # Get normalized alpha / brightness
-    alpha = depth_to_alpha(z, depth_threshold, depth_limit)
+    power: float = 0.3
+
+    if z <= depth_threshold:
+        alpha = 1.0
+    elif z >= depth_limit:
+        alpha = 0.0
+    else:
+        # Normalize distance from threshold
+        t = (z - depth_threshold) / (depth_limit - depth_threshold)
+        # Exponential falloff for drastic effect
+        alpha = 1.0 - (t**power)
+
+    # # Get normalized alpha / brightness
+    # alpha = depth_to_alpha(z, depth_threshold, depth_limit)
 
     # Map alpha to color (from dark blue to bright blue, for example)
     bright_color = np.array(near_color, dtype=np.uint8)
@@ -370,10 +355,7 @@ def draw_circle(
     # Interpolate
     color = (dark_color * (1 - alpha) + bright_color * alpha).astype(np.uint8)
 
-    # Circle radius
-    radius = 10
-
-    cv2.circle(image, (px, py), radius, color.tolist(), -1)
+    cv2.circle(image, (px, py), radius=10, color=color.tolist(), thickness=-1)
 
 
 def draw_landmarks_on_image(
@@ -400,16 +382,17 @@ def draw_landmarks_on_image(
     click_depth_threshold, move_depth_threshold, click_depth_limit, move_depth_limit = thresholds
 
     annotated_image = np.copy(rgb_image)
+    circles_to_draw_on_image = 20
     # annotated_image = apply_glass_for_far_depth(annotated_image, depth_map)
     # annotated_image = np.copy(annotated_image)
     # annotated_image[depth_map > DEPTH_THRESHOLD * 255] = greyed_image_overlay[depth_map > DEPTH_THRESHOLD * 255]
-    for i in range(20):
-        for j in range(20):
-            px, py = safe_convert_norm_to_px((i + 0.5) / 20, (j + 0.5) / 20)
+    for i in range(circles_to_draw_on_image):
+        for j in range(circles_to_draw_on_image):
+            px, py = safe_convert_norm_to_px((i + 0.5) / circles_to_draw_on_image, (j + 0.5) / circles_to_draw_on_image)
             draw_circle(
                 annotated_image,
-                (i + 0.5) / 20,
-                (j + 0.5) / 20,
+                (i + 0.5) / circles_to_draw_on_image,
+                (j + 0.5) / circles_to_draw_on_image,
                 depth_map[py, px],
                 move_depth_threshold,
                 move_depth_limit,
