@@ -240,20 +240,21 @@ def swap_handedness_for_display(handedness_category: str) -> str:
     return handedness_category
 
 
-DEPTH_THRESHOLD = 0.25
-GREYED_OUT_ALPHA = 0.45
-GLASS_PANE_SIZE = 400
-
-
-def apply_glass_for_far_depth(image, depth):
+def apply_glass_for_far_depth(
+    image,
+    depth,
+    depth_threshold: float,
+    pane_size: int = 400,
+    greyed_out_alpha: float = 0.45,
+):
     h, w = image.shape[:2]
 
     pane_mask = np.zeros((h, w), dtype=np.uint8)
 
-    x1 = w // 2 - GLASS_PANE_SIZE // 2
-    y1 = h // 2 - GLASS_PANE_SIZE // 2
-    x2 = x1 + GLASS_PANE_SIZE
-    y2 = y1 + GLASS_PANE_SIZE
+    x1 = w // 2 - pane_size // 2
+    y1 = h // 2 - pane_size // 2
+    x2 = x1 + pane_size
+    y2 = y1 + pane_size
 
     radius = 30
 
@@ -265,32 +266,37 @@ def apply_glass_for_far_depth(image, depth):
     cv2.circle(pane_mask, (x1 + radius, y2 - radius), radius, 255, -1)
     cv2.circle(pane_mask, (x2 - radius, y2 - radius), radius, 255, -1)
 
-    depth_mask = depth > np.float16(DEPTH_THRESHOLD)
+    depth_mask = depth > np.float16(depth_threshold)
     mask = np.logical_and(pane_mask > 0, depth_mask)
 
     overlay = np.zeros_like(image)
     overlay[mask] = (200, 200, 200)
 
-    result = cv2.addWeighted(overlay, GREYED_OUT_ALPHA, image, 1 - GREYED_OUT_ALPHA, 0)
+    result = cv2.addWeighted(overlay, greyed_out_alpha, image, 1 - greyed_out_alpha, 0)
 
     return result
 
 
-def depth_to_alpha(z, max_depth=1.0, power=0.3):
+def depth_to_alpha(
+    z: float,
+    depth_threshold: float,
+    max_depth: float,
+    power: float = 0.3,
+) -> float:
     """
     Maps depth to brightness/opacity:
     - z <= threshold: behind glass → alpha=0
     - threshold < z < max_depth: gradually increase alpha
     - z >= max_depth: alpha=1
     """
-    if z <= DEPTH_THRESHOLD:
+    if z <= depth_threshold:
         return 1.0
 
     if z >= max_depth:
         return 0.0
 
     # Normalize distance from threshold
-    t = (z - DEPTH_THRESHOLD) / (max_depth - DEPTH_THRESHOLD)
+    t = (z - depth_threshold) / (max_depth - depth_threshold)
 
     # Exponential falloff for drastic effect
     alpha = 1.0 - (t**power)
@@ -298,36 +304,68 @@ def depth_to_alpha(z, max_depth=1.0, power=0.3):
     return alpha
 
 
-def draw_fingertip(image, landmark: Landmark):
-    px = int(landmark.x * image.shape[1])
-    py = int(landmark.y * image.shape[0])
+# def draw_fingertip(
+#     image,
+#     landmark: Landmark,
+#     depth_threshold: float,
+#     far_color: list[int],
+#     near_color: list[int],
+# ):
+#     px = int(landmark.x * image.shape[1])
+#     py = int(landmark.y * image.shape[0])
+
+#     # Get normalized alpha / brightness
+#     alpha = depth_to_alpha(landmark.z, depth_threshold)
+
+#     # Map alpha to color (from dark blue to bright blue, for example)
+#     bright_color = np.array([255, 200, 0], dtype=np.uint8)
+#     dark_color = np.array([0, 0, 0], dtype=np.uint8)
+
+#     # Interpolate
+#     color = (dark_color * (1 - alpha) + bright_color * alpha).astype(np.uint8)
+
+#     # Circle radius
+#     radius = 10
+
+#     cv2.circle(image, (px, py), radius, color.tolist(), -1)
+
+
+def safe_convert_norm_to_px(
+    x_norm: float,
+    y_norm: float,
+    width: int = 480,
+    height: int = 480,
+) -> tuple[int, int]:
+
+    # Convert normalized → continuous pixel coordinates
+    x = x_norm * (width - 1)
+    y = y_norm * (height - 1)
+
+    # Integer pixel locations
+    x_px = max(min(int(x), width - 1), 0)
+    y_px = max(min(int(y), height - 1), 0)
+
+    return x_px, y_px
+
+
+def draw_circle(
+    image,
+    x: float,
+    y: float,
+    z: float,
+    depth_threshold: float,
+    depth_limit: float,
+    near_color: list[int],
+    far_color: list[int],
+):
+    px, py = safe_convert_norm_to_px(x, y)
 
     # Get normalized alpha / brightness
-    alpha = depth_to_alpha(landmark.z)
+    alpha = depth_to_alpha(z, depth_threshold, depth_limit)
 
     # Map alpha to color (from dark blue to bright blue, for example)
-    bright_color = np.array([255, 200, 0], dtype=np.uint8)
-    dark_color = np.array([0, 0, 0], dtype=np.uint8)
-
-    # Interpolate
-    color = (dark_color * (1 - alpha) + bright_color * alpha).astype(np.uint8)
-
-    # Circle radius
-    radius = 10
-
-    cv2.circle(image, (px, py), radius, color.tolist(), -1)
-
-
-def draw_circle(image, depth_map, x, y):
-    px = max(min(int(x * image.shape[1]), 479), 0)
-    py = max(min(int(y * image.shape[0]), 479), 0)
-
-    # Get normalized alpha / brightness
-    alpha = depth_to_alpha(depth_map[py, px])
-
-    # Map alpha to color (from dark blue to bright blue, for example)
-    bright_color = np.array([255, 255, 255], dtype=np.uint8)
-    dark_color = np.array([0, 0, 0], dtype=np.uint8)
+    bright_color = np.array(near_color, dtype=np.uint8)
+    dark_color = np.array(far_color, dtype=np.uint8)
 
     # Interpolate
     color = (dark_color * (1 - alpha) + bright_color * alpha).astype(np.uint8)
@@ -342,6 +380,7 @@ def draw_landmarks_on_image(
     rgb_image: np.ndarray,
     depth_map: np.ndarray,
     detection_result: GestureRecognizerCustomResult,
+    thresholds: tuple[float, float, float, float],
     # config: HGDConfig,
 ) -> np.ndarray:
     """Render hand landmarks (tip of fingers, knuckles, etc.) on the image.
@@ -353,11 +392,30 @@ def draw_landmarks_on_image(
     # grey_image = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2GRAY)
     # grey_image = cv2.cvtColor(grey_image, cv2.COLOR_GRAY2BGR)
     # greyed_image_overlay = cv2.addWeighted(grey_image, GREYED_OUT_ALPHA, rgb_image, 1 - GREYED_OUT_ALPHA, 0)
+    # click_depth_threshold = 0.3
+    # move_depth_threshold = 0.5
+    # click_depth_limit = move_depth_threshold - 0.5
+    # move_depth_limit = 1.1
+
+    click_depth_threshold, move_depth_threshold, click_depth_limit, move_depth_limit = thresholds
 
     annotated_image = np.copy(rgb_image)
     # annotated_image = apply_glass_for_far_depth(annotated_image, depth_map)
     # annotated_image = np.copy(annotated_image)
     # annotated_image[depth_map > DEPTH_THRESHOLD * 255] = greyed_image_overlay[depth_map > DEPTH_THRESHOLD * 255]
+    for i in range(20):
+        for j in range(20):
+            px, py = safe_convert_norm_to_px((i + 0.5) / 20, (j + 0.5) / 20)
+            draw_circle(
+                annotated_image,
+                (i + 0.5) / 20,
+                (j + 0.5) / 20,
+                depth_map[py, px],
+                move_depth_threshold,
+                move_depth_limit,
+                [255, 255, 255],
+                [0, 0, 0],
+            )
 
     if not detection_result.hand_detected:
         return annotated_image
@@ -366,13 +424,58 @@ def draw_landmarks_on_image(
     # handedness = detection_result.handedness
     # print("Index depth:", detection_result.index_finger_tip.z)
     # print("Index x,y:", detection_result.index_finger_tip.x, detection_result.index_finger_tip.y)
-    for i in range(20):
-        for j in range(20):
-            draw_circle(annotated_image, depth_map, i / 20, j / 20)
-    draw_fingertip(annotated_image, detection_result.index_finger_tip)
-    draw_fingertip(annotated_image, detection_result.thumb_tip)
-    draw_fingertip(annotated_image, detection_result.wrist)
-    draw_fingertip(annotated_image, detection_result.middle_finger_tip)
+
+    draw_circle(
+        annotated_image,
+        detection_result.thumb_tip.x,
+        detection_result.thumb_tip.y,
+        detection_result.thumb_tip.z,
+        click_depth_threshold,
+        click_depth_limit,
+        [255, 200, 0],
+        [0, 0, 0],
+    )
+    draw_circle(
+        annotated_image,
+        detection_result.index_finger_tip.x,
+        detection_result.index_finger_tip.y,
+        detection_result.index_finger_tip.z,
+        click_depth_threshold,
+        click_depth_limit,
+        [255, 200, 0],
+        [0, 0, 0],
+    )
+    draw_circle(
+        annotated_image,
+        detection_result.middle_finger_tip.x,
+        detection_result.middle_finger_tip.y,
+        detection_result.middle_finger_tip.z,
+        click_depth_threshold,
+        click_depth_limit,
+        [255, 200, 0],
+        [0, 0, 0],
+    )
+    draw_circle(
+        annotated_image,
+        detection_result.ring_finger_tip.x,
+        detection_result.ring_finger_tip.y,
+        detection_result.ring_finger_tip.z,
+        click_depth_threshold,
+        click_depth_limit,
+        [255, 200, 0],
+        [0, 0, 0],
+    )
+    draw_circle(
+        annotated_image,
+        detection_result.pinky_finger_tip.x,
+        detection_result.pinky_finger_tip.y,
+        detection_result.pinky_finger_tip.z,
+        click_depth_threshold,
+        click_depth_limit,
+        [255, 200, 0],
+        [0, 0, 0],
+    )
+    # draw_circle(annotated_image, detection_result.wrist)
     # SEPARATION = 0.01
     # draw_circle(annotated_image, depth_map, detection_result.wrist.x, detection_result.wrist.y)
     # draw_circle(annotated_image, depth_map, detection_result.wrist.x + SEPARATION, detection_result.wrist.y)
@@ -474,6 +577,7 @@ def predict(
     frame: cv2.typing.MatLike,
     detector: GestureRecognizer,
     depth_map: np.ndarray,
+    thresholds: tuple[float, float, float, float],
     # config: HGDConfig,
 ) -> tuple[GestureRecognizerCustomResult, np.ndarray]:
     mp_frame = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
@@ -487,6 +591,7 @@ def predict(
         mp_frame.numpy_view(),
         depth_map,
         custom_result,
+        thresholds,
     )  # config)
     return custom_result, annotated_image
 

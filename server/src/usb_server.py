@@ -18,8 +18,16 @@ import io
 from PyQt5 import QtWidgets, QtGui
 import time
 from enum import Enum
+import pyautogui as pg
 
-from src.gesture_classifier_model import get_mediapipe_model, predict
+from src.gesture_classifier_model import (
+    get_mediapipe_model,
+    predict,
+    Gesture,
+    Handedness,
+    Landmark,
+    GestureRecognizerCustomResult,
+)
 
 HOST = "0.0.0.0"
 WINDOWS_IPROXY_PATH = "C:\\Users\\hunta\\Documents\\msys64\\mingw64\\bin"
@@ -121,7 +129,7 @@ def run_websocket_thread_udp(port: int, queue: Queue[Frame], event: Event) -> No
 
         # If the frame is complete
         if len(f["chunks"]) == f["total"]:  # type: ignore
-            print(f"Complete frame {frame_id}")
+            # print(f"Complete frame {frame_id}")
             chunks = [f["chunks"][i] for i in range(f["total"])]  # type: ignore
             latest_complete_frame = b"".join(chunks)
 
@@ -137,7 +145,7 @@ def run_websocket_thread_udp(port: int, queue: Queue[Frame], event: Event) -> No
         orientation, depth_size, video_size = struct.unpack("<III", latest_complete_frame[0:12])
         depth_data = latest_complete_frame[12 : 12 + depth_size]
         video_data = latest_complete_frame[12 + depth_size : 12 + depth_size + video_size]
-        print("Received frame")
+        # print("Received frame")
         latest_complete_frame = None
 
         # if queue.full():
@@ -152,7 +160,7 @@ def run_websocket_thread_udp(port: int, queue: Queue[Frame], event: Event) -> No
         # queue.put_nowait(frame)
         try:
             queue.get_nowait()
-            print("Dropped frame")
+            # print("Dropped frame")
         except Empty:
             pass
         queue.put_nowait(frame)
@@ -181,7 +189,7 @@ def run_websocket_thread_tcp(port: int, queue: Queue[Frame], event: Event) -> No
                 orientation, depth_size, video_size = struct.unpack("<III", header)
                 depth_data = recv_exact(conn, depth_size)
                 video_data = recv_exact(conn, video_size)
-                print("Received frame")
+                # print("Received frame")
 
                 # if queue.full():
                 #     queue.get_nowait()
@@ -195,7 +203,7 @@ def run_websocket_thread_tcp(port: int, queue: Queue[Frame], event: Event) -> No
                 # queue.put_nowait(frame)
                 try:
                     queue.get_nowait()
-                    print("Dropped frame")
+                    # print("Dropped frame")
                 except Empty:
                     pass
                 queue.put_nowait(frame)
@@ -277,22 +285,142 @@ def get_image(frame: Frame) -> tuple[np.ndarray, np.ndarray]:
 def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
     detector = get_mediapipe_model()
 
+    cursor_velocity: tuple[float, float] = (0, 0)
+    are_dragging = False
+    last_10_records = defaultdict(list)
+
+    LEFT_CLICK_RECORD = "left_click"
+    RIGHT_CLICK_RECORD = "right_click"
+    GESTURE_RECORD = "gesture"
+
+    REPEATED_FRAMES_BEFORE_ACTION = 2
+    CURSOR_VELOCITY_DECAY_RATE = 0.8
+
+    CLICK_DEPTH_THRESHOLD = 0.3
+    MOVE_DEPTH_THRESHOLD = 0.5
+    CLICK_DEPTH_LIMIT = MOVE_DEPTH_THRESHOLD - 0.5  # Limits are for visuals only
+    MOVE_DEPTH_LIMIT = 1.1  # Limits are for visuals only
+    THRESHOLDS = (CLICK_DEPTH_THRESHOLD, MOVE_DEPTH_THRESHOLD, CLICK_DEPTH_LIMIT, MOVE_DEPTH_LIMIT)
+
+    prev_index_location = None
+
     while True:
         if event.is_set():
             logger.info("End event set, closing computer control thread")
             cv2.destroyAllWindows()
             return
 
-        frame = queue.get()
+        try:
+            frame = queue.get_nowait()
+        except Empty:
+            continue
 
         color_image, depth_map = get_image(frame)
-        # queue.task_done()
-
-        detection_result, annotated_image = predict(color_image, detector, depth_map)
+        detection_result, annotated_image = predict(color_image, detector, depth_map, THRESHOLDS)
 
         display_image(color_image, depth_map)
         cv2.imshow("Annotated Image", annotated_image)
-        cv2.waitKey(1)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            logger.info("Quit key entered. Exiting...")
+            break
+
+        if not detection_result.hand_detected:
+            prev_index_location = None
+            are_dragging = False
+            pg.mouseUp(button="left")
+            continue
+
+        for k, records in last_10_records.items():
+            while len(records) > 10:
+                records.pop(0)
+        last_10_records[GESTURE_RECORD].append(detection_result.gesture)
+
+        # When we see a palm, cancel all actions
+        if (
+            detection_result.gesture in (Gesture.palm, Gesture.stop, Gesture.stop_inverted)
+            and last_10_records[GESTURE_RECORD][5:].count(detection_result.gesture) >= REPEATED_FRAMES_BEFORE_ACTION
+        ):
+            logger.info("Palm detected, cancelling actions")
+            cursor_velocity = (0, 0)
+            are_dragging = False
+            pg.mouseUp(button="left")
+            for k, records in last_10_records.items():
+                if k != GESTURE_RECORD:
+                    records.append(None)
+            prev_index_location = detection_result.index_finger_tip
+            continue
+
+        # Left Click
+        # Conditions:
+        # - Gesture must be index finger - one
+        # - Gesture must be poking through click pane
+        if (
+            detection_result.gesture == Gesture.one
+            and last_10_records[GESTURE_RECORD][5:].count(Gesture.one) >= REPEATED_FRAMES_BEFORE_ACTION
+            and not any(last_10_records[LEFT_CLICK_RECORD])
+            and detection_result.index_finger_tip.z < CLICK_DEPTH_THRESHOLD
+        ):
+            logger.info("Left click")
+            pg.click(button="left")
+            last_10_records[LEFT_CLICK_RECORD].append(True)
+
+        # Right Click
+        # Same conditions as left click but for peace gesture
+        if (
+            detection_result.gesture == Gesture.peace
+            and last_10_records[GESTURE_RECORD][5:].count(Gesture.peace) >= REPEATED_FRAMES_BEFORE_ACTION
+            and not any(last_10_records[RIGHT_CLICK_RECORD])
+            and detection_result.index_finger_tip.z < CLICK_DEPTH_THRESHOLD
+        ):
+            logger.info("Right click")
+            pg.click(button="right")
+            last_10_records[RIGHT_CLICK_RECORD].append(True)
+
+        # Click and hold for dragging
+        if (
+            detection_result.gesture in (Gesture.ok, Gesture.fist)
+            and last_10_records[GESTURE_RECORD][5:].count(detection_result.gesture) >= REPEATED_FRAMES_BEFORE_ACTION
+            and not are_dragging
+            and detection_result.index_finger_tip.z < MOVE_DEPTH_THRESHOLD
+        ):
+            logger.info("Starting left click drag")
+            pg.mouseDown(button="left")
+            are_dragging = True
+
+        if detection_result.index_finger_tip.z >= MOVE_DEPTH_THRESHOLD and are_dragging:
+            logger.info("Ending left click drag")
+            pg.mouseUp(button="left")
+            are_dragging = False
+
+        # Small, absolute movements
+        # Conditions:
+        # - Gesture must be index finger - one
+        # - Gesture must be within move pane
+        if detection_result.gesture == Gesture.one and detection_result.index_finger_tip.z < MOVE_DEPTH_THRESHOLD and prev_index_location is not None:
+            logger.info("Moving cursor with small movements")
+            scaling = 1500
+            move_x_relative = prev_index_location.x - detection_result.index_finger_tip.x
+            move_y_relative = prev_index_location.y - detection_result.index_finger_tip.y
+            move_x_relative *= scaling
+            move_y_relative *= scaling
+            pg.moveRel(-move_x_relative, -move_y_relative, duration=0.1)
+
+        # Sweeping, general movements
+        if detection_result.gesture in (Gesture.two_up, Gesture.two_up_inverted) and detection_result.index_finger_tip.z < MOVE_DEPTH_THRESHOLD and prev_index_location is not None:
+            logger.info("Moving cursor with velocity")
+            scaling = 1000
+            cursor_velocity = (
+                cursor_velocity[0] + -(prev_index_location.x - detection_result.index_finger_tip.x) * scaling,
+                cursor_velocity[1] + (prev_index_location.y - detection_result.index_finger_tip.y) * scaling,
+            )
+            # move_x_relative = prev_index_location.x - detection_result.index_finger_tip.x
+            # move_y_relative = prev_index_location.y - detection_result.index_finger_tip.y
+            # move_x_relative *= scaling
+            # move_y_relative *= scaling
+
+        prev_index_location = detection_result.index_finger_tip
+        pg.moveRel(cursor_velocity[0], -cursor_velocity[1], duration=0.1)
+        cursor_velocity = (cursor_velocity[0] * CURSOR_VELOCITY_DECAY_RATE, cursor_velocity[1] * CURSOR_VELOCITY_DECAY_RATE)
 
 
 def run(args: argparse.Namespace):
