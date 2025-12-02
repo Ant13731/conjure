@@ -18,9 +18,11 @@ class USBSender {
     private let port: UInt16
     private let host: NWEndpoint.Host = "172.20.10.7" // loopback for iproxy
     private var compressionSession: VTCompressionSession?
+    private let use_tcp: Bool
 
-    init(port: Int) {
+    init(port: Int, use_tcp: Bool) {
         self.port = UInt16(port)
+        self.use_tcp = use_tcp
         setupCompression()
     }
 
@@ -37,7 +39,7 @@ class USBSender {
         connection = NWConnection(
             host: host,
             port: NWEndpoint.Port(rawValue: port)!,
-            using: .tcp
+            using: use_tcp ? .tcp : .udp
         )
         connection?.stateUpdateHandler = { state in
             switch state {
@@ -125,14 +127,29 @@ class USBSender {
 
         return output
     }
+    func rotationFromDeviceOrientation(_ o: UIDeviceOrientation) -> UInt32 {
+        switch o {
+        case .portrait:
+            return 0
+        case .landscapeLeft:
+            return 1
+        case .portraitUpsideDown:
+            return 2
+        case .landscapeRight:
+            return 3
+        default:
+            return 0
+        }
+    }
     /// Send a single frame over USB
     func send(videoBuffer: CVImageBuffer, depthBuffer: CVPixelBuffer) {
+        let orientation = rotationFromDeviceOrientation(UIDevice.current.orientation)
         guard let connection = connection else {
             print("No connection available, dropping frame")
             return }
-        guard let session = compressionSession else {
-            print("Compression session not initialized")
-            return }
+//        guard let session = compressionSession else {
+//            print("Compression session not initialized")
+//            return }
 
 //        var flags: VTEncodeInfoFlags = []
 //        let status = VTCompressionSessionEncodeFrame(session,
@@ -164,18 +181,51 @@ class USBSender {
         let depthData = Data(bytes: depthPtr, count: depthSize)
         CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly)
         var packet = Data()
+        packet.append(withUnsafeBytes(of: UInt32(orientation).littleEndian, { Data($0) }))
         packet.append(withUnsafeBytes(of: UInt32(depthData.count).littleEndian, { Data($0) }))
         packet.append(withUnsafeBytes(of: UInt32(videoData!.count).littleEndian, { Data($0) }))
         packet.append(depthData)
         packet.append(videoData!)
 
         // --- Send over TCP ---
-        connection.send(content: packet, completion: .contentProcessed({ sendError in
-            if let sendError = sendError {
-                print("[CompressionCallback]: TCP send failed: \(sendError)")
-            }
-        }))
+        if use_tcp {
+            connection.send(content: packet, completion: .contentProcessed({ sendError in
+                        if let sendError = sendError {
+                            print("[CompressionCallback]: TCP send failed: \(sendError)")
+                        }
+                    }))
+        }else{
+            sendFrameUDP(frameData: packet, connection: connection)
+        }
+        
+//
     }
+    func sendFrameUDP(frameData: Data, connection: NWConnection) {
+        let maxPayload = 9000   // safe size
+        let totalPackets = UInt16((frameData.count + maxPayload - 1) / maxPayload)
+        var frameID = UInt64(Date().timeIntervalSince1970*1000)  // millisecond timestamp
+
+        for packetID in 0..<totalPackets {
+            let start = Int(packetID) * maxPayload
+            let end = min(start + maxPayload, frameData.count)
+            let chunk = frameData[start..<end]
+
+            var header = Data()
+            header.append(Data(bytes: &frameID, count: 8))
+            var pid = UInt16(packetID)
+            header.append(Data(bytes: &pid, count: 2))
+            var tp = UInt16(totalPackets)
+            header.append(Data(bytes: &tp, count: 2))
+
+            let packet = header + chunk
+            connection.send(content: packet, completion: .contentProcessed { sendError in
+                if let sendError = sendError {
+                    print("[CompressionCallback]: UDP send failed: \(sendError)")
+                }
+            })
+        }
+    }
+
 
     /// H.264 compression callback
     private let compressionCallback: VTCompressionOutputCallback = { (outputCallbackRefCon,

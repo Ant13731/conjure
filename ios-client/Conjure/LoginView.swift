@@ -12,8 +12,9 @@ import AVFoundation
 
 enum ConnectionMode: String, CaseIterable, Identifiable {
     case onDevice = "On-device ML"
-    case streamWebRTC = "WebRTC Stream"
+    case streamWebRTC = "WebRTC"
     case streamTCP = "TCP Stream"
+    case streamUDP = "UDP Stream"
 
     var id: String {self.rawValue}
 }
@@ -28,7 +29,7 @@ struct LoginView: View {
 
     @State private var connectedWebRTC: Bool = false
     @State private var connectedUSB: Bool = false
-    @State private var connectionMode: ConnectionMode = .streamTCP
+    @State private var connectionMode: ConnectionMode = .streamUDP
 
     @State private var webRTCClient: WebRTCClient!
     @State private var cameraManager: CameraManager!
@@ -105,10 +106,10 @@ struct LoginView: View {
 
     func handleLogin() {
 //        handleLoginWebRTC()
-        switch connectionMode {
-        case .streamTCP:
+        
+        if connectionMode == .streamTCP || connectionMode == .streamUDP {
             handleLoginUSB()
-        case _:
+        } else {
             handleLoginWebRTC()
         }
     }
@@ -119,7 +120,7 @@ struct LoginView: View {
             connectionResultMessage = "Invalid port given (must be an integer)"
             return
         }
-        usbSender = USBSender(port: int_port)
+        usbSender = USBSender(port: int_port, use_tcp: connectionMode == .streamTCP)
         usbSender.connect {success in
             if success {
                 connectionResultMessage = "Connection Result: USB connected"
@@ -210,6 +211,9 @@ struct LoginView: View {
             cameraManager = CameraManager(webRTCClient: webRTCClient)
         case .streamTCP:
             print("Starting Image-only streaming via TCP")
+            cameraManager = CameraManager(usbSender: usbSender)
+        case .streamUDP:
+            print("Starting Image-only streaming via UDP")
             cameraManager = CameraManager(usbSender: usbSender)
         }
 
