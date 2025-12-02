@@ -7,6 +7,10 @@ from aiohttp import web
 from src.webRTC_server import handshake_server
 from src.usb_server import run
 
+# NOTE in order to get this to run on mac
+# - connect mac to personal hotspot on phone
+# - use ifconfig | grep -C3 172 to find out the IP address the phone should target - should be the second one (172.20.10.15)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Conjure server - pair with client")

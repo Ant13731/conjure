@@ -159,6 +159,16 @@ class GestureRecognizerCustomResult:
     def wrist(self) -> Landmark:
         return self.landmarks[0]
 
+    @property
+    def tip_landmarks(self) -> list[Landmark]:
+        return [
+            self.thumb_tip,
+            self.index_finger_tip,
+            self.middle_finger_tip,
+            self.ring_finger_tip,
+            self.pinky_finger_tip,
+        ]
+
     @classmethod
     def from_mediapipe_result(cls, result: GestureRecognizerResult, depth_map) -> "GestureRecognizerCustomResult":
         if not result.hand_landmarks:
@@ -330,10 +340,9 @@ def draw_circle(
     depth_limit: float,
     near_color: list[int],
     far_color: list[int],
+    power: float = 0.3,
 ):
     px, py = safe_convert_norm_to_px(x, y)
-
-    power: float = 0.3
 
     if z <= depth_threshold:
         alpha = 1.0
@@ -408,56 +417,18 @@ def draw_landmarks_on_image(
     # print("Index depth:", detection_result.index_finger_tip.z)
     # print("Index x,y:", detection_result.index_finger_tip.x, detection_result.index_finger_tip.y)
 
-    draw_circle(
-        annotated_image,
-        detection_result.thumb_tip.x,
-        detection_result.thumb_tip.y,
-        detection_result.thumb_tip.z,
-        click_depth_threshold,
-        click_depth_limit,
-        [255, 200, 0],
-        [0, 0, 0],
-    )
-    draw_circle(
-        annotated_image,
-        detection_result.index_finger_tip.x,
-        detection_result.index_finger_tip.y,
-        detection_result.index_finger_tip.z,
-        click_depth_threshold,
-        click_depth_limit,
-        [255, 200, 0],
-        [0, 0, 0],
-    )
-    draw_circle(
-        annotated_image,
-        detection_result.middle_finger_tip.x,
-        detection_result.middle_finger_tip.y,
-        detection_result.middle_finger_tip.z,
-        click_depth_threshold,
-        click_depth_limit,
-        [255, 200, 0],
-        [0, 0, 0],
-    )
-    draw_circle(
-        annotated_image,
-        detection_result.ring_finger_tip.x,
-        detection_result.ring_finger_tip.y,
-        detection_result.ring_finger_tip.z,
-        click_depth_threshold,
-        click_depth_limit,
-        [255, 200, 0],
-        [0, 0, 0],
-    )
-    draw_circle(
-        annotated_image,
-        detection_result.pinky_finger_tip.x,
-        detection_result.pinky_finger_tip.y,
-        detection_result.pinky_finger_tip.z,
-        click_depth_threshold,
-        click_depth_limit,
-        [255, 200, 0],
-        [0, 0, 0],
-    )
+    for landmark in detection_result.tip_landmarks:
+        draw_circle(
+            annotated_image,
+            landmark.x,
+            landmark.y,
+            landmark.z,
+            click_depth_threshold,
+            click_depth_limit,
+            [255, 200, 0],
+            [50, 40, 0],
+            1,
+        )
     # draw_circle(annotated_image, detection_result.wrist)
     # SEPARATION = 0.01
     # draw_circle(annotated_image, depth_map, detection_result.wrist.x, detection_result.wrist.y)

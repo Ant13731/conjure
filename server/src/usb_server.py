@@ -13,9 +13,10 @@ from typing import Any
 import sys
 
 # import av
-from PIL import Image
+# from PIL import Image
 import io
-from PyQt5 import QtWidgets, QtGui
+
+# from PyQt5 import QtWidgets, QtGui
 import time
 from enum import Enum
 import pyautogui as pg
@@ -299,6 +300,7 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
 
     REPEATED_FRAMES_BEFORE_ACTION = 2
     CURSOR_VELOCITY_DECAY_RATE = 0.8
+    CURSOR_VELOCITY_STOP_THRESHOLD = 0.1
 
     CLICK_DEPTH_THRESHOLD = 0.3
     MOVE_DEPTH_THRESHOLD = 0.5
@@ -341,6 +343,8 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
         last_10_right_click = last_10_right_click[-10:]
         last_10_gestures = last_10_gestures[-5:]
         last_10_gestures.append(detection_result.gesture)
+        last_10_left_click.append(False)
+        last_10_right_click.append(False)
 
         # When we see a palm, cancel all actions
         if detection_result.gesture in (Gesture.palm, Gesture.stop, Gesture.stop_inverted) and last_10_gestures.count(detection_result.gesture) >= REPEATED_FRAMES_BEFORE_ACTION:
@@ -416,7 +420,8 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
             )
 
         prev_index_location = detection_result.index_finger_tip
-        pg.moveRel(cursor_velocity[0], -cursor_velocity[1], duration=0.1)
+        if abs(cursor_velocity[0]) > CURSOR_VELOCITY_STOP_THRESHOLD or abs(cursor_velocity[1]) > CURSOR_VELOCITY_STOP_THRESHOLD:
+            pg.moveRel(cursor_velocity[0], -cursor_velocity[1], duration=0.1)
         cursor_velocity = (cursor_velocity[0] * CURSOR_VELOCITY_DECAY_RATE, cursor_velocity[1] * CURSOR_VELOCITY_DECAY_RATE)
 
 
@@ -432,16 +437,18 @@ def run(args: argparse.Namespace):
     else:
         websocket_thread = Thread(target=run_websocket_thread_udp, args=(args.port, queue, END_EVENT))
     websocket_thread.start()
-    computer_control_thread = Thread(target=run_computer_control_thread, args=(queue, END_EVENT))
-    computer_control_thread.start()
+    # computer_control_thread = Thread(target=run_computer_control_thread, args=(queue, END_EVENT))
+    # computer_control_thread.start()
 
-    while True:
-        try:
-            time.sleep(5)
-        except KeyboardInterrupt:
-            END_EVENT.set()
-            logger.info("Server shutting down...")
-            sys.exit()
-            websocket_thread.join(2)
-            computer_control_thread.join(2)
-            break
+    # while True:
+    try:
+        # time.sleep(5)
+        # Opencv cant run in a thread
+        run_computer_control_thread(queue, END_EVENT)
+    except KeyboardInterrupt:
+        END_EVENT.set()
+        logger.info("Server shutting down...")
+        sys.exit()
+        websocket_thread.join(2)
+        # computer_control_thread.join(2)
+        # break
