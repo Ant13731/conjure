@@ -105,6 +105,7 @@ def run_websocket_thread_udp(port: int, queue: Queue[Frame], event: Event) -> No
     #     logger.info(f"Connection from {addr} has been established!")
 
     #     try:
+    logger.info("Starting UDP receive loop")
     while True:
         if event.is_set():
             logger.info("End event set, closing websocket connection thread")
@@ -313,6 +314,7 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
 
     prev_index_location = None
 
+    logger.info("Starting computer control loop")
     while True:
         if event.is_set():
             logger.info("End event set, closing computer control thread")
