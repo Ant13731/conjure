@@ -28,6 +28,7 @@ from src.gesture_classifier_model import (
     Handedness,
     Landmark,
     GestureRecognizerCustomResult,
+    draw_landmarks_on_webrtc_data,
 )
 
 HOST = "0.0.0.0"
@@ -284,7 +285,7 @@ def get_image(frame: Frame) -> tuple[np.ndarray, np.ndarray]:
     return open_cv_image, depth_map
 
 
-def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
+def run_computer_control_thread(queue: Queue[Frame | GestureRecognizerCustomResult], event: Event) -> None:
     detector = get_mediapipe_model()
     pg.PAUSE = 0
 
@@ -326,10 +327,19 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
         except Empty:
             continue
 
-        color_image, depth_map = get_image(frame)
-        detection_result, annotated_image = predict(color_image, detector, depth_map, THRESHOLDS)
+        if isinstance(frame, Frame):
+            color_image, depth_map = get_image(frame)
+            detection_result, annotated_image = predict(color_image, detector, depth_map, THRESHOLDS)
+            display_image(color_image, depth_map)
+        elif isinstance(frame, GestureRecognizerCustomResult):
+            logger.info("Received gesture result from WebRTC")
+            detection_result = frame
+            color_image = np.zeros((480, 480, 3), dtype=np.uint8)
+            depth_map = np.zeros((480, 480), dtype=np.float16) * 100.0
+            annotated_image = draw_landmarks_on_webrtc_data(frame, THRESHOLDS)
+        else:
+            raise ValueError(f"Unknown frame type received in computer control thread (got {frame})")
 
-        display_image(color_image, depth_map)
         cv2.imshow("Annotated Image", annotated_image)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             logger.info("Quit key entered. Exiting...")
@@ -428,7 +438,7 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
 
 
 def run(args: argparse.Namespace):
-    queue: Queue[Frame] = Queue(maxsize=1)
+    queue: Queue[Frame | GestureRecognizerCustomResult] = Queue(maxsize=1)
     # queue = SingleItemQueue()
 
     END_EVENT = Event()
