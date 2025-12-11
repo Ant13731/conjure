@@ -215,7 +215,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
         }
 
         let timestamp = CMSampleBufferGetPresentationTimeStamp(syncedVideo.sampleBuffer)
-        let ts = Int(timestamp.seconds) * 1000
+        let ts = Int(timestamp.seconds * 1000) 
 
         if mediapipeManager != nil {
             guard let lastFrame = try? MPImage(sampleBuffer: colorFrame) else {
@@ -223,13 +223,16 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
                 return
             }
 
-            guard let _ = try? mediapipeManager!.handLandmark.detectAsync(image: lastFrame, timestampInMilliseconds: ts) else {
-                //            print("Mediapipe discarded frame")
+            print("Sending frame to mediapipe with ts \(ts) at time \(DispatchTime.now())")
+            do {
+                try mediapipeManager!.handLandmark.recognizeAsync(image: lastFrame, timestampInMilliseconds: ts)
+            } catch {
+                print("Caught mediapipe error", error)
                 return
             }
 
             let cameraFrame = IntermediateCameraFrame(rgb: lastFrame, depth: depthFrame, ts: ts)
-
+            
             Task {await frameFuser!.sendCameraFrame(cameraFrame)}
         } else if webRTCClient != nil {
             guard let colorBuffer = CMSampleBufferGetImageBuffer(colorFrame) else {

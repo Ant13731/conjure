@@ -22,6 +22,7 @@
 		16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B234042ED00BCF007D4D4C /* USBSender.swift */; };
 		16F2572C2ED23518005B3CE0 /* TurboLUT.metal in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572B2ED23509005B3CE0 /* TurboLUT.metal */; };
 		16F2572E2ED235F6005B3CE0 /* TurboTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */; };
+		16F3A8EC2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task in Resources */ = {isa = PBXBuildFile; fileRef = 16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */; };
 		5D0B6217767CE50368E4B453 /* Pods_Conjure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25E7A4018ABAB710BCBC838E /* Pods_Conjure.framework */; };
 /* End PBXBuildFile section */
 
@@ -42,6 +43,7 @@
 		16B234042ED00BCF007D4D4C /* USBSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBSender.swift; sourceTree = "<group>"; };
 		16F2572B2ED23509005B3CE0 /* TurboLUT.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = TurboLUT.metal; sourceTree = "<group>"; };
 		16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurboTexture.swift; sourceTree = "<group>"; };
+		16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = trained_mediapipe_gesture_recognizer.task; sourceTree = "<group>"; };
 		25E7A4018ABAB710BCBC838E /* Pods_Conjure.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Conjure.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B7C7DD7AFFF38B39D7A225B9 /* Pods-Conjure.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Conjure.release.xcconfig"; path = "Target Support Files/Pods-Conjure/Pods-Conjure.release.xcconfig"; sourceTree = "<group>"; };
 		BE2FD19F2306636C3E4A10BE /* Pods-Conjure.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Conjure.debug.xcconfig"; path = "Target Support Files/Pods-Conjure/Pods-Conjure.debug.xcconfig"; sourceTree = "<group>"; };
@@ -85,6 +87,7 @@
 				1627FB7F2ECD53B600C91671 /* Info.plist */,
 				1627FB8B2ECD5CC000C91671 /* Podfile */,
 				1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */,
+				16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */,
 				1627FB7D2ECD53B600C91671 /* Config.swift */,
 				1627FB812ECD53B600C91671 /* Schema.swift */,
 				1627FB7E2ECD53B600C91671 /* ConjureApp.swift */,
@@ -185,6 +188,7 @@
 				1627FB8E2ECD5DDA00C91671 /* hand_landmarker.task in Resources */,
 				1627FB8C2ECD5CC000C91671 /* Podfile in Resources */,
 				1627FB832ECD53B600C91671 /* Assets.xcassets in Resources */,
+				16F3A8EC2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

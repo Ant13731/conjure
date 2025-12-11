@@ -12,7 +12,7 @@ import Combine
 
 
 class MediaPipeManager: NSObject {
-    var handLandmark: HandLandmarker!
+    var handLandmark: GestureRecognizer!
     unowned var frameFuser: FrameFuser!
 
     init(frameFuser: FrameFuser) {
@@ -20,27 +20,28 @@ class MediaPipeManager: NSObject {
         self.frameFuser = frameFuser
 
 //        let modelPath = Bundle.main.path(forResource: "hand_landmarker", ofType: "task")
-        let modelPath = "hand_landmarker.task"
+//        let modelPath = "hand_landmarker.task"
+        let modelPath = "trained_mediapipe_gesture_recognizer.task"
 
-        let options = HandLandmarkerOptions()
+        let options = GestureRecognizerOptions()
         options.baseOptions.modelAssetPath = modelPath
         options.runningMode = .liveStream
 //        options.minHandDetectionConfidence = DataConfig.minHandDetectionConfidence
 //        options.minHandPresenceConfidence = DataConfig.minHandPresenceConfidence
 //        options.minHandTrackingConfidence = DataConfig.minHandTrackingConfidence
         options.numHands = DataConfig.numHands
-        options.handLandmarkerLiveStreamDelegate = self
+        options.gestureRecognizerLiveStreamDelegate = self
 
-        handLandmark = try! HandLandmarker(options: options)
+        handLandmark = try! GestureRecognizer(options: options)
 
     }
 
 }
 
-extension MediaPipeManager: HandLandmarkerLiveStreamDelegate {
-    func handLandmarker(
-        _ handLandmarker: HandLandmarker,
-        didFinishDetection result: HandLandmarkerResult?,
+extension MediaPipeManager: GestureRecognizerLiveStreamDelegate {
+    func gestureRecognizer(
+        _ gestureRecognizer: GestureRecognizer,
+        didFinishGestureRecognition result: GestureRecognizerResult?,
         timestampInMilliseconds: Int,
         error: Error?) {
             if (error != nil) {

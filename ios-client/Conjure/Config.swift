@@ -4,13 +4,22 @@
 //
 //  Created by Anthony Hunt on 2025-11-18.
 //
+enum ConnectionMode: String, CaseIterable, Identifiable {
+    case onDevice = "On-device ML"
+    case streamWebRTC = "WebRTC"
+    case streamTCP = "TCP Stream"
+    case streamUDP = "UDP Stream"
+
+    var id: String {self.rawValue}
+}
 
 struct LoginConfig {
-    static let defaultIPAddress = "172.20.10.7"
+    static let defaultIPAddress = "172.20.10.15"
 //    static let defaultIPAddress = "100.95.197.55"
 //    static let defaultIPAddress = "100.115.181.103"
     static let defaultPort = "5000"
-    static let defaultConnectionMethod = "WebRTC"
+    static let defaultConnectionMode = ConnectionMode.streamUDP
+//    static let defaultConnectionMode = ConnectionMode.onDevice
 }
 
 

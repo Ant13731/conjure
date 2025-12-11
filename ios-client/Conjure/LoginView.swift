@@ -10,14 +10,7 @@ import WebRTC
 import ARKit
 import AVFoundation
 
-enum ConnectionMode: String, CaseIterable, Identifiable {
-    case onDevice = "On-device ML"
-    case streamWebRTC = "WebRTC"
-    case streamTCP = "TCP Stream"
-    case streamUDP = "UDP Stream"
 
-    var id: String {self.rawValue}
-}
 
 
 struct LoginView: View {
@@ -29,7 +22,7 @@ struct LoginView: View {
 
     @State private var connectedWebRTC: Bool = false
     @State private var connectedUSB: Bool = false
-    @State private var connectionMode: ConnectionMode = .streamUDP
+    @State private var connectionMode: ConnectionMode = LoginConfig.defaultConnectionMode
 
     @State private var webRTCClient: WebRTCClient!
     @State private var cameraManager: CameraManager!

@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--tcp_mode", action="store_true", help="Use TCP over USB instead of UDP")
     parser.add_argument("--webrtc_mode", action="store_true", help="Enable WebRTC mode for video streaming")
     # parser.add_argument("--force_usb_mode", action="store_false", help="Enable USB mode for video streaming")
-    parser.add_argument("--port", type=int, default=5000, help="Port to run the server on")
+    parser.add_argument("--port", type=int, default=5001, help="Port to run the server on")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host to run the server on")
     # parser.add_argument("--host", type=str, default="100.95.197.55", help="Host to run the server on")
     # parser.add_argument("--host", type=str, default="100.115.181.103", help="Host to run the server on")

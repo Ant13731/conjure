@@ -322,23 +322,29 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
             return
 
         try:
+            # print("Waiting for frame")
             frame = queue.get_nowait()
+            # print("Got frame")
         except Empty:
             continue
 
         color_image, depth_map = get_image(frame)
         detection_result, annotated_image = predict(color_image, detector, depth_map, THRESHOLDS)
+        # print("ran detection")
 
         display_image(color_image, depth_map)
         cv2.imshow("Annotated Image", annotated_image)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             logger.info("Quit key entered. Exiting...")
             break
+        # print("displayed image")
 
         if not detection_result.hand_detected:
             prev_index_location = None
             are_dragging = False
+            # print("here")
             pg.mouseUp(button="left")
+            # print("here")
             continue
 
         last_10_left_click = last_10_left_click[-10:]
@@ -347,6 +353,8 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
         last_10_gestures.append(detection_result.gesture)
         last_10_left_click.append(False)
         last_10_right_click.append(False)
+
+        # print("here")
 
         # When we see a palm, cancel all actions
         if detection_result.gesture in (Gesture.palm, Gesture.stop, Gesture.stop_inverted) and last_10_gestures.count(detection_result.gesture) >= REPEATED_FRAMES_BEFORE_ACTION:
@@ -358,6 +366,7 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
             last_10_right_click.append(False)
             prev_index_location = detection_result.index_finger_tip
             continue
+        # print("hung1")
 
         # Left Click
         # Conditions:
@@ -372,6 +381,7 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
             logger.info("Left click")
             pg.click(button="left")
             last_10_left_click.append(True)
+        # print("hung2")
 
         # Right Click
         # Same conditions as left click but for peace gesture
@@ -384,6 +394,7 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
             logger.info("Right click")
             pg.click(button="right")
             last_10_right_click.append(True)
+        # print("hung3")
 
         # Click and hold for dragging
         if (
@@ -395,11 +406,13 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
             logger.info("Starting left click drag")
             pg.mouseDown(button="left")
             are_dragging = True
+        # print("hung4")
 
         if detection_result.index_finger_tip.z >= MOVE_DEPTH_THRESHOLD and are_dragging:
             logger.info("Ending left click drag")
             pg.mouseUp(button="left")
             are_dragging = False
+        # print("hung5")
 
         # Small, absolute movements
         # Conditions:
@@ -412,6 +425,7 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
             move_x_relative *= MOUSE_SCALING
             move_y_relative *= MOUSE_SCALING
             pg.moveRel(-move_x_relative, -move_y_relative, duration=0.1)
+        # print("hung6")
 
         # Sweeping, general movements
         if detection_result.gesture in (Gesture.two_up, Gesture.two_up_inverted) and detection_result.index_finger_tip.z < MOVE_DEPTH_THRESHOLD and prev_index_location is not None:
@@ -420,11 +434,13 @@ def run_computer_control_thread(queue: Queue[Frame], event: Event) -> None:
                 cursor_velocity[0] + -(prev_index_location.x - detection_result.index_finger_tip.x) * SWIPE_SCALING,
                 cursor_velocity[1] + (prev_index_location.y - detection_result.index_finger_tip.y) * SWIPE_SCALING,
             )
+        # print("hung7")
 
         prev_index_location = detection_result.index_finger_tip
         if abs(cursor_velocity[0]) > CURSOR_VELOCITY_STOP_THRESHOLD or abs(cursor_velocity[1]) > CURSOR_VELOCITY_STOP_THRESHOLD:
             pg.moveRel(cursor_velocity[0], -cursor_velocity[1], duration=0.1)
         cursor_velocity = (cursor_velocity[0] * CURSOR_VELOCITY_DECAY_RATE, cursor_velocity[1] * CURSOR_VELOCITY_DECAY_RATE)
+        # print("hung8")
 
 
 def run(args: argparse.Namespace):
