@@ -2,6 +2,7 @@ import cv2
 import time
 import numpy as np
 import mediapipe as mp  # type: ignore[import]
+import json
 
 from mediapipe.tasks.python import BaseOptions  # type: ignore[import]
 from mediapipe.tasks.python.vision.core.vision_task_running_mode import VisionTaskRunningMode  # type: ignore[import]
@@ -222,6 +223,18 @@ class GestureRecognizerCustomResult:
             landmarks=landmarks,
         )
 
+    @classmethod
+    def from_webrtc_result(cls, result: bytes) -> "GestureRecognizerCustomResult":
+        payload = json.loads(result.decode("utf-8"))
+        return cls(
+            hand_detected=True,
+            gesture=Gesture.from_str(payload["gesture"]),
+            gesture_confidence=float(payload["gesture_confidence"]),
+            handedness=Handedness.from_str(payload["handedness"]),
+            handedness_confidence=float(payload["handedness_confidence"]),
+            landmarks=[Landmark(**landmark) for landmark in payload["landmarks"]],
+        )
+
 
 def get_mediapipe_model() -> GestureRecognizer:
     """Get mediapipe model for gesture recognition (model is selected through config)."""
@@ -365,6 +378,42 @@ def draw_circle(
     color = (dark_color * (1 - alpha) + bright_color * alpha).astype(np.uint8)
 
     cv2.circle(image, (px, py), radius=10, color=color.tolist(), thickness=-1)
+
+
+def draw_landmarks_on_webrtc_data(
+    detection_result: GestureRecognizerCustomResult,
+    thresholds: tuple[float, float, float, float],
+) -> np.ndarray:
+    click_depth_threshold, move_depth_threshold, click_depth_limit, move_depth_limit = thresholds
+
+    annotated_image = np.zeros((480, 480, 3), dtype=np.uint8)
+
+    for landmark in detection_result.landmarks:
+        draw_circle(
+            annotated_image,
+            landmark.x,
+            landmark.y,
+            landmark.z,
+            move_depth_threshold,
+            move_depth_limit,
+            [255, 255, 255],
+            [0, 0, 0],
+        )
+
+    for landmark in detection_result.tip_landmarks:
+        draw_circle(
+            annotated_image,
+            landmark.x,
+            landmark.y,
+            landmark.z,
+            click_depth_threshold,
+            click_depth_limit,
+            [255, 200, 0],
+            [50, 40, 0],
+            1,
+        )
+
+    return annotated_image
 
 
 def draw_landmarks_on_image(
