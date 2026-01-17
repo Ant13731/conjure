@@ -5,26 +5,23 @@ Welcome to Conjure, a controller-free system for controlling your computer! Requ
 ## Features
 <p align="center">
   <img src="docs/images/hand_mediapipe.png" alt="Conjure in action" width="300"/>
-
-  Conjure in action, running on-device.
 </p>
 
 - Mouse movement according to hand position, controlled using the depth and RGB sensors in your front-facing phone camera
 - Specific gestures to control common inputs ("index finger" for left click, "peace" for right click, "pinch" to click and drag)
 
+High level architecture (certain modes may work wirelessly):
 <p align="center">
   <img src="docs/images/highLevelArch.png" alt="Conjure in action" width="500"/>
-  High level architecture. Certain modes may work wirelessly.
 </p>
+Mental model of the system:
 <p align="center">
   <img src="docs/images/mentalModel.png" alt="Conjure in action" width="300"/>
-  Mental model of the system.
 </p>
 <p align="center">
   <img src="docs/images/index_back.jpg" alt="Conjure in action" height="130"/>
   <img src="docs/images/index_middle.jpg" alt="Conjure in action" height="130"/>
   <img src="docs/images/index_front.jpg" alt="Conjure in action" height="130"/>
-  System behaviour
 </p>
 
 
