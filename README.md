@@ -23,7 +23,7 @@ Welcome to Conjure, a controller-free system for controlling your computer! Requ
   <img src="docs/images/index_back.jpg" alt="Conjure in action" height="170"/>
   <img src="docs/images/index_middle.jpg" alt="Conjure in action" height="170"/>
   <img src="docs/images/index_front.jpg" alt="Conjure in action" height="170"/>
-  <figcaption> Mental model of the system. </figcaption>
+  <figcaption>System behaviour</figcaption>
 </figure>
 
 
