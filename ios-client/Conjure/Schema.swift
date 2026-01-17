@@ -5,30 +5,44 @@
 //  Created by Anthony Hunt on 2025-11-18.
 //
 
+import AVFoundation
 import Foundation
 import MediaPipeTasksVision
-import AVFoundation
 
+/// Represents a single landmark/joint of a hand detected by mediapipe and post-processed with data from the TrueDepth sensor
 struct Landmark: Codable {
-    let x: Float
-    let y: Float
-    let z: Float?
-    let visibility: Float?
 
-     //0 for right hand, 1 for left
+    /// Normalized coordinate in [0.0, 1.0] representing horizontal position in the image
+    let x: Float
+
+    /// Normalized coordinate in [0.0, 1.0] representing vertical position in the image
+    let y: Float
+
+    /// Depth value relative to the camera's plane, taken from the TrueDepth sensor
+    let z: Float?
+
+    /// Depth value relative to the wrist according to mediapipe
+    let relativeDepth: Float?
+
+    /// Visibility of each joint may determine which depth to use
+    let visible: Bool?
 }
 
-struct Frame: Codable {
+/// Represents a single detected hand with its landmarks and gesture
+struct LandmarkedHand: Codable {
+    /// Should be "Left" or "Right"
     let handedness: String
+    let landmarks: [Landmark]
     let gesture: String
     let handedness_confidence: Float
     let gesture_confidence: Float
-//    let id: UInt32
-    let timestamp: Int
-    // Key corresponds to mediapipe digit labels (1 for thumb tip, etc.)
-    let landmarks: [Landmark]
 }
 
+/// Final frame to send through the connection, containing all detected hands and their landmarks
+struct LandmarkedFrame: Codable {
+    let hands: [LandmarkedHand]
+    let timestamp: Int
+}
 
 struct IntermediateCameraFrame {
     let rgb: MPImage

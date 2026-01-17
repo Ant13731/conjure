@@ -11,7 +11,9 @@ import SwiftUI
 struct ConjureApp: App {
     var body: some Scene {
         WindowGroup {
-            LoginView()
+            NavigationStack {
+                MainView()
+            }
         }
     }
 }

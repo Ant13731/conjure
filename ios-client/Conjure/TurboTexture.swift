@@ -441,8 +441,8 @@ class TurboLUTManager {
 
     func formatDepthBufferMetal(
         depthBuffer: CVPixelBuffer,
-        minDepth: Float = Float(DataConfig.minDepth),
-        maxDepth: Float = Float(DataConfig.maxDepth)
+//        minDepth: Float = Float(DataConfig.minDepth),
+//        maxDepth: Float = Float(DataConfig.maxDepth)
     ) -> CVPixelBuffer? {
 
         let width = CVPixelBufferGetWidth(depthBuffer)
@@ -548,8 +548,8 @@ class TurboLUTManager {
         encoder.setTexture(turboLUTTexture, index: 1)
         encoder.setTexture(dstTex, index: 2)
 
-        var params = DepthParams(minDepth: minDepth, maxDepth: maxDepth)
-        encoder.setBytes(&params, length: MemoryLayout<DepthParams>.size, index: 0)
+//        var params = DepthParams(minDepth: minDepth, maxDepth: maxDepth)
+//        encoder.setBytes(&params, length: MemoryLayout<DepthParams>.size, index: 0)
 
         // 4) Dispatch
         let w = pipelineState.threadExecutionWidth

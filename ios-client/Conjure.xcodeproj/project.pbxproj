@@ -7,18 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		160C94C02F1C31ED005C9E5F /* Conjure Icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 160C94BF2F1C31ED005C9E5F /* Conjure Icon.icon */; };
 		16143FBC2ECE8A0300D5BDFC /* RTCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */; };
 		16143FBE2ECE965E00D5BDFC /* MediaPipeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */; };
 		16143FC02ECEA1CC00D5BDFC /* FrameFuser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBF2ECEA1C900D5BDFC /* FrameFuser.swift */; };
 		16228CD52EAEBB010015672C /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 16228CD42EAEBB010015672C /* WebRTC */; };
 		1627FB832ECD53B600C91671 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB7B2ECD53B600C91671 /* Assets.xcassets */; };
 		1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7C2ECD53B600C91671 /* CameraManager.swift */; };
-		1627FB872ECD53B600C91671 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7D2ECD53B600C91671 /* Config.swift */; };
 		1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7E2ECD53B600C91671 /* ConjureApp.swift */; };
 		1627FB892ECD53B600C91671 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB802ECD53B600C91671 /* LoginView.swift */; };
 		1627FB8A2ECD53B600C91671 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB812ECD53B600C91671 /* Schema.swift */; };
 		1627FB8C2ECD5CC000C91671 /* Podfile in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB8B2ECD5CC000C91671 /* Podfile */; };
 		1627FB8E2ECD5DDA00C91671 /* hand_landmarker.task in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */; };
+		163C67112F1C52BC00DC5661 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C670D2F1C52BC00DC5661 /* MainView.swift */; };
+		163C67122F1C52BC00DC5661 /* ConnectionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C670E2F1C52BC00DC5661 /* ConnectionConfig.swift */; };
+		163C67132F1C52BC00DC5661 /* RecognitionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C670F2F1C52BC00DC5661 /* RecognitionConfig.swift */; };
 		16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B234042ED00BCF007D4D4C /* USBSender.swift */; };
 		16F2572C2ED23518005B3CE0 /* TurboLUT.metal in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572B2ED23509005B3CE0 /* TurboLUT.metal */; };
 		16F2572E2ED235F6005B3CE0 /* TurboTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */; };
@@ -27,19 +30,22 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		160C94BF2F1C31ED005C9E5F /* Conjure Icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Conjure Icon.icon"; sourceTree = "<group>"; };
 		16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTCClient.swift; sourceTree = "<group>"; };
 		16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPipeManager.swift; sourceTree = "<group>"; };
 		16143FBF2ECEA1C900D5BDFC /* FrameFuser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameFuser.swift; sourceTree = "<group>"; };
 		1627D3C72EAE826D00836F94 /* Conjure.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Conjure.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1627FB7B2ECD53B600C91671 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1627FB7C2ECD53B600C91671 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
-		1627FB7D2ECD53B600C91671 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		1627FB7E2ECD53B600C91671 /* ConjureApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConjureApp.swift; sourceTree = "<group>"; };
 		1627FB7F2ECD53B600C91671 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1627FB802ECD53B600C91671 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		1627FB812ECD53B600C91671 /* Schema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
 		1627FB8B2ECD5CC000C91671 /* Podfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Podfile; sourceTree = SOURCE_ROOT; };
 		1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = hand_landmarker.task; sourceTree = "<group>"; };
+		163C670D2F1C52BC00DC5661 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		163C670E2F1C52BC00DC5661 /* ConnectionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionConfig.swift; sourceTree = "<group>"; };
+		163C670F2F1C52BC00DC5661 /* RecognitionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionConfig.swift; sourceTree = "<group>"; };
 		16B234042ED00BCF007D4D4C /* USBSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBSender.swift; sourceTree = "<group>"; };
 		16F2572B2ED23509005B3CE0 /* TurboLUT.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = TurboLUT.metal; sourceTree = "<group>"; };
 		16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurboTexture.swift; sourceTree = "<group>"; };
@@ -69,6 +75,7 @@
 				1627D3C82EAE826D00836F94 /* Products */,
 				CA6BE904A512FF8EB81FB835 /* Pods */,
 				7069F41FA41C14DFC2565E01 /* Frameworks */,
+				160C94BF2F1C31ED005C9E5F /* Conjure Icon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -88,7 +95,8 @@
 				1627FB8B2ECD5CC000C91671 /* Podfile */,
 				1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */,
 				16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */,
-				1627FB7D2ECD53B600C91671 /* Config.swift */,
+				163C670D2F1C52BC00DC5661 /* MainView.swift */,
+				163C67102F1C52BC00DC5661 /* persistent_config */,
 				1627FB812ECD53B600C91671 /* Schema.swift */,
 				1627FB7E2ECD53B600C91671 /* ConjureApp.swift */,
 				1627FB802ECD53B600C91671 /* LoginView.swift */,
@@ -101,6 +109,15 @@
 				16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */,
 			);
 			path = Conjure;
+			sourceTree = "<group>";
+		};
+		163C67102F1C52BC00DC5661 /* persistent_config */ = {
+			isa = PBXGroup;
+			children = (
+				163C670E2F1C52BC00DC5661 /* ConnectionConfig.swift */,
+				163C670F2F1C52BC00DC5661 /* RecognitionConfig.swift */,
+			);
+			path = persistent_config;
 			sourceTree = "<group>";
 		};
 		7069F41FA41C14DFC2565E01 /* Frameworks */ = {
@@ -187,6 +204,7 @@
 			files = (
 				1627FB8E2ECD5DDA00C91671 /* hand_landmarker.task in Resources */,
 				1627FB8C2ECD5CC000C91671 /* Podfile in Resources */,
+				160C94C02F1C31ED005C9E5F /* Conjure Icon.icon in Resources */,
 				1627FB832ECD53B600C91671 /* Assets.xcassets in Resources */,
 				16F3A8EC2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task in Resources */,
 			);
@@ -227,8 +245,10 @@
 				16F2572C2ED23518005B3CE0 /* TurboLUT.metal in Sources */,
 				16143FBE2ECE965E00D5BDFC /* MediaPipeManager.swift in Sources */,
 				1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */,
-				1627FB872ECD53B600C91671 /* Config.swift in Sources */,
 				16F2572E2ED235F6005B3CE0 /* TurboTexture.swift in Sources */,
+				163C67112F1C52BC00DC5661 /* MainView.swift in Sources */,
+				163C67122F1C52BC00DC5661 /* ConnectionConfig.swift in Sources */,
+				163C67132F1C52BC00DC5661 /* RecognitionConfig.swift in Sources */,
 				16143FC02ECEA1CC00D5BDFC /* FrameFuser.swift in Sources */,
 				1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */,
 				1627FB892ECD53B600C91671 /* LoginView.swift in Sources */,
@@ -364,21 +384,23 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BE2FD19F2306636C3E4A10BE /* Pods-Conjure.debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Conjure Icon";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3UYLKW3D59;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Conjure/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Conjure;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to stream video content to the connected computer.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses the Face ID sensor to stream depth-related information to your computer.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -400,21 +422,23 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = B7C7DD7AFFF38B39D7A225B9 /* Pods-Conjure.release.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Conjure Icon";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3UYLKW3D59;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Conjure/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Conjure;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to stream video content to the connected computer.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses the Face ID sensor to stream depth-related information to your computer.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
