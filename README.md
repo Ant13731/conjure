@@ -3,28 +3,28 @@
 Welcome to Conjure, a controller-free system for controlling your computer! Requires an iPhone with FaceID.
 
 ## Features
-<figure align="center">
+<p align="center">
   <img src="docs/images/hand_mediapipe.png" alt="Conjure in action" width="300"/>
   <figcaption> Conjure in action, running on-device. </figcaption>
-</figure>
+</p>
 
 - Mouse movement according to hand position, controlled using the depth and RGB sensors in your front-facing phone camera
 - Specific gestures to control common inputs ("index finger" for left click, "peace" for right click, "pinch" to click and drag)
 
-<figure align="center">
+<p align="center">
   <img src="docs/images/highLevelArch.png" alt="Conjure in action" width="500"/>
-  <figcaption> High level architecture. Certain modes may work wirelessly. </figcaption>
-</figure>
-<figure align="center">
+  <figcaption> High level architecture. Certain modes may work wirelessly.</figcaption>
+</p>
+<p align="center">
   <img src="docs/images/mentalModel.png" alt="Conjure in action" width="300"/>
-  <figcaption> Mental model of the system. </figcaption>
-</figure>
-<figure align="center">
+  <figcaption> Mental model of the system.</figcaption>
+</p>
+<p align="center">
   <img src="docs/images/index_back.jpg" alt="Conjure in action" height="170"/>
   <img src="docs/images/index_middle.jpg" alt="Conjure in action" height="170"/>
   <img src="docs/images/index_front.jpg" alt="Conjure in action" height="170"/>
   <figcaption>System behaviour</figcaption>
-</figure>
+</p>
 
 
 ### Known Bugs/Future Features
