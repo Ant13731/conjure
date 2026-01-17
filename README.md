@@ -5,7 +5,8 @@ Welcome to Conjure, a controller-free system for controlling your computer! Requ
 ## Features
 <p align="center">
   <img src="docs/images/hand_mediapipe.png" alt="Conjure in action" width="300"/>
-  <figcaption> Conjure in action, running on-device. </figcaption>
+
+  Conjure in action, running on-device.
 </p>
 
 - Mouse movement according to hand position, controlled using the depth and RGB sensors in your front-facing phone camera
@@ -13,17 +14,17 @@ Welcome to Conjure, a controller-free system for controlling your computer! Requ
 
 <p align="center">
   <img src="docs/images/highLevelArch.png" alt="Conjure in action" width="500"/>
-  <figcaption> High level architecture. Certain modes may work wirelessly.</figcaption>
+  High level architecture. Certain modes may work wirelessly.
 </p>
 <p align="center">
   <img src="docs/images/mentalModel.png" alt="Conjure in action" width="300"/>
-  <figcaption> Mental model of the system.</figcaption>
+  Mental model of the system.
 </p>
 <p align="center">
-  <img src="docs/images/index_back.jpg" alt="Conjure in action" height="170"/>
-  <img src="docs/images/index_middle.jpg" alt="Conjure in action" height="170"/>
-  <img src="docs/images/index_front.jpg" alt="Conjure in action" height="170"/>
-  <figcaption>System behaviour</figcaption>
+  <img src="docs/images/index_back.jpg" alt="Conjure in action" height="130"/>
+  <img src="docs/images/index_middle.jpg" alt="Conjure in action" height="130"/>
+  <img src="docs/images/index_front.jpg" alt="Conjure in action" height="130"/>
+  System behaviour
 </p>
 
 
