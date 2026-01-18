@@ -17,6 +17,7 @@ struct MainView: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject var connectionConfig: ConnectionConfigStore
     @EnvironmentObject var recognitionConfig: RecognitionConfigStore
+    @StateObject private var cameraManager = CameraManager()
 
     // Debug/functional vars
     @State private var connectionMessage: String = ""
@@ -71,7 +72,9 @@ struct MainView: View {
     @ViewBuilder
     var backgroundView: some View {
         if isConnected && isStreaming {
-            VideoStreamView()
+            // VideoStreamView()
+            FrontCameraView()
+                .environmentObject(cameraManager)
         } else {
             Color.black
         }
@@ -166,6 +169,33 @@ struct MainView: View {
         ) {
             // TODO: See if we should check for a connection before allowing streaming, otherwise show error
             isStreaming.toggle()
+
+            if !isStreaming {
+                if !cameraManager.isSessionSetUp {
+                    Task {
+                        let setupMessage = await cameraManager.setupSession()
+                        if let msg = setupMessage {
+                            debugErrorMessage = msg
+                            return
+                        }
+
+                        let startMessage = cameraManager.startSession()
+                        if let msg = startMessage {
+                            debugErrorMessage = msg
+                            return
+                        }
+                    }
+                    return
+                }
+                let startMessage = cameraManager.startSession()
+                if let msg = startMessage {
+                    debugErrorMessage = msg
+                    return
+                }
+
+            } else {
+                cameraManager.stopSession()
+            }
         }
     }
     var settingsButton: some View {
