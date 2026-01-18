@@ -47,12 +47,12 @@ struct HostConfig: Identifiable, Codable, Equatable {
 struct ConnectionConfig: Codable {
     var webRTCChannelLabel: String
     var queueSize: Int
-    var connectionMode: ConnectionMode
+    var mode: ConnectionMode
 
     static let `default` = ConnectionConfig(
         webRTCChannelLabel: "hand_landmarks",
         queueSize: 1,
-        connectionMode: .default
+        mode: .default
     )
 }
 
@@ -65,13 +65,17 @@ final class ConnectionConfigStore: ObservableObject {
     @Published var connectionConfig: ConnectionConfig = ConnectionConfig.default {
         didSet { saveConnectionConfig() }
     }
+    @Published var currentHostConfig: HostConfig? = nil {
+        didSet { saveCurrentHostConfig() }
+    }
 
     private let keyHosts = "hostConfigs"
     private let keyConnectionConfig = "connectionConfig"
-
+    private let keyCurrentHostConfig = "currentHostConfig"
     init() {
         loadHosts()
         loadConnectionConfig()
+        loadCurrentHostConfig()
     }
 
     private func loadHosts() {
@@ -118,6 +122,32 @@ final class ConnectionConfigStore: ObservableObject {
             UserDefaults.standard.set(data, forKey: keyConnectionConfig)
         } catch {
             print("Failed to save connection configuration (json encoding error): \(error)")
+        }
+    }
+    private func loadCurrentHostConfig() {
+        guard let data = UserDefaults.standard.data(forKey: keyCurrentHostConfig) else {
+            print("No saved current host configuration found - key not found in UserDefaults.")
+            currentHostConfig = nil
+            return
+        }
+        do {
+            currentHostConfig = try JSONDecoder().decode(HostConfig.self, from: data)
+        } catch {
+            currentHostConfig = nil
+            print("Failed to load current host configuration (json decoding error): \(error)")
+            return
+        }
+    }
+    private func saveCurrentHostConfig() {
+        do {
+            if let current = currentHostConfig {
+                let data = try JSONEncoder().encode(current)
+                UserDefaults.standard.set(data, forKey: keyCurrentHostConfig)
+            } else {
+                UserDefaults.standard.removeObject(forKey: keyCurrentHostConfig)
+            }
+        } catch {
+            print("Failed to save current host configuration (json encoding error): \(error)")
         }
     }
 }

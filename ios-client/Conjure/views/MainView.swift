@@ -10,12 +10,14 @@ import AVFoundation
 import SwiftUI
 import WebRTC
 
-enum Route: Hashable {
-    case settings
-}
-
 /// General idea: camera shows in the background, with a separate settings view
+/// TODO: Implement a trackpad mode (need to export this to another view)
 struct MainView: View {
+    // State objs
+    @EnvironmentObject var router: Router
+    @EnvironmentObject var connectionConfig: ConnectionConfigStore
+    @EnvironmentObject var recognitionConfig: RecognitionConfigStore
+
     // Debug/functional vars
     @State private var connectionMessage: String = ""
     @State private var debugErrorMessage: String = ""
@@ -23,8 +25,6 @@ struct MainView: View {
     @State private var isStreaming: Bool = false
 
     // Header information
-    @State private var displayConnectedIP: String = ""
-    @State private var displayConnectedPort: String = ""
     var displayStatus: String {
         if isConnected {
             if isStreaming {
@@ -35,45 +35,36 @@ struct MainView: View {
         return "Not connected"
     }
 
-    @State private var path = NavigationPath()
-
     var body: some View {
-        NavigationStack(path: $path) {
-            ZStack {
-                // MARK: Background Camera View
-                backgroundView.ignoresSafeArea()
+        ZStack {
+            // MARK: Background Camera View
+            backgroundView.ignoresSafeArea()
 
-                // MARK: Foreground Overlay
+            // MARK: Foreground Overlay
+            VStack {
+                header
+                Spacer()
+                if !isConnected || !isStreaming {
+                    disconnectedOverlay
+                }
+                Spacer()
+                if !debugErrorMessage.isEmpty {
+                    debugMessage
+                }
+                Spacer()
+
+            }
+            // MARK: Control buttons
+            HStack {
+                Spacer()
                 VStack {
-                    header
                     Spacer()
-                    if !isConnected || !isStreaming {
-                        disconnectedOverlay
-                    }
-                    Spacer()
-                    if !debugErrorMessage.isEmpty {
-                        debugMessage
-                    }
-                    Spacer()
+                    connectButton
+                    enableCameraButton
+                    settingsButton
+                }
+            }
 
-                }
-                // MARK: Control buttons
-                HStack {
-                    Spacer()
-                    VStack {
-                        Spacer()
-                        connectButton
-                        enableCameraButton
-                        settingsButton
-                    }
-                }
-            }
-            .navigationDestination(for: Route.self) { route in
-                switch route {
-                case .settings:
-                    SettingsView()
-                }
-            }
         }
     }
 
@@ -88,8 +79,8 @@ struct MainView: View {
     var header: some View {
         VStack {
             Text("Status: " + displayStatus)
-            if !displayConnectedIP.isEmpty && !displayConnectedPort.isEmpty {
-                Text(displayConnectedIP + ":" + displayConnectedPort)
+            if let currentHost = connectionConfig.currentHostConfig {
+                Text(currentHost.ipAddress + ":" + currentHost.port)
             }
         }
         .font(.subheadline.monospaced())
@@ -136,67 +127,53 @@ struct MainView: View {
             )
             .clipShape(RoundedRectangle(cornerRadius: 12))
     }
-    var connectButton: some View {
+    @ViewBuilder
+    private func actionButtonBuilder(
+        systemImage: String,
+        isActive: Bool,
+        activeColor: Color = .green,
+        action: @escaping () -> Void
+    ) -> some View {
         Button {
+            action()
+        } label: {
+            Image(systemName: systemImage)
+                .font(.system(size: 22))
+                .padding()
+                .foregroundStyle(isActive ? activeColor : .white)
+                .background(.ultraThinMaterial)
+                .clipShape(Circle())
+                .shadow(radius: 4)
+        }
+    }
+    var connectButton: some View {
+        actionButtonBuilder(
+            systemImage: "dot.radiowaves.left.and.right",
+            isActive: isConnected,
+        ) {
             if !isConnected {
                 isConnected = true
             } else {
                 // TODO: If it is already connected, should we retry connection or just disconnect?
                 isConnected = false
             }
-        } label: {
-            Image(systemName: "dot.radiowaves.left.and.right")
-                .font(.system(size: 22))
-                .padding()
-                .foregroundStyle(isConnected ? .green : .red)
-                .background(.ultraThinMaterial)
-                .clipShape(Circle())
-                .shadow(radius: 4)
         }
     }
     var enableCameraButton: some View {
-        Button {
+        actionButtonBuilder(
+            systemImage: "video.fill",
+            isActive: isStreaming,
+        ) {
             // TODO: See if we should check for a connection before allowing streaming, otherwise show error
             isStreaming.toggle()
-        } label: {
-            Image(systemName: "video.fill")
-                .font(.system(size: 22))
-                .padding()
-                .foregroundStyle(isStreaming ? .green : .white)
-                .background(.ultraThinMaterial)
-                .clipShape(Circle())
-                .shadow(radius: 4)
         }
     }
     var settingsButton: some View {
-        Button {
-            path.append(Route.settings)
-        } label: {
-            Image(systemName: "gearshape.fill")
-                .font(.system(size: 22))
-                .padding()
-                .foregroundStyle(.white)
-                .background(.ultraThinMaterial)
-                .clipShape(Circle())
-                .shadow(radius: 4)
-        }
-    }
-}
+        actionButtonBuilder(
+            systemImage: "gearshape.fill", isActive: false,
+            action: {
+                router.path.append(Route.settings)
+            })
 
-// Stubs
-struct VideoStreamView: View {
-    var body: some View {
-        Color.black
-            .overlay(
-                Text("Video Stream")
-                    .foregroundColor(.white)
-            )
-    }
-}
-
-struct SettingsView: View {
-    var body: some View {
-        Text("Settings")
-            .navigationTitle("Settings")
     }
 }

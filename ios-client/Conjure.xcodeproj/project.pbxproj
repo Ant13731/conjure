@@ -22,6 +22,10 @@
 		163C67112F1C52BC00DC5661 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C670D2F1C52BC00DC5661 /* MainView.swift */; };
 		163C67122F1C52BC00DC5661 /* ConnectionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C670E2F1C52BC00DC5661 /* ConnectionConfig.swift */; };
 		163C67132F1C52BC00DC5661 /* RecognitionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C670F2F1C52BC00DC5661 /* RecognitionConfig.swift */; };
+		163C67162F1C684100DC5661 /* VideoStreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C67152F1C683C00DC5661 /* VideoStreamView.swift */; };
+		163C67182F1C684700DC5661 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C67172F1C684400DC5661 /* SettingsView.swift */; };
+		163C671A2F1C77F900DC5661 /* RecognitionConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C67192F1C77EE00DC5661 /* RecognitionConfigView.swift */; };
+		163C671C2F1C780D00DC5661 /* HostListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C671B2F1C780400DC5661 /* HostListView.swift */; };
 		16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B234042ED00BCF007D4D4C /* USBSender.swift */; };
 		16F2572C2ED23518005B3CE0 /* TurboLUT.metal in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572B2ED23509005B3CE0 /* TurboLUT.metal */; };
 		16F2572E2ED235F6005B3CE0 /* TurboTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */; };
@@ -46,6 +50,10 @@
 		163C670D2F1C52BC00DC5661 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		163C670E2F1C52BC00DC5661 /* ConnectionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionConfig.swift; sourceTree = "<group>"; };
 		163C670F2F1C52BC00DC5661 /* RecognitionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionConfig.swift; sourceTree = "<group>"; };
+		163C67152F1C683C00DC5661 /* VideoStreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoStreamView.swift; sourceTree = "<group>"; };
+		163C67172F1C684400DC5661 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		163C67192F1C77EE00DC5661 /* RecognitionConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionConfigView.swift; sourceTree = "<group>"; };
+		163C671B2F1C780400DC5661 /* HostListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostListView.swift; sourceTree = "<group>"; };
 		16B234042ED00BCF007D4D4C /* USBSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBSender.swift; sourceTree = "<group>"; };
 		16F2572B2ED23509005B3CE0 /* TurboLUT.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = TurboLUT.metal; sourceTree = "<group>"; };
 		16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurboTexture.swift; sourceTree = "<group>"; };
@@ -95,11 +103,10 @@
 				1627FB8B2ECD5CC000C91671 /* Podfile */,
 				1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */,
 				16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */,
-				163C670D2F1C52BC00DC5661 /* MainView.swift */,
+				1627FB7E2ECD53B600C91671 /* ConjureApp.swift */,
+				163C67142F1C67CF00DC5661 /* views */,
 				163C67102F1C52BC00DC5661 /* persistent_config */,
 				1627FB812ECD53B600C91671 /* Schema.swift */,
-				1627FB7E2ECD53B600C91671 /* ConjureApp.swift */,
-				1627FB802ECD53B600C91671 /* LoginView.swift */,
 				16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */,
 				1627FB7C2ECD53B600C91671 /* CameraManager.swift */,
 				16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */,
@@ -118,6 +125,19 @@
 				163C670F2F1C52BC00DC5661 /* RecognitionConfig.swift */,
 			);
 			path = persistent_config;
+			sourceTree = "<group>";
+		};
+		163C67142F1C67CF00DC5661 /* views */ = {
+			isa = PBXGroup;
+			children = (
+				163C671B2F1C780400DC5661 /* HostListView.swift */,
+				163C67192F1C77EE00DC5661 /* RecognitionConfigView.swift */,
+				163C67172F1C684400DC5661 /* SettingsView.swift */,
+				163C67152F1C683C00DC5661 /* VideoStreamView.swift */,
+				163C670D2F1C52BC00DC5661 /* MainView.swift */,
+				1627FB802ECD53B600C91671 /* LoginView.swift */,
+			);
+			path = views;
 			sourceTree = "<group>";
 		};
 		7069F41FA41C14DFC2565E01 /* Frameworks */ = {
@@ -242,6 +262,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				163C67182F1C684700DC5661 /* SettingsView.swift in Sources */,
 				16F2572C2ED23518005B3CE0 /* TurboLUT.metal in Sources */,
 				16143FBE2ECE965E00D5BDFC /* MediaPipeManager.swift in Sources */,
 				1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */,
@@ -249,9 +270,12 @@
 				163C67112F1C52BC00DC5661 /* MainView.swift in Sources */,
 				163C67122F1C52BC00DC5661 /* ConnectionConfig.swift in Sources */,
 				163C67132F1C52BC00DC5661 /* RecognitionConfig.swift in Sources */,
+				163C671A2F1C77F900DC5661 /* RecognitionConfigView.swift in Sources */,
 				16143FC02ECEA1CC00D5BDFC /* FrameFuser.swift in Sources */,
 				1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */,
+				163C671C2F1C780D00DC5661 /* HostListView.swift in Sources */,
 				1627FB892ECD53B600C91671 /* LoginView.swift in Sources */,
+				163C67162F1C684100DC5661 /* VideoStreamView.swift in Sources */,
 				16143FBC2ECE8A0300D5BDFC /* RTCClient.swift in Sources */,
 				16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */,
 				1627FB8A2ECD53B600C91671 /* Schema.swift in Sources */,

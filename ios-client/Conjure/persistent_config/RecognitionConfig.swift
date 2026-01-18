@@ -2,10 +2,10 @@ import AVFoundation
 import Combine
 
 struct RecognitionConfig: Codable {
-    let numHands: Int
-    let landmarkDepthPixelRadius: Int
-    let minDepth: Float  //TODO do we need min/max depth here? Especially for on device ML?
-    let maxDepth: Float
+    var numHands: Int
+    var landmarkDepthPixelRadius: Int
+    var minDepth: Float  //TODO do we need min/max depth here? Especially for on device ML?
+    var maxDepth: Float
 
     static let `default` = RecognitionConfig(
         numHands: 1,
