@@ -32,10 +32,6 @@ struct SettingsView: View {
                 }
             }
         }
-
-        // Add a list of settings
-        // Open Host list view
-        // Open Recognition settings view
         .padding(.bottom, 24)
         .navigationTitle("Settings")
     }
@@ -120,6 +116,7 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(.ultraThinMaterial)
             )
+            .padding(.horizontal)
         }
     }
 }

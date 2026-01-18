@@ -18,13 +18,3 @@ struct VideoStreamView: View {
             )
     }
 }
-
-struct HostListView: View {
-    var body: some View {
-        Color.black
-            .overlay(
-                Text("Hosts List")
-                    .foregroundColor(.white)
-            )
-    }
-}
