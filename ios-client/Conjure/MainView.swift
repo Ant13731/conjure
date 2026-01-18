@@ -17,9 +17,9 @@ enum Route: Hashable {
 /// General idea: camera shows in the background, with a separate settings view
 struct MainView: View {
     // Debug/functional vars
-    @State private var connectionMessage: String = "test12"
-    @State private var debugErrorMessage: String = "test1"
-    @State private var isConnected: Bool = true
+    @State private var connectionMessage: String = ""
+    @State private var debugErrorMessage: String = ""
+    @State private var isConnected: Bool = false
     @State private var isStreaming: Bool = false
 
     // Header information
@@ -55,12 +55,18 @@ struct MainView: View {
                         debugMessage
                     }
                     Spacer()
-                    HStack {
+
+                }
+                // MARK: Control buttons
+                HStack {
+                    Spacer()
+                    VStack {
                         Spacer()
+                        connectButton
+                        enableCameraButton
                         settingsButton
                     }
                 }
-                .padding()
             }
             .navigationDestination(for: Route.self) { route in
                 switch route {
@@ -130,6 +136,38 @@ struct MainView: View {
             )
             .clipShape(RoundedRectangle(cornerRadius: 12))
     }
+    var connectButton: some View {
+        Button {
+            if !isConnected {
+                isConnected = true
+            } else {
+                // TODO: If it is already connected, should we retry connection or just disconnect?
+                isConnected = false
+            }
+        } label: {
+            Image(systemName: "dot.radiowaves.left.and.right")
+                .font(.system(size: 22))
+                .padding()
+                .foregroundStyle(isConnected ? .green : .red)
+                .background(.ultraThinMaterial)
+                .clipShape(Circle())
+                .shadow(radius: 4)
+        }
+    }
+    var enableCameraButton: some View {
+        Button {
+            // TODO: See if we should check for a connection before allowing streaming, otherwise show error
+            isStreaming.toggle()
+        } label: {
+            Image(systemName: "video.fill")
+                .font(.system(size: 22))
+                .padding()
+                .foregroundStyle(isStreaming ? .green : .white)
+                .background(.ultraThinMaterial)
+                .clipShape(Circle())
+                .shadow(radius: 4)
+        }
+    }
     var settingsButton: some View {
         Button {
             path.append(Route.settings)
@@ -142,7 +180,6 @@ struct MainView: View {
                 .clipShape(Circle())
                 .shadow(radius: 4)
         }
-        .padding()
     }
 }
 
