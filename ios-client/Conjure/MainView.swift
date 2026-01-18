@@ -10,12 +10,16 @@ import AVFoundation
 import SwiftUI
 import WebRTC
 
+enum Route: Hashable {
+    case settings
+}
+
 /// General idea: camera shows in the background, with a separate settings view
 struct MainView: View {
     // Debug/functional vars
-    @State private var debugErrorMessage: String = ""
-    @State private var connectionMessage: String = ""
-    @State private var isConnected: Bool = false
+    @State private var connectionMessage: String = "test12"
+    @State private var debugErrorMessage: String = "test1"
+    @State private var isConnected: Bool = true
     @State private var isStreaming: Bool = false
 
     // Header information
@@ -31,36 +35,38 @@ struct MainView: View {
         return "Not connected"
     }
 
-    var body: some View {
-        ZStack {
-            // MARK: Background Camera View
-            backgroundView.ignoresSafeArea()
+    @State private var path = NavigationPath()
 
-            // MARK: Foreground Overlay
-            VStack {
-                header
-                Spacer()
-                if !isConnected {
-                    disconnectedOverlay
+    var body: some View {
+        NavigationStack(path: $path) {
+            ZStack {
+                // MARK: Background Camera View
+                backgroundView.ignoresSafeArea()
+
+                // MARK: Foreground Overlay
+                VStack {
+                    header
                     Spacer()
+                    if !isConnected || !isStreaming {
+                        disconnectedOverlay
+                    }
+                    Spacer()
+                    if !debugErrorMessage.isEmpty {
+                        debugMessage
+                    }
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        settingsButton
+                    }
                 }
-                if !debugErrorMessage.isEmpty {
-                    Text("Debug: " + debugErrorMessage)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .padding(8)
-                        .background(
-                            Color.white.opacity(0.8)
-                                .blur(radius: 1)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
+                .padding()
             }
-            .padding()
-        }
-        .toolbar {
-            ToolbarItem(placement: .bottomBar) {
-                settingsButton
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .settings:
+                    SettingsView()
+                }
             }
         }
     }
@@ -74,10 +80,9 @@ struct MainView: View {
         }
     }
     var header: some View {
-        VStack(alignment: .leading) {
+        VStack {
             Text("Status: " + displayStatus)
-            Spacer()
-            if isConnected {
+            if !displayConnectedIP.isEmpty && !displayConnectedPort.isEmpty {
                 Text(displayConnectedIP + ":" + displayConnectedPort)
             }
         }
@@ -90,7 +95,6 @@ struct MainView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
-
     var disconnectedOverlay: some View {
         VStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -101,10 +105,12 @@ struct MainView: View {
                 .font(.headline)
                 .foregroundColor(.white)
 
-            Text(connectionMessage)
-                .font(.subheadline)
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
+            if !connectionMessage.isEmpty {
+                Text(connectionMessage)
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+            }
         }
         .padding(24)
         .background(
@@ -113,13 +119,30 @@ struct MainView: View {
                 .blur(radius: 1)
         )
     }
+    var debugMessage: some View {
+        Text("Debug: " + debugErrorMessage)
+            .font(.caption)
+            .foregroundColor(.red)
+            .padding(8)
+            .background(
+                Color.white.opacity(0.8)
+                    .blur(radius: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
     var settingsButton: some View {
-        NavigationLink {
-            SettingsView()
+        Button {
+            path.append(Route.settings)
         } label: {
             Image(systemName: "gearshape.fill")
-                .foregroundColor(.white)
+                .font(.system(size: 22))
+                .padding()
+                .foregroundStyle(.white)
+                .background(.ultraThinMaterial)
+                .clipShape(Circle())
+                .shadow(radius: 4)
         }
+        .padding()
     }
 }
 
