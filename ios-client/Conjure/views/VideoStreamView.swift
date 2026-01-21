@@ -103,21 +103,7 @@ class CameraManager: NSObject, ObservableObject {
         return nil
     }
 
-    func startSession() -> String? {
-        if !isSessionSetUp {
-            isSessionRunning = false
-            return "Must set up session before starting/stopping session"
-        }
 
-        captureSession.startRunning()
-        isSessionRunning = true
-        return nil
-    }
-
-    func stopSession() {
-        captureSession.stopRunning()
-        isSessionRunning = false
-    }
 
     private func setupCamera() -> String? {
         guard
@@ -198,6 +184,22 @@ class CameraManager: NSObject, ObservableObject {
         }
         captureSession.addOutput(depthOut)
         return nil
+    }
+
+    func startSession() -> String? {
+        if !isSessionSetUp {
+            isSessionRunning = false
+            return "Must set up session before starting/stopping session"
+        }
+
+        captureSession.startRunning()
+        isSessionRunning = true
+        return nil
+    }
+
+    func stopSession() {
+        captureSession.stopRunning()
+        isSessionRunning = false
     }
 }
 

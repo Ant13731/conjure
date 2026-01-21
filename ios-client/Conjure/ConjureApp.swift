@@ -10,7 +10,9 @@ import SwiftUI
 
 enum Route: Hashable {
     case settings
+    case settingsGeneral
     case settingsHostList
+    case settingsTrackpad
     case settingsRecognition
 }
 
@@ -21,33 +23,58 @@ final class Router: ObservableObject {
 
 @main
 struct ConjureApp: App {
-    @StateObject private var connectionConfigStore = ConnectionConfigStore()
-    @StateObject private var recognitionConfigStore = RecognitionConfigStore()
+    @StateObject private var generalSettings = PersistentSettings<GeneralSettings>()
+    @StateObject private var hostListSettings = PersistentSettings<HostListSettings>()
+    @StateObject private var trackpadSettings = PersistentSettings<TrackpadSettings>()
+    @StateObject private var recognitionSettings = PersistentSettings<RecognitionSettings>()
     @StateObject private var router = Router()
 
     var body: some Scene {
         WindowGroup {
             NavigationStack(path: $router.path) {
                 MainView()
-                    .environmentObject(connectionConfigStore)
-                    .environmentObject(recognitionConfigStore)
+                    .environmentObject(generalSettings)
+                    .environmentObject(hostListSettings)
+                    .environmentObject(trackpadSettings)
+                    .environmentObject(recognitionSettings)
                     .environmentObject(router)
+
                     .navigationDestination(for: Route.self) { route in
                         switch route {
                         case .settings:
                             SettingsView()
-                                .environmentObject(connectionConfigStore)
-                                .environmentObject(recognitionConfigStore)
+                                .environmentObject(generalSettings)
+                                .environmentObject(hostListSettings)
+                                .environmentObject(trackpadSettings)
+                                .environmentObject(recognitionSettings)
                                 .environmentObject(router)
                         case .settingsHostList:
                             HostListView()
-                                .environmentObject(connectionConfigStore)
-                                .environmentObject(recognitionConfigStore)
+                                .environmentObject(generalSettings)
+                                .environmentObject(hostListSettings)
+                                .environmentObject(trackpadSettings)
+                                .environmentObject(recognitionSettings)
                                 .environmentObject(router)
                         case .settingsRecognition:
-                            RecognitionConfigView()
-                                .environmentObject(connectionConfigStore)
-                                .environmentObject(recognitionConfigStore)
+                            RecognitionView()
+                                .environmentObject(generalSettings)
+                                .environmentObject(hostListSettings)
+                                .environmentObject(trackpadSettings)
+                                .environmentObject(recognitionSettings)
+                                .environmentObject(router)
+                        case .settingsTrackpad:
+                            TrackpadView()
+                                .environmentObject(generalSettings)
+                                .environmentObject(hostListSettings)
+                                .environmentObject(trackpadSettings)
+                                .environmentObject(recognitionSettings)
+                                .environmentObject(router)
+                        case .settingsGeneral:
+                            GeneralView()
+                                .environmentObject(generalSettings)
+                                .environmentObject(hostListSettings)
+                                .environmentObject(trackpadSettings)
+                                .environmentObject(recognitionSettings)
                                 .environmentObject(router)
                         }
                     }

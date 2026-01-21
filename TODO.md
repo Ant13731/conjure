@@ -1,0 +1,26 @@
+TODO Features:
+- ios-client
+    - MainView:
+        - trackpad should take up bottom 3/4 - 5/6 of the screen
+        - Dont display video on mainscreen, just whether it has started
+        - Buttons will be at the top of the screen, either beside or underneath header info: Start/stop connection, start/stop streaming data, navigate to settings
+    - Settings page:
+        - button to swap between trackpad/video - Input Mode Selection
+        - organize the setting sections like so:
+            - current mode config
+            - button to go to config mode switcher
+            - current host
+            - button to go to list host switcher
+            - trackpad config
+            - to trackpad subpage
+            - recognition config
+            - recognition config subpage
+    - RTC:
+        - one way payload channel
+        - two way config-change-communication channel (or just use HTTP requests for this in a separate thread)
+    - Storage classes:
+        - make a generic storage class with consts for each class all listed in one file.
+        - Each new const should accept an argument for the key name (or make this based on UUID? would be easier to debug with concrete key name) and the type to store
+- server
+    - trackpad driver
+    - RTC channel configuration/communication

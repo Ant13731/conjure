@@ -35,51 +35,50 @@ extension Binding {
     }
 }
 
-struct RecognitionConfigView: View {
-    @EnvironmentObject var connectionConfigStore: ConnectionConfigStore
-    @EnvironmentObject var recognitionConfigStore: RecognitionConfigStore
+struct RecognitionView: View {
+    @EnvironmentObject var recognitionSettings: PersistentSettings<RecognitionSettings>
 
     var body: some View {
         Form {
             VStack(alignment: .leading) {
                 Text(
-                    "Hands to detect: \(recognitionConfigStore.recognitionConfig.numHands)",
+                    "Hands to detect: \(recognitionSettings.value.numHands)",
                 )
                 Slider(
-                    value: .convert($recognitionConfigStore.recognitionConfig.numHands),
+                    value: .convert($recognitionSettings.value.numHands),
                     in: 1.0...2.0,
                     step: 1.0
                 )
 
                 Text(
-                    "Landmark depth pixel search radius: \(recognitionConfigStore.recognitionConfig.landmarkDepthPixelRadius)",
+                    "Landmark depth pixel search radius: \(recognitionSettings.value.landmarkDepthPixelRadius)",
                 )
                 Slider(
                     value: .convert(
-                        $recognitionConfigStore.recognitionConfig.landmarkDepthPixelRadius),
+                        $recognitionSettings.value.landmarkDepthPixelRadius),
                     in: 0.0...10.0,
                     step: 1.0
                 )
 
                 Text(
-                    "Min depth: \(recognitionConfigStore.recognitionConfig.minDepth, specifier: "%.2f") m"
+                    "Min depth: \(recognitionSettings.value.minDepth, specifier: "%.2f") m"
                 )
                 Slider(
-                    value: $recognitionConfigStore.recognitionConfig.minDepth,
+                    value: $recognitionSettings.value.minDepth,
                     in: 0.0...1.0,
                     step: 0.05
                 )
 
                 Text(
-                    "Max depth: \(recognitionConfigStore.recognitionConfig.maxDepth, specifier: "%.2f") m"
+                    "Max depth: \(recognitionSettings.value.maxDepth, specifier: "%.2f") m"
                 )
                 Slider(
-                    value: $recognitionConfigStore.recognitionConfig.maxDepth,
+                    value: $recognitionSettings.value.maxDepth,
                     in: 1.0...5.0,
                     step: 0.05
                 )
             }
         }
-        .navigationTitle("Recognition Configuration")
+        .navigationTitle("Recognition Settings")
     }
 }

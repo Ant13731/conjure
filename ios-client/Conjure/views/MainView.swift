@@ -15,8 +15,11 @@ import WebRTC
 struct MainView: View {
     // State objs
     @EnvironmentObject var router: Router
-    @EnvironmentObject var connectionConfig: ConnectionConfigStore
-    @EnvironmentObject var recognitionConfig: RecognitionConfigStore
+    @EnvironmentObject var generalSettings: PersistentSettings<GeneralSettings>
+    @EnvironmentObject var hostListSettings: PersistentSettings<HostListSettings>
+    @EnvironmentObject var trackpadSettings: PersistentSettings<TrackpadSettings>
+    @EnvironmentObject var recognitionSettings: PersistentSettings<RecognitionSettings>
+
     @StateObject private var cameraManager = CameraManager()
 
     // Debug/functional vars
@@ -82,8 +85,12 @@ struct MainView: View {
     var header: some View {
         VStack {
             Text("Status: " + displayStatus)
-            if let currentHost = connectionConfig.currentHostConfig {
-                Text(currentHost.ipAddress + ":" + currentHost.port)
+            if let currentHost = hostListSettings.value.currentHost {
+                if let friendlyName = currentHost.friendlyName, !friendlyName.isEmpty {
+                    Text("\(currentHost.ipAddress):\(currentHost.port) (\(friendlyName))")
+                } else {
+                    Text("\(currentHost.ipAddress):\(currentHost.port)")
+                }
             }
         }
         .font(.subheadline.monospaced())
@@ -164,7 +171,7 @@ struct MainView: View {
     }
     var enableCameraButton: some View {
         actionButtonBuilder(
-            systemImage: "video.fill",
+            systemImage: "record.circle",
             isActive: isStreaming,
         ) {
             // TODO: See if we should check for a connection before allowing streaming, otherwise show error

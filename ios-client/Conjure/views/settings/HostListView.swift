@@ -9,14 +9,14 @@ import AVFoundation
 import SwiftUI
 
 struct HostListView: View {
-    @EnvironmentObject var connectionConfigStore: ConnectionConfigStore
-    @State private var editingHost: HostConfig?
+    @EnvironmentObject var hostListSettings: PersistentSettings<HostListSettings>
+    @State private var editingHost: HostSettings?
     @State private var showAddHost = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading) {
-                ForEach(connectionConfigStore.hosts) { host in
+                ForEach(hostListSettings.value.hosts) { host in
                     entry(host: host)
                 }
                 Divider()
@@ -55,10 +55,10 @@ struct HostListView: View {
     }
 
     @ViewBuilder
-    private func entry(host: HostConfig) -> some View {
+    private func entry(host: HostSettings) -> some View {
         HStack {
             Button {
-                connectionConfigStore.currentHostConfig = host
+                hostListSettings.value.currentHost = host
             } label: {
                 HStack {
                     Text(host.friendlyName ?? host.ipAddress)
@@ -70,7 +70,7 @@ struct HostListView: View {
             .buttonStyle(.borderless)
 
             HStack(alignment: .center, spacing: 8) {
-                if connectionConfigStore.currentHostConfig == host {
+                if hostListSettings.value.currentHost == host {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                 }
@@ -99,9 +99,9 @@ struct HostListView: View {
         .padding(.horizontal)
     }
 
-    private func deleteHost(_ host: HostConfig) {
-        if let index = connectionConfigStore.hosts.firstIndex(of: host) {
-            connectionConfigStore.hosts.remove(at: index)
+    private func deleteHost(_ host: HostSettings) {
+        if let index = hostListSettings.value.hosts.firstIndex(of: host) {
+            hostListSettings.value.hosts.remove(at: index)
         }
     }
 
@@ -109,9 +109,9 @@ struct HostListView: View {
 
 struct EditHostView: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var connectionConfigStore: ConnectionConfigStore
+    @EnvironmentObject var hostListSettings: PersistentSettings<HostListSettings>
 
-    var hostToEdit: HostConfig?
+    var hostToEdit: HostSettings?
 
     @State private var friendlyName: String = ""
     @State private var ipAddress: String = ""
@@ -169,27 +169,27 @@ struct EditHostView: View {
             hostToEdit.ipAddress = ipAddress
             hostToEdit.port = port
 
-            if let index = connectionConfigStore.hosts.firstIndex(where: { $0.id == hostToEdit.id })
-            {
-                connectionConfigStore.hosts[index] = hostToEdit
+            if let index = hostListSettings.value.hosts.firstIndex(where: { $0.id == hostToEdit.id }
+            ) {
+                hostListSettings.value.hosts[index] = hostToEdit
+
+                // If new host was previously the current host, update that as well
+                if hostListSettings.value.currentHost?.id == hostToEdit.id {
+                    hostListSettings.value.currentHost = hostToEdit
+                }
+
                 return
             }
             print("Failed to find host to edit in store, adding as new host instead.")
 
         }
 
-        let newHost = HostConfig(
+        let newHost = HostSettings(
             ipAddress: ipAddress,
             port: port,
             friendlyName: friendlyName.isEmpty ? nil : friendlyName,
         )
 
-        // if let editing = hostToEdit,
-        //     let index = connectionConfigStore.hosts.firstIndex(where: { $0.id == hostToEdit.id })
-        // {
-        //     connectionConfigStore.hosts[index] = newHost
-        // } else {
-        connectionConfigStore.hosts.append(newHost)
-        // }
+        hostListSettings.value.hosts.append(newHost)
     }
 }
