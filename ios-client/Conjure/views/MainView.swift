@@ -44,9 +44,8 @@ struct MainView: View {
             // MARK: Background Camera View
             backgroundView.ignoresSafeArea()
 
-            // MARK: Foreground Overlay
+            // MARK: Messages and Foreground overlay
             VStack {
-                header
                 Spacer()
                 if !isConnected || !isStreaming {
                     disconnectedOverlay
@@ -58,15 +57,17 @@ struct MainView: View {
                 Spacer()
 
             }
-            // MARK: Control buttons
-            HStack {
-                Spacer()
-                VStack {
+
+            // MARK: Status and Action Buttons
+            VStack {
+                HStack {
+                    header
                     Spacer()
                     connectButton
                     enableCameraButton
                     settingsButton
                 }
+                Spacer()
             }
 
         }
@@ -83,13 +84,12 @@ struct MainView: View {
         }
     }
     var header: some View {
-        VStack {
-            Text("Status: " + displayStatus)
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Status:\n  \(displayStatus)")
             if let currentHost = hostListSettings.value.currentHost {
+                Text("  \(currentHost.ipAddress):\(currentHost.port)")
                 if let friendlyName = currentHost.friendlyName, !friendlyName.isEmpty {
-                    Text("\(currentHost.ipAddress):\(currentHost.port) (\(friendlyName))")
-                } else {
-                    Text("\(currentHost.ipAddress):\(currentHost.port)")
+                    Text("  \(friendlyName)")
                 }
             }
         }
@@ -148,7 +148,7 @@ struct MainView: View {
             action()
         } label: {
             Image(systemName: systemImage)
-                .font(.system(size: 22))
+                .font(.system(size: 20))
                 .padding()
                 .foregroundStyle(isActive ? activeColor : .white)
                 .background(.ultraThinMaterial)
@@ -177,6 +177,7 @@ struct MainView: View {
             // TODO: See if we should check for a connection before allowing streaming, otherwise show error
             isStreaming.toggle()
 
+            // TODO handle start/stop actions async - right now if you click start and then stop immediately the camera won't stop...
             if !isStreaming {
                 if !cameraManager.isSessionSetUp {
                     Task {
