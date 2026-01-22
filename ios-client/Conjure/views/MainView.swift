@@ -28,18 +28,16 @@ struct MainView: View {
     @State private var isConnected: Bool = false
     @State private var isStreaming: Bool = false
     @State private var isProcessingStreamChange: Bool = false
-    @State private var wasStreamingBeforeSettings: Bool = false
-    @State private var operationModeBeforeSettings: OperationMode?
 
     // Header information
     var displayStatus: String {
-        if isConnected {
-            if isStreaming {
-                return "Streaming"
-            }
+        if !isConnected {
+            return "Not connected"
+        }
+        if !isStreaming {
             return "Streaming paused"
         }
-        return "Not connected"
+        return "Streaming"
     }
 
     var body: some View {
@@ -86,18 +84,7 @@ struct MainView: View {
 
         }
         .onChange(of: generalSettings.value.operationMode) { _ in
-            // When switching operation modes, ensure streaming is off and the camera session stops
-            if isStreaming {
-                cameraManager.stopSession()
-                //TODO trackpadManager.stopSession() if needed
-                isStreaming = false
-            }
-        }
-        .onChange(of: router.path.count) { newCount in
-            // When returning from settings (path emptied), restore prior streaming state if desired
-            if newCount == 0 {
-                restoreStreamingIfNeeded()
-            }
+            stopStreaming()
         }
     }
 
@@ -158,10 +145,7 @@ struct MainView: View {
         .font(.subheadline.monospaced())
         .foregroundColor(.white)
         .padding(8)
-        .background(
-            .ultraThinMaterial.opacity(0.8)
-                // .blur(radius: 10)
-        )
+        .background(.ultraThinMaterial.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     var disconnectedOverlay: some View {
@@ -259,9 +243,6 @@ struct MainView: View {
         actionButtonBuilder(
             systemImage: "gearshape.fill", isActive: false,
             action: {
-                // Stop streaming before leaving for settings so we don't keep the camera alive
-                wasStreamingBeforeSettings = isStreaming
-                operationModeBeforeSettings = generalSettings.value.operationMode
                 stopStreaming()
                 router.path.append(Route.settings)
             })
@@ -278,15 +259,6 @@ private extension MainView {
                 cameraManager.stopSession()
                 isStreaming = false
             }
-        }
-    }
-
-    func restoreStreamingIfNeeded() {
-        guard wasStreamingBeforeSettings else { return }
-        guard operationModeBeforeSettings != nil, generalSettings.value.operationMode == operationModeBeforeSettings else { return }
-        wasStreamingBeforeSettings = false
-        Task {
-            await startStreaming()
         }
     }
 

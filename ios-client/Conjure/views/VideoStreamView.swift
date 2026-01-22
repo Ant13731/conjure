@@ -326,7 +326,6 @@ struct FrontCameraView: View {
 
     var body: some View {
         CameraPreviewView(
-            // TODO fix this camera streaming not working...
             previewLayer: cameraManager.previewLayer
         )
         .ignoresSafeArea(.all)
