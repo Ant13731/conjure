@@ -42,6 +42,7 @@ struct MainView: View {
     var body: some View {
         ZStack {
             // MARK: Background Camera View
+            // TODO if in trackpad mode, this is a plain background. if in camera mode, show mediapipe frames
             backgroundView.ignoresSafeArea()
 
             // MARK: Messages and Foreground overlay
@@ -68,6 +69,16 @@ struct MainView: View {
                     settingsButton
                 }
                 Spacer()
+                // MARK: Trackpad
+
+                if generalSettings.value.operationMode == .trackpad {
+                    ZStack{
+                        // After some inactivity (or on error), fade out the trackpad view
+                        visibleTrackpadView
+                        // TODO add invisible trackpad sensor layer
+                    }
+                }
+                // TODO if in camera mode, hide trackpad. If in trackpad mode, show trackpad overlay. this sould take up at least 75%-85% of the screen
             }
 
         }
@@ -75,12 +86,44 @@ struct MainView: View {
 
     @ViewBuilder
     var backgroundView: some View {
-        if isConnected && isStreaming {
+        if isConnected && isStreaming && generalSettings.value.operationMode == .handRecognition {
             // VideoStreamView()
             FrontCameraView()
                 .environmentObject(cameraManager)
         } else {
             Color.black
+        }
+    }
+    var visibleTrackpadView: some View {
+            GeometryReader { geo in
+            VStack {
+                Spacer()
+
+                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                    .fill(.ultraThinMaterial.opacity(0.5))
+                    .frame(height: geo.size.height * 0.97)
+                    .frame(maxWidth: .infinity)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 32, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.25),
+                                        Color.white.opacity(0.05),
+                                        Color.clear
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    ).shadow(
+                        color: Color.black.opacity(0.15),
+                        radius: 20,
+                        y: 8
+                    )
+
+            }
+            .ignoresSafeArea(edges: .bottom)
         }
     }
     var header: some View {
