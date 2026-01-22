@@ -28,6 +28,8 @@ struct MainView: View {
     @State private var isConnected: Bool = false
     @State private var isStreaming: Bool = false
     @State private var isProcessingStreamChange: Bool = false
+    @State private var wasStreamingBeforeSettings: Bool = false
+    @State private var operationModeBeforeSettings: OperationMode?
 
     // Header information
     var displayStatus: String {
@@ -83,6 +85,20 @@ struct MainView: View {
             }
 
         }
+        .onChange(of: generalSettings.value.operationMode) { _ in
+            // When switching operation modes, ensure streaming is off and the camera session stops
+            if isStreaming {
+                cameraManager.stopSession()
+                //TODO trackpadManager.stopSession() if needed
+                isStreaming = false
+            }
+        }
+        .onChange(of: router.path.count) { newCount in
+            // When returning from settings (path emptied), restore prior streaming state if desired
+            if newCount == 0 {
+                restoreStreamingIfNeeded()
+            }
+        }
     }
 
     @ViewBuilder
@@ -96,10 +112,9 @@ struct MainView: View {
         }
     }
     var visibleTrackpadView: some View {
-            GeometryReader { geo in
+        GeometryReader { geo in
             VStack {
                 Spacer()
-
                 RoundedRectangle(cornerRadius: 32, style: .continuous)
                     .fill(.ultraThinMaterial.opacity(0.5))
                     .frame(height: geo.size.height * 0.97)
@@ -128,21 +143,24 @@ struct MainView: View {
         }
     }
     var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Status:\n  \(displayStatus)")
-            if let currentHost = hostListSettings.value.currentHost {
-                Text("  \(currentHost.ipAddress):\(currentHost.port)")
-                if let friendlyName = currentHost.friendlyName, !friendlyName.isEmpty {
-                    Text("  \(friendlyName)")
+        HStack{
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Status:\n  \(displayStatus)")
+                if let currentHost = hostListSettings.value.currentHost {
+                    Text("  \(currentHost.ipAddress):\(currentHost.port)")
+                    if let friendlyName = currentHost.friendlyName, !friendlyName.isEmpty {
+                        Text("  \(friendlyName)")
+                    }
                 }
             }
+            Spacer()
         }
         .font(.subheadline.monospaced())
         .foregroundColor(.white)
-        .padding(.vertical, 8)
+        .padding(8)
         .background(
-            Color.black.opacity(0.4)
-                .blur(radius: 10)
+            .ultraThinMaterial.opacity(0.8)
+                // .blur(radius: 10)
         )
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
@@ -227,27 +245,12 @@ struct MainView: View {
             isProcessingStreamChange = true
             Task {
                 defer {isProcessingStreamChange = false}
-                // TODO: See if we should check for a connection before allowing streaming, otherwise show error
 
                 if !isStreaming {
-                    if !cameraManager.isSessionSetUp {
-                        let setupMessage = await cameraManager.setupSession()
-                        if let msg = setupMessage {
-                            debugErrorMessage = msg
-                            return
-                        }
-                    }
-
-                    let startMessage = cameraManager.startSession()
-                    if let msg = startMessage {
-                        debugErrorMessage = msg
-                        return
-                    }
-                    isStreaming = true
+                    await startStreaming()
 
                 } else {
-                    cameraManager.stopSession()
-                    isStreaming = false
+                    stopStreaming()
                 }
             }
         }.disabled(isProcessingStreamChange)
@@ -256,8 +259,56 @@ struct MainView: View {
         actionButtonBuilder(
             systemImage: "gearshape.fill", isActive: false,
             action: {
+                // Stop streaming before leaving for settings so we don't keep the camera alive
+                wasStreamingBeforeSettings = isStreaming
+                operationModeBeforeSettings = generalSettings.value.operationMode
+                stopStreaming()
                 router.path.append(Route.settings)
             })
 
+    }
+}
+
+// MARK: - Streaming helpers
+private extension MainView {
+    func stopStreaming() {
+        // TODO: Handle streaming for trackpads
+        if generalSettings.value.operationMode == .handRecognition {
+            if isStreaming {
+                cameraManager.stopSession()
+                isStreaming = false
+            }
+        }
+    }
+
+    func restoreStreamingIfNeeded() {
+        guard wasStreamingBeforeSettings else { return }
+        guard operationModeBeforeSettings != nil, generalSettings.value.operationMode == operationModeBeforeSettings else { return }
+        wasStreamingBeforeSettings = false
+        Task {
+            await startStreaming()
+        }
+    }
+
+    func startStreaming() async {
+        // TODO: See if we should check for a connection before allowing streaming, otherwise show error
+        // TODO: Handle streaming for trackpads
+
+        if generalSettings.value.operationMode == .handRecognition {
+            if !cameraManager.isSessionSetUp {
+                let setupMessage = await cameraManager.setupSession()
+                if let msg = setupMessage {
+                    debugErrorMessage = msg
+                    return
+                }
+            }
+
+            let startMessage = cameraManager.startSession()
+            if let msg = startMessage {
+                debugErrorMessage = msg
+                return
+            }
+            isStreaming = true
+        }
     }
 }

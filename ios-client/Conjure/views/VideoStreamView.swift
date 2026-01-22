@@ -103,8 +103,6 @@ class CameraManager: NSObject, ObservableObject {
         return nil
     }
 
-
-
     private func setupCamera() -> String? {
         guard
             // Get the default (only) front facing camera
@@ -297,15 +295,29 @@ struct CameraPreviewView: UIViewRepresentable {
     let previewLayer: AVCaptureVideoPreviewLayer
 
     func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        previewLayer.frame = view.bounds
-        previewLayer.videoGravity = .resizeAspectFill
-        view.layer.addSublayer(previewLayer)
+        let view = PreviewLayerContainerView()
+        view.setPreviewLayer(previewLayer)
         return view
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
-        previewLayer.frame = uiView.bounds
+        guard let containerView = uiView as? PreviewLayerContainerView else { return }
+        containerView.layoutIfNeeded()
+    }
+}
+
+class PreviewLayerContainerView: UIView {
+    private weak var previewLayer: AVCaptureVideoPreviewLayer?
+
+    func setPreviewLayer(_ layer: AVCaptureVideoPreviewLayer) {
+        self.previewLayer = layer
+        layer.videoGravity = .resizeAspectFill
+        self.layer.addSublayer(layer)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        previewLayer?.frame = bounds
     }
 }
 
