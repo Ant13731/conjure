@@ -27,6 +27,7 @@ struct MainView: View {
     @State private var debugErrorMessage: String = ""
     @State private var isConnected: Bool = false
     @State private var isStreaming: Bool = false
+    @State private var isProcessingStreamChange: Bool = false
 
     // Header information
     var displayStatus: String {
@@ -65,7 +66,7 @@ struct MainView: View {
                     header
                     Spacer()
                     connectButton
-                    enableCameraButton
+                    enableStreamButton
                     settingsButton
                 }
                 Spacer()
@@ -212,42 +213,44 @@ struct MainView: View {
             }
         }
     }
-    var enableCameraButton: some View {
+    var enableStreamButton: some View {
         actionButtonBuilder(
             systemImage: "record.circle",
             isActive: isStreaming,
         ) {
-            // TODO: See if we should check for a connection before allowing streaming, otherwise show error
-            isStreaming.toggle()
 
-            // TODO handle start/stop actions async - right now if you click start and then stop immediately the camera won't stop...
-            if !isStreaming {
-                if !cameraManager.isSessionSetUp {
-                    Task {
+            guard !isProcessingStreamChange else {
+                print("Already processing stream change, ignoring repeated button press")
+                return
+            }
+
+            isProcessingStreamChange = true
+            Task {
+                defer {isProcessingStreamChange = false}
+                // TODO: See if we should check for a connection before allowing streaming, otherwise show error
+
+                if !isStreaming {
+                    if !cameraManager.isSessionSetUp {
                         let setupMessage = await cameraManager.setupSession()
                         if let msg = setupMessage {
                             debugErrorMessage = msg
                             return
                         }
-
-                        let startMessage = cameraManager.startSession()
-                        if let msg = startMessage {
-                            debugErrorMessage = msg
-                            return
-                        }
                     }
-                    return
-                }
-                let startMessage = cameraManager.startSession()
-                if let msg = startMessage {
-                    debugErrorMessage = msg
-                    return
-                }
 
-            } else {
-                cameraManager.stopSession()
+                    let startMessage = cameraManager.startSession()
+                    if let msg = startMessage {
+                        debugErrorMessage = msg
+                        return
+                    }
+                    isStreaming = true
+
+                } else {
+                    cameraManager.stopSession()
+                    isStreaming = false
+                }
             }
-        }
+        }.disabled(isProcessingStreamChange)
     }
     var settingsButton: some View {
         actionButtonBuilder(
