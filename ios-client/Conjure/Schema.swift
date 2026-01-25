@@ -34,8 +34,8 @@ struct LandmarkedHand: Codable {
     let handedness: String
     let landmarks: [Landmark]
     let gesture: String
-    let handedness_confidence: Float
-    let gesture_confidence: Float
+    let handednessConfidence: Float
+    let gestureConfidence: Float
 }
 
 /// Final frame to send through the connection, containing all detected hands and their landmarks
@@ -45,10 +45,11 @@ struct LandmarkedFrame: Codable {
 }
 
 struct IntermediateCameraFrame {
-    let rgb: MPImage
+    let rgb: CVImageBuffer
     let depth: CVPixelBuffer
     let ts: Int
 }
+
 struct IntermediateLandmarkFrame {
     let result: GestureRecognizerResult
     let ts: Int

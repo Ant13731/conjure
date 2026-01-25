@@ -1,250 +1,232 @@
-//////
-//////  FrameFuser.swift
-//////  Conjure
-//////
-//////  Created by Anthony Hunt on 2025-11-19.
-//////
-//
-//
-//
-//import AVFoundation
-//import MediaPipeTasksVision
-//
-//actor FrameFuser {
-//    private var cameraBuffer: [Int: IntermediateCameraFrame] = [:]
-//    private var mpBuffer: [Int: IntermediateLandmarkFrame] = [:]
-//    private let maxBufferSize = 6
-//
-//    unowned private var webRTCClient: WebRTCClient!
-//
-//    init(_ webRTCClient: WebRTCClient) {
-//           self.webRTCClient = webRTCClient
-//       }
-//
-//
-//    func sendCameraFrame(_ frame: IntermediateCameraFrame) {
-//        cameraBuffer[frame.ts] = frame
-//        Task {await tryFuse(at: frame.ts)}
-//        prune()
-//    }
-//
-//    func sendMediaPipeFrame(_ frame: IntermediateLandmarkFrame) {
-//        
-//        mpBuffer[frame.ts] = frame
-//        Task {await tryFuse(at: frame.ts)}
-//        prune()
-//    }
-//
-//    private func tryFuse(at ts: Int) async {
-//        guard let c = cameraBuffer[ts],
-//              let m = mpBuffer[ts] else {
-//            print("Failed to find entries for mediapipe and camera at timestamp \(ts)")
-//            print("CamBuff:", cameraBuffer.keys)
-//            print("MPBuff_:", mpBuffer.keys)
-//            return }
-//
-//        // Remove matched entries
-//        cameraBuffer[ts] = nil
-//        mpBuffer[ts] = nil
-//
-//
-//        let firstHand = await MainActor.run {m.result.handedness}
-//        if firstHand.isEmpty || firstHand[0].isEmpty {
-//            print("No hands detected")
-//            return
-//        }
-//        let handedness_confidence = firstHand[0][0].score
-//        let handedness = firstHand[0][0].categoryName ?? "unknown"
-//        
-//        let gestures = await MainActor.run {m.result.gestures}
-//        let gesture: String
-//        let gesture_confidence: Float
-//        if gestures.isEmpty || gestures[0].isEmpty {
-//            print("No gesture detected")
-//            gesture = "unknown"
-//            gesture_confidence = 0
-//        } else{
-//            gesture = gestures[0][0].categoryName ?? "unknown"
-//            gesture_confidence = gestures[0][0].score
-//        }
-//
-//        var landmarks: [Landmark] = []
-//        let awaited_landmarks = await MainActor.run {m.result.landmarks[0]}
-//        for landmark in awaited_landmarks {
-//            let depth = depthAt(x: landmark.x, y: landmark.y, from: await MainActor.run {c.depth})
-//            landmarks.append(Landmark(x: landmark.x, y: landmark.y, z: depth, relativeDepth: depth, visible: landmark.visibility as? Bool))
-//        }
-//
-////        let frame = LandmarkedFrame(handedness: handedness, gesture: gesture, handedness_confidence: handedness_confidence, gesture_confidence: gesture_confidence, timestamp: ts, landmarks:landmarks)
-//        
-//        print("Mediapipe frame retrieved with \(ts) at time  \(DispatchTime.now())")
-//        
-////        Task {await webRTCClient.send(frame: frame)}
-//        print("Sent frame to server at \(ts) at time  \(DispatchTime.now())")
-////        print("Fuser reached this point", c, m)
-//
-//        // Emit final fused frame
-//
-//    }
-//    private func depthAtPixel(
-//        px: Int,
-//        py: Int,
-//        width: Int,
-//        bytesPerRow: Int,
-//        base: UnsafeRawPointer,
-//        format: OSType
-//    ) -> Float {
-//        
-//        switch format {
-//        case kCVPixelFormatType_DepthFloat16:
-//            let ptr = base.assumingMemoryBound(to: UInt16.self)
-//            let stride = bytesPerRow / MemoryLayout<UInt16>.size
-//            let bits = ptr[py * stride + px]
-//            let f16 = Float16(bitPattern: bits)
-//            return Float(f16)
-//            
-//        case kCVPixelFormatType_DepthFloat32:
-//            let ptr = base.assumingMemoryBound(to: Float.self)
-//            let stride = bytesPerRow / MemoryLayout<Float>.size
-//            return ptr[py * stride + px]
-//            
-//        default:
-//            return 100
-//        }
-//    }
-//
-//    func depthAt(x: Float, y: Float, from depthBuffer: CVPixelBuffer, areaSize: Int = 3) -> Float {
-//        CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
-//        defer { CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly) }
-//        
-//        
-//        let width = CVPixelBufferGetWidth(depthBuffer)
-//        let height = CVPixelBufferGetHeight(depthBuffer)
-//        
-//        let bytesPerRow = CVPixelBufferGetBytesPerRow(depthBuffer)
-//        let format = CVPixelBufferGetPixelFormatType(depthBuffer)
-//        let base = CVPixelBufferGetBaseAddress(depthBuffer)!
-//        
-//        let xf = x * Float(width - 1)
-//            let yf = y * Float(height - 1)
-//            
-//            let xCenter = Int(round(xf))
-//            let yCenter = Int(round(yf))
-//            
-//            // Out-of-bounds → Python returns 100, Swift returns nil unless you want 100 too.
-//            guard xCenter >= 0, xCenter < width,
-//                  yCenter >= 0, yCenter < height else {
-//                return 100   // match Python version exactly
-//            }
-//            
-//            // Define grid window (same integer logic as Python)
-//            let half = areaSize / 2
-//            let xStart = max(xCenter - half, 0)
-//            let xEnd   = min(xCenter + half + 1, width)
-//            let yStart = max(yCenter - half, 0)
-//            let yEnd   = min(yCenter + half + 1, height)
-//            
-//            // Closed container edges = no area → return center pixel
-//            if xStart >= xEnd || yStart >= yEnd {
-//                return depthAtPixel(px: xCenter, py: yCenter,
-//                                    width: width, bytesPerRow: bytesPerRow,
-//                                    base: base, format: format)
-//            }
-//            
-//        var minDepth: Float = 100
-//        
-//        if format == kCVPixelFormatType_DepthFloat16 {
-//                let ptr = base.assumingMemoryBound(to: UInt16.self)
-//                let rowStride = bytesPerRow / MemoryLayout<UInt16>.size
-//                
-//                for py in yStart..<yEnd {
-//                    let row = ptr + py * rowStride
-//                    for px in xStart..<xEnd {
-//                        let bits = row[px]
-//                        let f16 = Float(Float16(bitPattern: bits))
-//                        if f16 < minDepth { minDepth = f16 }
-//                    }
-//                }
-//                
-//            } else if format == kCVPixelFormatType_DepthFloat32 {
-//                let ptr = base.assumingMemoryBound(to: Float.self)
-//                let rowStride = bytesPerRow / MemoryLayout<Float>.size
-//                
-//                for py in yStart..<yEnd {
-//                    let row = ptr + py * rowStride
-//                    for px in xStart..<xEnd {
-//                        let d = row[px]
-//                        if d < minDepth { minDepth = d }
-//                    }
-//                }
-//                
-//            } else {
-//                // Unsupported format → match Python default behavior?
-//                return 100
-//            }
-//            
-////            // --- Iterate through small block and find min depth
-////            for py in yStart..<yEnd {
-////                for px in xStart..<xEnd {
-////                    if let d = depthAtPixel(
-////                        px: px, py: py,
-////                        width: width,
-////                        bytesPerRow: bytesPerRow,
-////                        base: base,
-////                        format: format
-////                    ) {
-////                        if d < minDepth { minDepth = d }
-////                    }
-////                }
-////            }
-//            
-//            return minDepth
-////        let depthWidth = CVPixelBufferGetWidth(depthBuffer)
-////        let depthHeight = CVPixelBufferGetHeight(depthBuffer)
-////        let px = Int(x * Float(depthWidth))
-////        let py = Int(y * Float(depthHeight))
 ////
-////        guard px >= 0 && px < width && py >= 0 && py < height else {
-////            return 100
-////        }
+////  FrameFuser.swift
+////  Conjure
 ////
-////        let format = CVPixelBufferGetPixelFormatType(depthBuffer)
-////        let base = CVPixelBufferGetBaseAddress(depthBuffer)!
+////  Created by Anthony Hunt on 2025-11-19.
 ////
-////        let bytesPerRow = CVPixelBufferGetBytesPerRow(depthBuffer)
-////
-////        switch format {
-////        case kCVPixelFormatType_DepthFloat16:
-////             let ptr = base.assumingMemoryBound(to: UInt16.self)
-////             let rowStride = bytesPerRow / MemoryLayout<UInt16>.size
-////             let f16bits = ptr[py * rowStride + px]
-////
-////             // Convert UInt16 bit-pattern → Float16 → Float
-////             let f16 = Float16(bitPattern: f16bits)
-////             return Float(f16)
-////
-//////        case kCVPixelFormatType_DepthFloat32:
-//////            let pointer = base.assumingMemoryBound(to: Float.self)
-//////            let rowStart = py * (bytesPerRow / MemoryLayout<Float>.size)
-//////            return pointer[rowStart + px]
-////
-////        default:
-////            return 100
-////        }
-//    }
-//
-//    private func prune() {
-//        // keep only tiny number of frames
-//        if cameraBuffer.count > maxBufferSize {
-//            if let oldest = cameraBuffer.keys.min() {
-//                cameraBuffer.removeValue(forKey: oldest)
-//            }
-//        }
-//        if mpBuffer.count > maxBufferSize {
-//            if let oldest = mpBuffer.keys.min() {
-//                mpBuffer.removeValue(forKey: oldest)
-//            }
-//        }
-//    }
-//}
-//
+
+import AVFoundation
+import MediaPipeTasksVision
+
+protocol FusedFrameConsumer {
+    func consumeFusedFrame(_ frame: LandmarkedFrame) async
+}
+
+actor FrameFuser {
+    private var cameraBuffer: [Int: IntermediateCameraFrame] = [:]
+    private var mpBuffer: [Int: IntermediateLandmarkFrame] = [:]
+    private let maxBufferSize = 15
+
+    // Receivers into this class
+    func sendCameraFrame(_ frame: IntermediateCameraFrame) async {
+        cameraBuffer[frame.ts] = frame
+        await tryFuse(at: frame.ts)
+        prune()
+    }
+
+    func sendMediaPipeFrame(_ frame: IntermediateLandmarkFrame) async {
+        mpBuffer[frame.ts] = frame
+        await tryFuse(at: frame.ts)
+        prune()
+    }
+
+    // Recievers out of this class
+    private(set) var fusedFrameConsumers: [FusedFrameConsumer] = []
+    func addFusedFrameConsumer(_ consumer: FusedFrameConsumer) {
+        fusedFrameConsumers.append(consumer)
+    }
+    func removeFusedFrameConsumer(_ consumer: FusedFrameConsumer) {
+        fusedFrameConsumers.removeAll { $0 as AnyObject === consumer as AnyObject }
+    }
+
+    // Fusion logic
+    private func tryFuse(at ts: Int) async {
+        guard let intermediateCameraFrame = cameraBuffer[ts],
+            let intermediateLandmarkFrame = mpBuffer[ts]
+        else {
+            print("Failed to find entries for mediapipe and camera at timestamp \(ts)")
+            print("CamBuff:", cameraBuffer.keys)
+            print("MPBuff_:", mpBuffer.keys)
+            return
+        }
+
+        // Remove matched entries
+        cameraBuffer[ts] = nil
+        mpBuffer[ts] = nil
+
+        let landmarkedFrame = await mergeIntermediateFrames(
+            intermediateCameraFrame: intermediateCameraFrame,
+            intermediateLandmarkFrame: intermediateLandmarkFrame,
+            ts: ts)
+
+        guard let landmarkedFrame else {
+            print("Failed to merge intermediate frames at timestamp \(ts)")
+            return
+        }
+
+        for consumer in fusedFrameConsumers {
+            await consumer.consumeFusedFrame(landmarkedFrame)
+        }
+    }
+
+    private func mergeIntermediateFrames(
+        intermediateCameraFrame: IntermediateCameraFrame,
+        intermediateLandmarkFrame: IntermediateLandmarkFrame,
+        ts: Int
+    ) async -> LandmarkedFrame? {
+        let (handednessList, gestureList, landmarksList) = await MainActor.run {
+            (
+                intermediateLandmarkFrame.result.handedness,
+                intermediateLandmarkFrame.result.gestures,
+                intermediateLandmarkFrame.result.landmarks
+            )
+        }
+
+        if landmarksList.isEmpty || handednessList.isEmpty || gestureList.isEmpty {
+            print("No hands detected")
+            return nil
+        }
+
+        var landmarkedHands: [LandmarkedHand] = []
+        for (handedness, (gesture, landmarks)) in zip(
+            handednessList, zip(gestureList, landmarksList))
+        {
+            // Get handedness
+            if handedness.isEmpty {
+                print("Handedness is empty for a hand, skipping")
+                continue
+            }
+            let handednessConfidence = handedness[0].score
+            let handedness = handedness[0].categoryName ?? "unknown"
+
+            // Get gesture
+            if gesture.isEmpty {
+                print("Gesture is empty for a hand, skipping")
+                continue
+            }
+            let gestureName = gesture[0].categoryName ?? "unknown"
+            let gestureConfidence = gesture[0].score
+
+            // Get depth values for landmarks
+            var landmarksWithDepth: [Landmark] = []
+            for landmark in landmarks {
+                let depth = depthAt(
+                    x: landmark.x,
+                    y: landmark.y,
+                    from: await MainActor.run { intermediateCameraFrame.depth })
+                landmarksWithDepth.append(
+                    Landmark(
+                        x: landmark.x, y: landmark.y, z: depth, relativeDepth: depth,
+                        visible: landmark.visibility as? Bool))
+            }
+
+            landmarkedHands.append(
+                LandmarkedHand(
+                    handedness: handedness,
+                    landmarks: landmarksWithDepth,
+                    gesture: gestureName,
+                    handednessConfidence: handednessConfidence,
+                    gestureConfidence: gestureConfidence
+                )
+            )
+        }
+        return LandmarkedFrame(hands: landmarkedHands, timestamp: ts)
+    }
+
+    static let INVALID_DEPTH: Float = 100
+
+    func depthAt(x: Float, y: Float, from depthBuffer: CVPixelBuffer, areaSize: Int = 3) -> Float {
+        CVPixelBufferLockBaseAddress(depthBuffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(depthBuffer, .readOnly) }
+
+        let width = CVPixelBufferGetWidth(depthBuffer)
+        let height = CVPixelBufferGetHeight(depthBuffer)
+
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(depthBuffer)
+        let format = CVPixelBufferGetPixelFormatType(depthBuffer)
+        let base = CVPixelBufferGetBaseAddress(depthBuffer)!
+
+        // Grab the center of the pixel corresponding to normalized coords
+        let xCenter = Int(round(x * Float(width - 1)))
+        let yCenter = Int(round(y * Float(height - 1)))
+
+        // Center pixel is out-of-bounds - Return a very far depth (100)
+        guard xCenter >= 0, xCenter < width, yCenter >= 0, yCenter < height else {
+            return FrameFuser.INVALID_DEPTH  // Matches expectation in python
+        }
+
+        // Define search region (in pixel size)
+        // Anything outside this border is removed from consideration for depth values
+        let half = areaSize / 2
+        let xStart = max(xCenter - half, areaSize)
+        let xEnd = min(xCenter + half + 1, width - areaSize)
+        let yStart = max(yCenter - half, areaSize)
+        let yEnd = min(yCenter + half + 1, height - areaSize)
+
+        guard areaSize < width, areaSize < height else {
+            print(
+                "Area search size too large for depth buffer dimensions: \(areaSize) vs \(width)x\(height)"
+            )
+            return FrameFuser.INVALID_DEPTH
+        }
+
+        guard xStart > xEnd, yStart > yEnd else {
+            print(
+                "Area search size resulted in invalid search region: x[\(xStart), \(xEnd)), y[\(yStart), \(yEnd))"
+            )
+            return FrameFuser.INVALID_DEPTH
+        }
+
+        // When we lookup a pixel, it can be either a 16 bit float or a 32 bit float
+        // In practice, this is usually just a 16 bit float, but different cameras may use different bits
+        let getDepthValueWithFormat = depthAtWithFormat(
+            base: base,
+            bytesPerRow: bytesPerRow,
+            format: format
+        )
+
+        var minDepth: Float = FrameFuser.INVALID_DEPTH
+        for py in yStart..<yEnd {
+            for px in xStart..<xEnd {
+                minDepth = min(minDepth, getDepthValueWithFormat(px, py))
+            }
+        }
+
+        return minDepth
+    }
+
+    private func depthAtWithFormat(
+        base: UnsafeRawPointer,
+        bytesPerRow: Int,
+        format: OSType,
+    ) -> ((Int, Int) -> Float) {
+        switch format {
+        case kCVPixelFormatType_DepthFloat16:
+            let ptr = base.assumingMemoryBound(to: UInt16.self)
+            let rowStride = bytesPerRow / MemoryLayout<UInt16>.size
+            return { px, py in Float(Float16(bitPattern: ptr[py * rowStride + px])) }
+
+        case kCVPixelFormatType_DepthFloat32:
+            let ptr = base.assumingMemoryBound(to: Float.self)
+            let rowStride = bytesPerRow / MemoryLayout<Float>.size
+            return { px, py in ptr[py * rowStride + px] }
+
+        default:
+            return { _, __ in FrameFuser.INVALID_DEPTH }
+        }
+    }
+
+    private func prune() {
+        // keep only tiny number of frames
+        if cameraBuffer.count > maxBufferSize {
+            if let oldest = cameraBuffer.keys.min() {
+                cameraBuffer.removeValue(forKey: oldest)
+            }
+        }
+        if mpBuffer.count > maxBufferSize {
+            if let oldest = mpBuffer.keys.min() {
+                mpBuffer.removeValue(forKey: oldest)
+            }
+        }
+    }
+}
