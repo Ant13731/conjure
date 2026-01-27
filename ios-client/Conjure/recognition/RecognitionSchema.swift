@@ -42,12 +42,14 @@ struct LandmarkedHand: Codable {
 struct LandmarkedFrame: Codable {
     let hands: [LandmarkedHand]
     let timestamp: Int
+    let orientation: UIDeviceOrientation
 }
 
 struct IntermediateCameraFrame {
     let rgb: CVImageBuffer
     let depth: CVPixelBuffer
     let ts: Int
+    let orientation: UIDeviceOrientation
 }
 
 struct IntermediateLandmarkFrame {

@@ -35,7 +35,12 @@ struct SettingsView: View {
             appendToPath: .settingsGeneral
         ) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("WebRTC Channel Label: \(generalSettings.value.webRTCChannelLabel)")
+                Text(
+                    "WebRTC Stream Channel Label: \(generalSettings.value.webRTCStreamChannelLabel)"
+                )
+                Text(
+                    "WebRTC Settings Channel Label: \(generalSettings.value.webRTCSettingsChannelLabel)"
+                )
                 Text("Queue Size: \(generalSettings.value.queueSize)")
                 Text("Connection Mode: \(generalSettings.value.connectionMode.rawValue)")
                 Text("Operation Mode: \(generalSettings.value.operationMode.rawValue)")

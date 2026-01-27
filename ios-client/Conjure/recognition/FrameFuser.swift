@@ -130,7 +130,11 @@ actor FrameFuser {
                 )
             )
         }
-        return LandmarkedFrame(hands: landmarkedHands, timestamp: ts)
+        return LandmarkedFrame(
+            hands: landmarkedHands,
+            timestamp: ts,
+            orientation: intermediateCameraFrame.orientation
+        )
     }
 
     static let INVALID_DEPTH: Float = 100

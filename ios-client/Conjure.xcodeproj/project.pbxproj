@@ -16,7 +16,7 @@
 		1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7C2ECD53B600C91671 /* CameraManager.swift */; };
 		1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7E2ECD53B600C91671 /* ConjureApp.swift */; };
 		1627FB892ECD53B600C91671 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB802ECD53B600C91671 /* LoginView.swift */; };
-		1627FB8A2ECD53B600C91671 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB812ECD53B600C91671 /* Schema.swift */; };
+		1627FB8A2ECD53B600C91671 /* RecognitionSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB812ECD53B600C91671 /* RecognitionSchema.swift */; };
 		1627FB8C2ECD5CC000C91671 /* Podfile in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB8B2ECD5CC000C91671 /* Podfile */; };
 		1627FB8E2ECD5DDA00C91671 /* hand_landmarker.task in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */; };
 		163C67112F1C52BC00DC5661 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163C670D2F1C52BC00DC5661 /* MainView.swift */; };
@@ -29,6 +29,8 @@
 		16883EC02F20619D00ADE587 /* TrackpadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16883EBE2F20619900ADE587 /* TrackpadView.swift */; };
 		16883EC32F2061AA00ADE587 /* GeneralView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16883EC12F2061A200ADE587 /* GeneralView.swift */; };
 		16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B234042ED00BCF007D4D4C /* USBSender.swift */; };
+		16C76E652F284DF1002F5D0F /* TrackpadSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */; };
+		16C76E672F284DF7002F5D0F /* TrackpadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E662F284DF4002F5D0F /* TrackpadManager.swift */; };
 		16CCA41D2F25A2A200212709 /* CameraFrameConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */; };
 		16F2572C2ED23518005B3CE0 /* TurboLUT.metal in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572B2ED23509005B3CE0 /* TurboLUT.metal */; };
 		16F2572E2ED235F6005B3CE0 /* TurboTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */; };
@@ -47,7 +49,7 @@
 		1627FB7E2ECD53B600C91671 /* ConjureApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConjureApp.swift; sourceTree = "<group>"; };
 		1627FB7F2ECD53B600C91671 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1627FB802ECD53B600C91671 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		1627FB812ECD53B600C91671 /* Schema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
+		1627FB812ECD53B600C91671 /* RecognitionSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionSchema.swift; sourceTree = "<group>"; };
 		1627FB8B2ECD5CC000C91671 /* Podfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Podfile; sourceTree = SOURCE_ROOT; };
 		1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = hand_landmarker.task; sourceTree = "<group>"; };
 		163C670D2F1C52BC00DC5661 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
@@ -60,6 +62,8 @@
 		16883EBE2F20619900ADE587 /* TrackpadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadView.swift; sourceTree = "<group>"; };
 		16883EC12F2061A200ADE587 /* GeneralView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralView.swift; sourceTree = "<group>"; };
 		16B234042ED00BCF007D4D4C /* USBSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBSender.swift; sourceTree = "<group>"; };
+		16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadSchema.swift; sourceTree = "<group>"; };
+		16C76E662F284DF4002F5D0F /* TrackpadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadManager.swift; sourceTree = "<group>"; };
 		16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFrameConsumer.swift; sourceTree = "<group>"; };
 		16F2572B2ED23509005B3CE0 /* TurboLUT.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = TurboLUT.metal; sourceTree = "<group>"; };
 		16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurboTexture.swift; sourceTree = "<group>"; };
@@ -104,6 +108,8 @@
 		1627FB822ECD53B600C91671 /* Conjure */ = {
 			isa = PBXGroup;
 			children = (
+				16C76E632F284304002F5D0F /* trackpad */,
+				16C76E622F2842EB002F5D0F /* recognition */,
 				1627FB7B2ECD53B600C91671 /* Assets.xcassets */,
 				1627FB7F2ECD53B600C91671 /* Info.plist */,
 				1627FB8B2ECD5CC000C91671 /* Podfile */,
@@ -112,12 +118,7 @@
 				1627FB7E2ECD53B600C91671 /* ConjureApp.swift */,
 				163C67142F1C67CF00DC5661 /* views */,
 				163C67102F1C52BC00DC5661 /* persistentSettings */,
-				1627FB7C2ECD53B600C91671 /* CameraManager.swift */,
-				16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */,
-				1627FB812ECD53B600C91671 /* Schema.swift */,
 				16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */,
-				16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */,
-				16143FBF2ECEA1C900D5BDFC /* FrameFuser.swift */,
 				16B234042ED00BCF007D4D4C /* USBSender.swift */,
 				16F2572B2ED23509005B3CE0 /* TurboLUT.metal */,
 				16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */,
@@ -155,6 +156,27 @@
 				16883EBE2F20619900ADE587 /* TrackpadView.swift */,
 			);
 			path = settings;
+			sourceTree = "<group>";
+		};
+		16C76E622F2842EB002F5D0F /* recognition */ = {
+			isa = PBXGroup;
+			children = (
+				1627FB7C2ECD53B600C91671 /* CameraManager.swift */,
+				16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */,
+				1627FB812ECD53B600C91671 /* RecognitionSchema.swift */,
+				16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */,
+				16143FBF2ECEA1C900D5BDFC /* FrameFuser.swift */,
+			);
+			path = recognition;
+			sourceTree = "<group>";
+		};
+		16C76E632F284304002F5D0F /* trackpad */ = {
+			isa = PBXGroup;
+			children = (
+				16C76E662F284DF4002F5D0F /* TrackpadManager.swift */,
+				16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */,
+			);
+			path = trackpad;
 			sourceTree = "<group>";
 		};
 		7069F41FA41C14DFC2565E01 /* Frameworks */ = {
@@ -287,8 +309,10 @@
 				16143FBE2ECE965E00D5BDFC /* MediaPipeManager.swift in Sources */,
 				1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */,
 				16F2572E2ED235F6005B3CE0 /* TurboTexture.swift in Sources */,
+				16C76E652F284DF1002F5D0F /* TrackpadSchema.swift in Sources */,
 				16883EC02F20619D00ADE587 /* TrackpadView.swift in Sources */,
 				163C67112F1C52BC00DC5661 /* MainView.swift in Sources */,
+				16C76E672F284DF7002F5D0F /* TrackpadManager.swift in Sources */,
 				16883EBA2F2054F800ADE587 /* PersistentSettings.swift in Sources */,
 				163C671A2F1C77F900DC5661 /* RecognitionView.swift in Sources */,
 				16143FC02ECEA1CC00D5BDFC /* FrameFuser.swift in Sources */,
@@ -298,7 +322,7 @@
 				163C67162F1C684100DC5661 /* VideoStreamView.swift in Sources */,
 				16143FBC2ECE8A0300D5BDFC /* RTCClient.swift in Sources */,
 				16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */,
-				1627FB8A2ECD53B600C91671 /* Schema.swift in Sources */,
+				1627FB8A2ECD53B600C91671 /* RecognitionSchema.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

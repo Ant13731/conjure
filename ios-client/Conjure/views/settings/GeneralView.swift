@@ -15,7 +15,10 @@ struct GeneralView: View {
         Form {
             VStack(alignment: .leading) {
                 Text(
-                    "WebRTC Channel Label (unchangable): \(generalSettings.value.webRTCChannelLabel)",
+                    "WebRTC Stream Channel Label (unchangable): \(generalSettings.value.webRTCStreamChannelLabel)",
+                )
+                Text(
+                    "WebRTC Settings Channel Label (unchangable): \(generalSettings.value.webRTCSettingsChannelLabel)",
                 )
 
                 Text(

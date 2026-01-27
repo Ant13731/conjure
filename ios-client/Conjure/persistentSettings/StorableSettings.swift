@@ -54,13 +54,15 @@ enum OperationMode: String, CaseIterable, Identifiable, Codable {
 
 /// Misc. connection and operation settings, including webRTC channel label, queue size, etc.
 struct GeneralSettings: PersistentlyStorable {
-    var webRTCChannelLabel: String
-    var queueSize: Int
+    var webRTCStreamChannelLabel: String
+    var webRTCSettingsChannelLabel: String
+    var queueSize: Int  // TODO apply to frame fuser
     var connectionMode: ConnectionMode
     var operationMode: OperationMode
 
     static var defaultValue = GeneralSettings(
-        webRTCChannelLabel: "hand_landmarks",
+        webRTCStreamChannelLabel: "stream",
+        webRTCSettingsChannelLabel: "settings",
         queueSize: 1,
         connectionMode: .defaultValue,
         operationMode: .defaultValue

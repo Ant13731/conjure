@@ -189,6 +189,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate,
         _ synchronizer: AVCaptureDataOutputSynchronizer,
         didOutput synchronizedDataCollection: AVCaptureSynchronizedDataCollection
     ) {
+        let orientation = UIDevice.current.orientation
         guard
             let syncedVideo = synchronizedDataCollection.synchronizedData(for: rgbOut)
                 as? AVCaptureSynchronizedSampleBufferData,
@@ -225,7 +226,8 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate,
                 await consumer.consumeFrame(
                     rgbFrame: rgbFrame,
                     depthFrame: depthFrame,
-                    ts: ts
+                    ts: ts,
+                    orientation: orientation
                 )
             }
         }

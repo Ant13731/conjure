@@ -11,7 +11,12 @@ import MediaPipeTasksVision
 import SwiftUI
 
 class CameraFrameConsumer {
-    func consumeFrame(rgbFrame: CMSampleBuffer, depthFrame: CVPixelBuffer, ts: Int) async {
+    func consumeFrame(
+        rgbFrame: CMSampleBuffer,
+        depthFrame: CVPixelBuffer,
+        ts: Int,
+        orientation: UIDeviceOrientation
+    ) async {
         // Override in subclasses
     }
 }
@@ -23,7 +28,12 @@ class MediapipeFrameConsumer: CameraFrameConsumer {
         self.mediapipeManager = mediapipeManager
     }
 
-    override func consumeFrame(rgbFrame: CMSampleBuffer, depthFrame: CVPixelBuffer, ts: Int) async {
+    override func consumeFrame(
+        rgbFrame: CMSampleBuffer,
+        depthFrame: CVPixelBuffer,
+        ts: Int,
+        orientation: UIDeviceOrientation
+    ) async {
         guard let mpImage = try? MPImage(sampleBuffer: rgbFrame) else {
             print("MediapipeFrameConsumer: Failed to cast frame into MPImage")
             return
@@ -45,12 +55,22 @@ class RGBFrameConsumer: CameraFrameConsumer {
         self.frameFuser = frameFuser
     }
 
-    override func consumeFrame(rgbFrame: CMSampleBuffer, depthFrame: CVPixelBuffer, ts: Int) async {
+    override func consumeFrame(
+        rgbFrame: CMSampleBuffer,
+        depthFrame: CVPixelBuffer,
+        ts: Int,
+        orientation: UIDeviceOrientation
+    ) async {
         guard let videoBuffer = CMSampleBufferGetImageBuffer(rgbFrame) else {
             print("Failed to get CVPixelBuffer from image frame")
             return
         }
-        let cameraFrame = IntermediateCameraFrame(rgb: videoBuffer, depth: depthFrame, ts: ts)
+        let cameraFrame = IntermediateCameraFrame(
+            rgb: videoBuffer,
+            depth: depthFrame,
+            ts: ts,
+            orientation: orientation
+        )
         await frameFuser.sendCameraFrame(cameraFrame)
     }
 }
