@@ -31,6 +31,7 @@
 		16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B234042ED00BCF007D4D4C /* USBSender.swift */; };
 		16C76E652F284DF1002F5D0F /* TrackpadSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */; };
 		16C76E672F284DF7002F5D0F /* TrackpadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E662F284DF4002F5D0F /* TrackpadManager.swift */; };
+		16C76E6C2F284F24002F5D0F /* SkeletonAnnotationFusedFrameConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E6B2F284F14002F5D0F /* SkeletonAnnotationFusedFrameConsumer.swift */; };
 		16CCA41D2F25A2A200212709 /* CameraFrameConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */; };
 		16F2572C2ED23518005B3CE0 /* TurboLUT.metal in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572B2ED23509005B3CE0 /* TurboLUT.metal */; };
 		16F2572E2ED235F6005B3CE0 /* TurboTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */; };
@@ -64,6 +65,7 @@
 		16B234042ED00BCF007D4D4C /* USBSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBSender.swift; sourceTree = "<group>"; };
 		16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadSchema.swift; sourceTree = "<group>"; };
 		16C76E662F284DF4002F5D0F /* TrackpadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadManager.swift; sourceTree = "<group>"; };
+		16C76E6B2F284F14002F5D0F /* SkeletonAnnotationFusedFrameConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonAnnotationFusedFrameConsumer.swift; sourceTree = "<group>"; };
 		16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFrameConsumer.swift; sourceTree = "<group>"; };
 		16F2572B2ED23509005B3CE0 /* TurboLUT.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = TurboLUT.metal; sourceTree = "<group>"; };
 		16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurboTexture.swift; sourceTree = "<group>"; };
@@ -160,6 +162,7 @@
 		16C76E622F2842EB002F5D0F /* recognition */ = {
 			isa = PBXGroup;
 			children = (
+				16C76E6B2F284F14002F5D0F /* SkeletonAnnotationFusedFrameConsumer.swift */,
 				1627FB7C2ECD53B600C91671 /* CameraManager.swift */,
 				16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */,
 				1627FB812ECD53B600C91671 /* RecognitionSchema.swift */,
@@ -340,6 +343,7 @@
 				16883EBA2F2054F800ADE587 /* PersistentSettings.swift in Sources */,
 				163C671A2F1C77F900DC5661 /* RecognitionView.swift in Sources */,
 				16143FC02ECEA1CC00D5BDFC /* FrameFuser.swift in Sources */,
+				16C76E6C2F284F24002F5D0F /* SkeletonAnnotationFusedFrameConsumer.swift in Sources */,
 				1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */,
 				163C671C2F1C780D00DC5661 /* HostListView.swift in Sources */,
 				1627FB892ECD53B600C91671 /* LoginView.swift in Sources */,

@@ -96,11 +96,30 @@ struct SettingsView: View {
                     "Landmark depth pixel search radius: \(recognitionSettings.value.landmarkDepthPixelRadius)"
                 )
                 Text(
-                    "Minimum depth: \(recognitionSettings.value.minDepth, specifier: "%.2f") meters"
+                    "Minimum depth: \(recognitionSettings.value.minDepth, specifier: "%.2f") m"
                 )
                 Text(
-                    "Maximum depth: \(recognitionSettings.value.maxDepth, specifier: "%.2f") meters"
+                    "Maximum depth: \(recognitionSettings.value.maxDepth, specifier: "%.2f") m"
                 )
+                Text(
+                    "Skeleton line width: \(recognitionSettings.value.lineWidth, specifier: "%.2f") m"
+                )
+                Text(
+                    "Skeleton joint radius: \(recognitionSettings.value.jointRadius, specifier: "%.2f") m"
+                )
+                Text(
+                    "Click depth threshold: \(recognitionSettings.value.clickDepthThreshold, specifier: "%.2f") m"
+                )
+                Text(
+                    "Move depth threshold: \(recognitionSettings.value.moveDepthThreshold, specifier: "%.2f") m"
+                )
+                Text(
+                    "Click depth limit: \(recognitionSettings.value.clickDepthLimit, specifier: "%.2f") m"
+                )
+                Text(
+                    "Move depth limit: \(recognitionSettings.value.moveDepthLimit, specifier: "%.2f") m"
+                )
+
             }
         }
     }

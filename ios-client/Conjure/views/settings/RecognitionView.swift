@@ -77,6 +77,56 @@ struct RecognitionView: View {
                     in: 1.0...5.0,
                     step: 0.05
                 )
+
+                Text(
+                    "Skeleton line width: \(recognitionSettings.value.lineWidth, specifier: "%.2f") m"
+                )
+                Slider(
+                    value: $recognitionSettings.value.lineWidth,
+                    in: 1.0...5.0,
+                    step: 0.05
+                )
+                Text(
+                    "Skeleton joint radius: \(recognitionSettings.value.jointRadius, specifier: "%.2f") m"
+                )
+                Slider(
+                    value: $recognitionSettings.value.jointRadius,
+                    in: 1.0...10.0,
+                    step: 0.05
+                )
+
+                Text(
+                    "Click depth threshold: \(recognitionSettings.value.clickDepthThreshold, specifier: "%.2f") m"
+                )
+                Slider(
+                    value: $recognitionSettings.value.clickDepthThreshold,
+                    in: 0.0...2.5,
+                    step: 0.05
+                )
+                Text(
+                    "Move depth threshold: \(recognitionSettings.value.moveDepthThreshold, specifier: "%.2f") m"
+                )
+                Slider(
+                    value: $recognitionSettings.value.moveDepthThreshold,
+                    in: 0.0...2.5,
+                    step: 0.05
+                )
+                Text(
+                    "Click depth limit: \(recognitionSettings.value.clickDepthLimit, specifier: "%.2f") m"
+                )
+                Slider(
+                    value: $recognitionSettings.value.clickDepthLimit,
+                    in: 0.0...2.5,
+                    step: 0.05
+                )
+                Text(
+                    "Move depth limit: \(recognitionSettings.value.moveDepthLimit, specifier: "%.2f") m"
+                )
+                Slider(
+                    value: $recognitionSettings.value.moveDepthLimit,
+                    in: 0.0...2.5,
+                    step: 0.05
+                )
             }
         }
         .navigationTitle("Recognition Settings")
