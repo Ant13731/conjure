@@ -108,8 +108,6 @@
 		1627FB822ECD53B600C91671 /* Conjure */ = {
 			isa = PBXGroup;
 			children = (
-				16C76E632F284304002F5D0F /* trackpad */,
-				16C76E622F2842EB002F5D0F /* recognition */,
 				1627FB7B2ECD53B600C91671 /* Assets.xcassets */,
 				1627FB7F2ECD53B600C91671 /* Info.plist */,
 				1627FB8B2ECD5CC000C91671 /* Podfile */,
@@ -117,8 +115,7 @@
 				16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */,
 				1627FB7E2ECD53B600C91671 /* ConjureApp.swift */,
 				163C67142F1C67CF00DC5661 /* views */,
-				163C67102F1C52BC00DC5661 /* persistentSettings */,
-				16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */,
+				16C76E6A2F284EA5002F5D0F /* data */,
 				16B234042ED00BCF007D4D4C /* USBSender.swift */,
 				16F2572B2ED23509005B3CE0 /* TurboLUT.metal */,
 				16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */,
@@ -126,18 +123,20 @@
 			path = Conjure;
 			sourceTree = "<group>";
 		};
-		163C67102F1C52BC00DC5661 /* persistentSettings */ = {
+		163C67102F1C52BC00DC5661 /* settings */ = {
 			isa = PBXGroup;
 			children = (
 				16883EBB2F20591D00ADE587 /* StorableSettings.swift */,
 				16883EB92F2054F400ADE587 /* PersistentSettings.swift */,
 			);
-			path = persistentSettings;
+			path = settings;
 			sourceTree = "<group>";
 		};
 		163C67142F1C67CF00DC5661 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				16C76E692F284E8D002F5D0F /* trackpad */,
+				16C76E682F284E71002F5D0F /* recognition */,
 				16883EC52F2061FF00ADE587 /* settings */,
 				163C67172F1C684400DC5661 /* SettingsView.swift */,
 				163C67152F1C683C00DC5661 /* VideoStreamView.swift */,
@@ -177,6 +176,31 @@
 				16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */,
 			);
 			path = trackpad;
+			sourceTree = "<group>";
+		};
+		16C76E682F284E71002F5D0F /* recognition */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = recognition;
+			sourceTree = "<group>";
+		};
+		16C76E692F284E8D002F5D0F /* trackpad */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = trackpad;
+			sourceTree = "<group>";
+		};
+		16C76E6A2F284EA5002F5D0F /* data */ = {
+			isa = PBXGroup;
+			children = (
+				16C76E632F284304002F5D0F /* trackpad */,
+				16C76E622F2842EB002F5D0F /* recognition */,
+				163C67102F1C52BC00DC5661 /* settings */,
+				16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */,
+			);
+			path = data;
 			sourceTree = "<group>";
 		};
 		7069F41FA41C14DFC2565E01 /* Frameworks */ = {
