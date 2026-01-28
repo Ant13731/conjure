@@ -127,8 +127,125 @@ struct RecognitionView: View {
                     in: 0.0...2.5,
                     step: 0.05
                 )
+
+                ColorPickerWidget(
+                    title: "Finger tip color near",
+                    color: $recognitionSettings.value.fingerTipColorNear
+                )
+                ColorPickerWidget(
+                    title: "Finger tip color far",
+                    color: $recognitionSettings.value.fingerTipColorFar
+                )
+                ColorPickerWidget(
+                    title: "Joint color near",
+                    color: $recognitionSettings.value.jointColorNear
+                )
+                ColorPickerWidget(
+                    title: "Joint color far",
+                    color: $recognitionSettings.value.jointColorFar
+                )
             }
         }
         .navigationTitle("Recognition Settings")
+    }
+}
+
+struct ColorTextWidget: View {
+    let title: String
+    let color: Color_
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.body)
+            Spacer()
+            HStack(spacing: 4) {
+                Text("R: \(color.red)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("G: \(color.green)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("B: \(color.blue)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(SwiftUI.Color(color.toUIColor()))
+                    .frame(width: 30, height: 20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(SwiftUI.Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+            }
+        }
+    }
+}
+
+struct ColorPickerWidget: View {
+    let title: String
+    @Binding var color: Color_
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ColorTextWidget(title: title, color: $color.wrappedValue)
+
+            VStack(spacing: 4) {
+                HStack {
+                    Text("R")
+                        .frame(width: 20)
+                        .foregroundColor(.red)
+                    Slider(
+                        value: Binding(
+                            get: { Double(color.red) },
+                            set: { color.red = Int($0) }
+                        ),
+                        in: 0...255,
+                        step: 1
+                    )
+                    Text("\(color.red)")
+                        .frame(width: 35, alignment: .trailing)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                HStack {
+                    Text("G")
+                        .frame(width: 20)
+                        .foregroundColor(.green)
+                    Slider(
+                        value: Binding(
+                            get: { Double(color.green) },
+                            set: { color.green = Int($0) }
+                        ),
+                        in: 0...255,
+                        step: 1
+                    )
+                    Text("\(color.green)")
+                        .frame(width: 35, alignment: .trailing)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                HStack {
+                    Text("B")
+                        .frame(width: 20)
+                        .foregroundColor(.blue)
+                    Slider(
+                        value: Binding(
+                            get: { Double(color.blue) },
+                            set: { color.blue = Int($0) }
+                        ),
+                        in: 0...255,
+                        step: 1
+                    )
+                    Text("\(color.blue)")
+                        .frame(width: 35, alignment: .trailing)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(.leading, 8)
+        }
+        .padding(.vertical, 4)
     }
 }

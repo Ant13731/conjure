@@ -38,18 +38,49 @@ struct LandmarkedHand: Codable {
     let gestureConfidence: Float
 }
 
+enum UIDeviceOrientation_: Int, Codable {
+    case unknown = 0
+    case portrait = 1
+    case portraitUpsideDown = 2
+    case landscapeLeft = 3
+    case landscapeRight = 4
+    case faceUp = 5
+    case faceDown = 6
+
+    init(from orientation: UIDeviceOrientation) {
+        switch orientation {
+        case .unknown:
+            self = .unknown
+        case .portrait:
+            self = .portrait
+        case .portraitUpsideDown:
+            self = .portraitUpsideDown
+        case .landscapeLeft:
+            self = .landscapeLeft
+        case .landscapeRight:
+            self = .landscapeRight
+        case .faceUp:
+            self = .faceUp
+        case .faceDown:
+            self = .faceDown
+        @unknown default:
+            self = .unknown
+        }
+    }
+}
+
 /// Final frame to send through the connection, containing all detected hands and their landmarks
 struct LandmarkedFrame: Codable {
     let hands: [LandmarkedHand]
     let timestamp: Int
-    let orientation: UIDeviceOrientation
+    let orientation: UIDeviceOrientation_
 }
 
 struct IntermediateCameraFrame {
     let rgb: CVImageBuffer
     let depth: CVPixelBuffer
     let ts: Int
-    let orientation: UIDeviceOrientation
+    let orientation: UIDeviceOrientation_
 }
 
 struct IntermediateLandmarkFrame {

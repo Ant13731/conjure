@@ -15,7 +15,7 @@ class CameraFrameConsumer {
         rgbFrame: CMSampleBuffer,
         depthFrame: CVPixelBuffer,
         ts: Int,
-        orientation: UIDeviceOrientation
+        orientation: UIDeviceOrientation_
     ) async {
         // Override in subclasses
     }
@@ -32,7 +32,7 @@ class MediapipeFrameConsumer: CameraFrameConsumer {
         rgbFrame: CMSampleBuffer,
         depthFrame: CVPixelBuffer,
         ts: Int,
-        orientation: UIDeviceOrientation
+        orientation: UIDeviceOrientation_
     ) async {
         guard let mpImage = try? MPImage(sampleBuffer: rgbFrame) else {
             print("MediapipeFrameConsumer: Failed to cast frame into MPImage")
@@ -59,7 +59,7 @@ class RGBFrameConsumer: CameraFrameConsumer {
         rgbFrame: CMSampleBuffer,
         depthFrame: CVPixelBuffer,
         ts: Int,
-        orientation: UIDeviceOrientation
+        orientation: UIDeviceOrientation_
     ) async {
         guard let videoBuffer = CMSampleBufferGetImageBuffer(rgbFrame) else {
             print("Failed to get CVPixelBuffer from image frame")

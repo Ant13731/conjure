@@ -7,7 +7,7 @@
 
 import AVFoundation
 import Combine
-import UIKit
+import SwiftUI
 
 // MARK: - General Settings
 /// Possible connection modes for video streaming and processing
@@ -118,10 +118,10 @@ struct RecognitionSettings: PersistentlyStorable {
 
     var lineWidth: Float = 2.0
     var jointRadius: Float = 4.0
-    var fingerTipColorNear: UIColor
-    var fingerTipColorFar: UIColor
-    var jointColorNear: UIColor
-    var jointColorFar: UIColor
+    var fingerTipColorNear: Color_
+    var fingerTipColorFar: Color_
+    var jointColorNear: Color_
+    var jointColorFar: Color_
     var clickDepthThreshold: Float
     var moveDepthThreshold: Float
     var clickDepthLimit: Float
@@ -134,14 +134,46 @@ struct RecognitionSettings: PersistentlyStorable {
         maxDepth: 1.5,
         lineWidth: 2.0,
         jointRadius: 4.0,
-        fingerTipColorNear: UIColor(red: 50, green: 40, blue: 0, alpha: 1.0),
-        fingerTipColorFar: UIColor(red: 255, green: 200, blue: 0, alpha: 1.0),
-        jointColorNear: UIColor(red: 255, green: 255, blue: 255, alpha: 1.0),
-        jointColorFar: UIColor(red: 0, green: 0, blue: 0, alpha: 1.0),
+        fingerTipColorNear: Color_(red: 50, green: 40, blue: 0),
+        fingerTipColorFar: Color_(red: 255, green: 200, blue: 0),
+        jointColorNear: Color_(red: 255, green: 255, blue: 255),
+        jointColorFar: Color_(red: 0, green: 0, blue: 0),
         clickDepthThreshold: 0.3,
         moveDepthThreshold: 0.5,
         clickDepthLimit: 0,
         moveDepthLimit: 1.1,
     )
     static var storageKey = "recognitionSettings"
+}
+
+struct Color_: PersistentlyStorable {
+    var red: Int
+    var green: Int
+    var blue: Int
+
+    static var defaultValue = Color_(red: 255, green: 255, blue: 255)
+    static var storageKey = "colourSettings"
+
+    func toUIColor() -> Color {
+        return Color(
+            red: Double(red) / 255.0,
+            green: Double(green) / 255.0,
+            blue: Double(blue) / 255.0,
+        )
+    }
+
+    func fromUIColor(_ color: Color) -> Color_ {
+        let uiColor = UIColor(color)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        return Color_(
+            red: Int(red * 255),
+            green: Int(green * 255),
+            blue: Int(blue * 255),
+        )
+    }
+
 }

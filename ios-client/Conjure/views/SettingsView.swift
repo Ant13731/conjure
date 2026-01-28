@@ -119,6 +119,22 @@ struct SettingsView: View {
                 Text(
                     "Move depth limit: \(recognitionSettings.value.moveDepthLimit, specifier: "%.2f") m"
                 )
+                ColorTextWidget(
+                    title: "Finger tip color near",
+                    color: recognitionSettings.value.fingerTipColorNear
+                )
+                ColorTextWidget(
+                    title: "Finger tip color far",
+                    color: recognitionSettings.value.fingerTipColorFar
+                )
+                ColorTextWidget(
+                    title: "Joint color near",
+                    color: recognitionSettings.value.jointColorNear
+                )
+                ColorTextWidget(
+                    title: "Joint color far",
+                    color: recognitionSettings.value.jointColorFar
+                )
 
             }
         }
