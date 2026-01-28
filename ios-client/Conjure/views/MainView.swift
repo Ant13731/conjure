@@ -21,6 +21,10 @@ struct MainView: View {
     @EnvironmentObject var recognitionSettings: PersistentSettings<RecognitionSettings>
 
     @StateObject private var cameraManager = CameraManager()
+    private let frameFuser = FrameFuser()
+
+    @State private var mediapipeManager: MediapipeManager?
+    @State private var skeletonOverlayConsumer: SkeletonOverlayFusedFrameConsumer?
 
     // Debug/functional vars
     @State private var connectionMessage: String = ""
@@ -28,6 +32,7 @@ struct MainView: View {
     @State private var isConnected: Bool = false
     @State private var isStreaming: Bool = false
     @State private var isProcessingStreamChange: Bool = false
+    @State private var isPipelineSetup = false
 
     // Header information
     var displayStatus: String {
@@ -73,7 +78,7 @@ struct MainView: View {
                 // MARK: Trackpad
 
                 if generalSettings.value.operationMode == .trackpad {
-                    ZStack{
+                    ZStack {
                         // After some inactivity (or on error), fade out the trackpad view
                         visibleTrackpadView
                         // TODO add invisible trackpad sensor layer
@@ -92,8 +97,9 @@ struct MainView: View {
     var backgroundView: some View {
         if isConnected && isStreaming && generalSettings.value.operationMode == .handRecognition {
             // VideoStreamView()
-            FrontCameraView()
+            FrontCameraView(frameFuser: frameFuser)
                 .environmentObject(cameraManager)
+                .environmentObject(skeletonOverlayConsumer!)
         } else {
             Color.black
         }
@@ -113,7 +119,7 @@ struct MainView: View {
                                     colors: [
                                         Color.white.opacity(0.25),
                                         Color.white.opacity(0.05),
-                                        Color.clear
+                                        Color.clear,
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -130,7 +136,7 @@ struct MainView: View {
         }
     }
     var header: some View {
-        HStack{
+        HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Status:\n  \(displayStatus)")
                 if let currentHost = hostListSettings.value.currentHost {
@@ -228,7 +234,7 @@ struct MainView: View {
 
             isProcessingStreamChange = true
             Task {
-                defer {isProcessingStreamChange = false}
+                defer { isProcessingStreamChange = false }
 
                 if !isStreaming {
                     await startStreaming()
@@ -251,22 +257,33 @@ struct MainView: View {
 }
 
 // MARK: - Streaming helpers
-private extension MainView {
-    func stopStreaming() {
+extension MainView {
+    fileprivate func stopStreaming() {
         // TODO: Handle streaming for trackpads
         if generalSettings.value.operationMode == .handRecognition {
             if isStreaming {
                 cameraManager.stopSession()
                 isStreaming = false
             }
+
+            // Reset pipeline in case settings have changed
+            if isPipelineSetup {
+                resetHandRecognitionProcessingPipeline()
+            }
         }
     }
 
-    func startStreaming() async {
+    fileprivate func startStreaming() async {
         // TODO: See if we should check for a connection before allowing streaming, otherwise show error
         // TODO: Handle streaming for trackpads
 
         if generalSettings.value.operationMode == .handRecognition {
+            // Set up the processing pipeline if not already done
+            if !isPipelineSetup {
+                setupHandRecognitionProcessingPipeline()
+                isPipelineSetup = true
+            }
+
             if !cameraManager.isSessionSetUp {
                 let setupMessage = await cameraManager.setupSession()
                 if let msg = setupMessage {
@@ -282,5 +299,33 @@ private extension MainView {
             }
             isStreaming = true
         }
+
+    }
+
+    private func setupHandRecognitionProcessingPipeline() {
+        // Create MediaPipe manager
+        let mediapipe = MediapipeManager(recognitionSettings: recognitionSettings)
+        mediapipe.addFrameFuser(frameFuser)
+        mediapipeManager = mediapipe
+
+        let skeletonOverlay = SkeletonOverlayFusedFrameConsumer()
+        skeletonOverlayConsumer = skeletonOverlay
+
+        // Create and register frame consumers
+        let mediapipeConsumer = MediapipeFrameConsumer(mediapipeManager: mediapipe)
+        let rgbConsumer = RGBFrameConsumer(frameFuser: frameFuser)
+
+        cameraManager.clearConsumers()
+        cameraManager.addConsumer(mediapipeConsumer)
+        cameraManager.addConsumer(rgbConsumer)
+
+        frameFuser.clearFusedFrameConsumers()
+        frameFuser.addFusedFrameConsumer(skeletonOverlay)
+    }
+    private func resetHandRecognitionProcessingPipeline() {
+        cameraManager.clearConsumers()
+        frameFuser.clearFusedFrameConsumers()
+        mediapipeManager = nil
+        isPipelineSetup = false
     }
 }

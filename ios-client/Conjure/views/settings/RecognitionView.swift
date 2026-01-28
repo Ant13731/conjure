@@ -128,20 +128,69 @@ struct RecognitionView: View {
                     step: 0.05
                 )
 
+                Divider()
+                    .padding(.vertical, 8)
+
+                // MARK: - Skeleton Visualization Settings
+                Text("Skeleton Visualization")
+                    .font(.headline)
+                    .padding(.top, 8)
+
+                Toggle("Show Skeleton Lines", isOn: $recognitionSettings.value.showSkeletonLines)
+                Toggle("Show Joints", isOn: $recognitionSettings.value.showJoints)
+                Toggle("Show Finger Tips", isOn: $recognitionSettings.value.showFingerTips)
+                Toggle(
+                    "Show Invisible Landmarks",
+                    isOn: $recognitionSettings.value.showInvisibleLandmarks)
+
+                Text(
+                    "Skeleton Line Width: \(recognitionSettings.value.lineWidth, specifier: "%.2f") px"
+                )
+                Slider(
+                    value: $recognitionSettings.value.lineWidth,
+                    in: 0.5...5.0,
+                    step: 0.1
+                )
+
+                Text(
+                    "Joint Radius: \(recognitionSettings.value.jointRadius, specifier: "%.1f") px"
+                )
+                Slider(
+                    value: $recognitionSettings.value.jointRadius,
+                    in: 2.0...20.0,
+                    step: 0.5
+                )
+
                 ColorPickerWidget(
-                    title: "Finger tip color near",
+                    title: "Skeleton Line Color",
+                    color: $recognitionSettings.value.skeletonLineColor
+                )
+
+                Text("Finger Tip Colors")
+                    .font(.subheadline)
+                    .padding(.top, 4)
+
+                ColorPickerWidget(
+                    title: "Finger tip near (click threshold)",
                     color: $recognitionSettings.value.fingerTipColorNear
                 )
+
                 ColorPickerWidget(
-                    title: "Finger tip color far",
+                    title: "Finger tip far (click limit)",
                     color: $recognitionSettings.value.fingerTipColorFar
                 )
+
+                Text("Joint Colors")
+                    .font(.subheadline)
+                    .padding(.top, 4)
+
                 ColorPickerWidget(
-                    title: "Joint color near",
+                    title: "Joint near (move threshold)",
                     color: $recognitionSettings.value.jointColorNear
                 )
+
                 ColorPickerWidget(
-                    title: "Joint color far",
+                    title: "Joint far (move limit)",
                     color: $recognitionSettings.value.jointColorFar
                 )
             }

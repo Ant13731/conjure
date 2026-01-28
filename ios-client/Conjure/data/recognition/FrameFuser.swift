@@ -7,6 +7,7 @@
 
 import AVFoundation
 import MediaPipeTasksVision
+import SwiftUI
 
 protocol FusedFrameConsumer {
     func consumeFusedFrame(_ frame: LandmarkedFrame) async
@@ -31,12 +32,19 @@ actor FrameFuser {
     }
 
     // Recievers out of this class
+    @MainActor
     private(set) var fusedFrameConsumers: [FusedFrameConsumer] = []
+    @MainActor
     func addFusedFrameConsumer(_ consumer: FusedFrameConsumer) {
         fusedFrameConsumers.append(consumer)
     }
+    @MainActor
     func removeFusedFrameConsumer(_ consumer: FusedFrameConsumer) {
         fusedFrameConsumers.removeAll { $0 as AnyObject === consumer as AnyObject }
+    }
+    @MainActor
+    func clearFusedFrameConsumers() {
+        fusedFrameConsumers.removeAll()
     }
 
     // Fusion logic
@@ -64,7 +72,7 @@ actor FrameFuser {
             return
         }
 
-        for consumer in fusedFrameConsumers {
+        for consumer in await fusedFrameConsumers {
             await consumer.consumeFusedFrame(landmarkedFrame)
         }
     }

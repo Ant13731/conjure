@@ -53,11 +53,20 @@ class PreviewLayerContainerView: UIView {
 
 struct FrontCameraView: View {
     @EnvironmentObject var cameraManager: CameraManager
+    @EnvironmentObject var recognitionSettings: PersistentSettings<RecognitionSettings>
+    @EnvironmentObject var skeletonOverlayConsumer: SkeletonOverlayFusedFrameConsumer
+
+    let frameFuser: FrameFuser
 
     var body: some View {
-        CameraPreviewView(
-            previewLayer: cameraManager.previewLayer
-        )
-        .ignoresSafeArea(.all)
+        ZStack {
+            CameraPreviewView(
+                previewLayer: cameraManager.previewLayer
+            )
+            .ignoresSafeArea(.all)
+
+            SkeletonOverlayView(skeletonConsumer: skeletonOverlayConsumer)
+                .environmentObject(recognitionSettings)
+        }
     }
 }

@@ -136,9 +136,36 @@ struct SettingsView: View {
                     color: recognitionSettings.value.jointColorFar
                 )
 
+                Divider()
+                    .padding(.vertical, 8)
+
+                // Skeleton Visualization Settings
+                Text("Skeleton Visualization")
+                    .font(.headline)
+
+                Text(
+                    "Skeleton lines: \(recognitionSettings.value.showSkeletonLines ? "On" : "Off")")
+                Text("Joints: \(recognitionSettings.value.showJoints ? "On" : "Off")")
+                Text("Finger tips: \(recognitionSettings.value.showFingerTips ? "On" : "Off")")
+                Text(
+                    "Show invisible: \(recognitionSettings.value.showInvisibleLandmarks ? "Yes" : "No")"
+                )
+
+                Text(
+                    "Line width: \(recognitionSettings.value.lineWidth, specifier: "%.2f") px"
+                )
+                Text(
+                    "Joint radius: \(recognitionSettings.value.jointRadius, specifier: "%.1f") px"
+                )
+
+                ColorTextWidget(
+                    title: "Skeleton line color",
+                    color: recognitionSettings.value.skeletonLineColor
+                )
             }
         }
     }
+
     @ViewBuilder
     private func configViewBuilder(
         title: String, systemImage: String, appendToPath: Route, content: () -> some View

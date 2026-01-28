@@ -116,16 +116,23 @@ struct RecognitionSettings: PersistentlyStorable {
     var minDepth: Float  //TODO do we need min/max depth here? Especially for on device ML?
     var maxDepth: Float
 
-    var lineWidth: Float = 2.0
-    var jointRadius: Float = 4.0
+    var lineWidth: Float
+    var jointRadius: Float
     var fingerTipColorNear: Color_
     var fingerTipColorFar: Color_
     var jointColorNear: Color_
     var jointColorFar: Color_
+    var skeletonLineColor: Color_
     var clickDepthThreshold: Float
     var moveDepthThreshold: Float
     var clickDepthLimit: Float
     var moveDepthLimit: Float
+
+    // Skeleton visualization toggles
+    var showSkeletonLines: Bool
+    var showJoints: Bool
+    var showFingerTips: Bool
+    var showInvisibleLandmarks: Bool
 
     static var defaultValue = RecognitionSettings(
         numHands: 1,
@@ -138,10 +145,15 @@ struct RecognitionSettings: PersistentlyStorable {
         fingerTipColorFar: Color_(red: 255, green: 200, blue: 0),
         jointColorNear: Color_(red: 255, green: 255, blue: 255),
         jointColorFar: Color_(red: 0, green: 0, blue: 0),
+        skeletonLineColor: Color_(red: 255, green: 255, blue: 255),
         clickDepthThreshold: 0.3,
         moveDepthThreshold: 0.5,
         clickDepthLimit: 0,
         moveDepthLimit: 1.1,
+        showSkeletonLines: true,
+        showJoints: true,
+        showFingerTips: true,
+        showInvisibleLandmarks: false
     )
     static var storageKey = "recognitionSettings"
 }
@@ -173,6 +185,38 @@ struct Color_: PersistentlyStorable {
             red: Int(red * 255),
             green: Int(green * 255),
             blue: Int(blue * 255),
+        )
+    }
+
+    /// Interpolates between two colors based on depth and threshold/limit values
+    static func interpolateColor(
+        near: Color_,
+        far: Color_,
+        depth: Float,
+        threshold: Float,
+        limit: Float
+    ) -> Color {
+        // If closer than threshold, use near color
+        if depth <= threshold {
+            return near.toUIColor()
+        }
+
+        // If farther than limit, use far color
+        if depth >= limit {
+            return far.toUIColor()
+        }
+
+        // Interpolate between threshold and limit
+        let progress = Double((depth - threshold) / (limit - threshold))
+
+        let r = Double(near.red) + (Double(far.red) - Double(near.red)) * progress
+        let g = Double(near.green) + (Double(far.green) - Double(near.green)) * progress
+        let b = Double(near.blue) + (Double(far.blue) - Double(near.blue)) * progress
+
+        return Color(
+            red: r / 255.0,
+            green: g / 255.0,
+            blue: b / 255.0
         )
     }
 

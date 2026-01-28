@@ -43,6 +43,9 @@ class MediapipeManager: NSObject {
 
 extension MediapipeManager: GestureRecognizerLiveStreamDelegate {
 
+    // FrameFuser handling is a bit awkward since the frame goes
+    // through the MediapipeFrameConsumer and then detectAsync
+    // is called to pass the frame here
     func gestureRecognizer(
         _ gestureRecognizer: GestureRecognizer,
         didFinishGestureRecognition result: GestureRecognizerResult?,

@@ -38,6 +38,10 @@ class CameraManager: NSObject, ObservableObject {
         frameConsumers.removeAll { $0 === consumer }
     }
 
+    func clearConsumers() {
+        frameConsumers.removeAll()
+    }
+
     func setupSession() async -> String? {
         if isSessionRunning {
             stopSession()
@@ -82,13 +86,17 @@ class CameraManager: NSObject, ObservableObject {
             return "Must set up session before starting/stopping session"
         }
 
-        captureSession.startRunning()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            self?.captureSession.startRunning()
+        }
         isSessionRunning = true
         return nil
     }
 
     func stopSession() {
-        captureSession.stopRunning()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            self?.captureSession.stopRunning()
+        }
         isSessionRunning = false
     }
 }
