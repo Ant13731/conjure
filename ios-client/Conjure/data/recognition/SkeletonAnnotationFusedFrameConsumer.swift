@@ -50,7 +50,7 @@ enum HandLandmarkIndex: Int {
         (17, 18), (18, 19), (19, 20),
         (13, 17),
         // Palm
-        (0, 17)
+        (0, 17),
     ]
 }
 
@@ -66,6 +66,8 @@ class SkeletonOverlayFusedFrameConsumer: FusedFrameConsumer, ObservableObject {
     @Published var joints: [[SkeletonJointData]] = []  // Array of hands, each with array of joints
     @Published var frameSize: CGSize = .zero
 
+    private var previousOrientation: UIDeviceOrientation_?
+
     func consumeFusedFrame(_ frame: LandmarkedFrame) async {
         var allJoints: [[SkeletonJointData]] = []
 
@@ -77,9 +79,17 @@ class SkeletonOverlayFusedFrameConsumer: FusedFrameConsumer, ObservableObject {
                 let z = landmark.z ?? 0
                 let visible = landmark.visible ?? true
 
-                let joint = SkeletonJointData(
+                let (rotatedX, rotatedY) = rotateCoordinates(
                     x: landmark.x,
                     y: landmark.y,
+                    orientation: frame.orientation  // You already have this!
+                )
+
+                let joint = SkeletonJointData(
+                    x: rotatedX,
+                    // x: landmark.x,
+                    y: rotatedY,
+                    // y: landmark.y,
                     z: z,
                     visible: visible,
                     isTip: isTip
@@ -92,6 +102,28 @@ class SkeletonOverlayFusedFrameConsumer: FusedFrameConsumer, ObservableObject {
 
         await MainActor.run {
             self.joints = allJoints
+        }
+    }
+
+    func rotateCoordinates(x: Float, y: Float, orientation: UIDeviceOrientation_) -> (
+        Float, Float
+    ) {
+        switch orientation {
+        case .portrait:
+            previousOrientation = .portrait
+            return (y, x)
+        case .landscapeLeft:
+            previousOrientation = .landscapeLeft
+            return (x, 1 - y)
+        case .landscapeRight:
+            previousOrientation = .landscapeRight
+            return (1 - x, y)
+        default:
+            if previousOrientation != nil {
+                return rotateCoordinates(x: x, y: y, orientation: previousOrientation!)
+            }
+            return (x, y)
+
         }
     }
 }
