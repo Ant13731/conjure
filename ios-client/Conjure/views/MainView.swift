@@ -84,7 +84,6 @@ struct MainView: View {
                         // TODO add invisible trackpad sensor layer
                     }
                 }
-                // TODO if in camera mode, hide trackpad. If in trackpad mode, show trackpad overlay. this sould take up at least 75%-85% of the screen
             }
 
         }
