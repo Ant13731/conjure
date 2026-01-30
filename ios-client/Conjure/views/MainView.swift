@@ -94,7 +94,10 @@ struct MainView: View {
 
     @ViewBuilder
     var backgroundView: some View {
-        if isConnected && isStreaming && generalSettings.value.operationMode == .handRecognition {
+        if isConnected && isStreaming
+            && (generalSettings.value.operationMode == .handRecognition
+                || generalSettings.value.operationMode == .handRecognitionDemoMode)
+        {
             // VideoStreamView()
             FrontCameraView(frameFuser: frameFuser)
                 .environmentObject(cameraManager)
@@ -212,12 +215,17 @@ struct MainView: View {
             systemImage: "dot.radiowaves.left.and.right",
             isActive: isConnected,
         ) {
-            if !isConnected {
-                isConnected = true
-            } else {
-                // TODO: If it is already connected, should we retry connection or just disconnect?
-                isConnected = false
+            if generalSettings.value.operationMode == .handRecognitionDemoMode {
+                isConnected.toggle()
+                return
             }
+            print("Connect button not yet implemented for this operation mode")
+            // if !isConnected {
+            //     isConnected = true
+            // } else {
+            //     // TODO: If it is already connected, should we retry connection or just disconnect?
+            //     isConnected = false
+            // }
         }
     }
     var enableStreamButton: some View {
@@ -259,7 +267,9 @@ struct MainView: View {
 extension MainView {
     fileprivate func stopStreaming() {
         // TODO: Handle streaming for trackpads
-        if generalSettings.value.operationMode == .handRecognition {
+        if generalSettings.value.operationMode == .handRecognition
+            || generalSettings.value.operationMode == .handRecognitionDemoMode
+        {
             if isStreaming {
                 cameraManager.stopSession()
                 isStreaming = false
@@ -276,7 +286,9 @@ extension MainView {
         // TODO: See if we should check for a connection before allowing streaming, otherwise show error
         // TODO: Handle streaming for trackpads
 
-        if generalSettings.value.operationMode == .handRecognition {
+        if generalSettings.value.operationMode == .handRecognition
+            || generalSettings.value.operationMode == .handRecognitionDemoMode
+        {
             // Set up the processing pipeline if not already done
             if !isPipelineSetup {
                 setupHandRecognitionProcessingPipeline()

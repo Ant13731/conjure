@@ -34,8 +34,6 @@
 		16C76E6C2F284F24002F5D0F /* SkeletonAnnotationFusedFrameConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E6B2F284F14002F5D0F /* SkeletonAnnotationFusedFrameConsumer.swift */; };
 		16CCA41D2F25A2A200212709 /* CameraFrameConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */; };
 		16D171382F299CE300811030 /* SkeletonOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D171372F299CE300811030 /* SkeletonOverlayView.swift */; };
-		16F2572C2ED23518005B3CE0 /* TurboLUT.metal in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572B2ED23509005B3CE0 /* TurboLUT.metal */; };
-		16F2572E2ED235F6005B3CE0 /* TurboTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */; };
 		16F3A8EC2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task in Resources */ = {isa = PBXBuildFile; fileRef = 16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */; };
 		5D0B6217767CE50368E4B453 /* Pods_Conjure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25E7A4018ABAB710BCBC838E /* Pods_Conjure.framework */; };
 /* End PBXBuildFile section */
@@ -69,8 +67,6 @@
 		16C76E6B2F284F14002F5D0F /* SkeletonAnnotationFusedFrameConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonAnnotationFusedFrameConsumer.swift; sourceTree = "<group>"; };
 		16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFrameConsumer.swift; sourceTree = "<group>"; };
 		16D171372F299CE300811030 /* SkeletonOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonOverlayView.swift; sourceTree = "<group>"; };
-		16F2572B2ED23509005B3CE0 /* TurboLUT.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = TurboLUT.metal; sourceTree = "<group>"; };
-		16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurboTexture.swift; sourceTree = "<group>"; };
 		16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = trained_mediapipe_gesture_recognizer.task; sourceTree = "<group>"; };
 		25E7A4018ABAB710BCBC838E /* Pods_Conjure.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Conjure.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B7C7DD7AFFF38B39D7A225B9 /* Pods-Conjure.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Conjure.release.xcconfig"; path = "Target Support Files/Pods-Conjure/Pods-Conjure.release.xcconfig"; sourceTree = "<group>"; };
@@ -121,8 +117,6 @@
 				163C67142F1C67CF00DC5661 /* views */,
 				16C76E6A2F284EA5002F5D0F /* data */,
 				16B234042ED00BCF007D4D4C /* USBSender.swift */,
-				16F2572B2ED23509005B3CE0 /* TurboLUT.metal */,
-				16F2572D2ED235ED005B3CE0 /* TurboTexture.swift */,
 			);
 			path = Conjure;
 			sourceTree = "<group>";
@@ -335,11 +329,9 @@
 				16883EC32F2061AA00ADE587 /* GeneralView.swift in Sources */,
 				163C67182F1C684700DC5661 /* SettingsView.swift in Sources */,
 				16883EBC2F20592100ADE587 /* StorableSettings.swift in Sources */,
-				16F2572C2ED23518005B3CE0 /* TurboLUT.metal in Sources */,
 				16143FBE2ECE965E00D5BDFC /* MediaPipeManager.swift in Sources */,
 				16D171382F299CE300811030 /* SkeletonOverlayView.swift in Sources */,
 				1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */,
-				16F2572E2ED235F6005B3CE0 /* TurboTexture.swift in Sources */,
 				16C76E652F284DF1002F5D0F /* TrackpadSchema.swift in Sources */,
 				16883EC02F20619D00ADE587 /* TrackpadView.swift in Sources */,
 				163C67112F1C52BC00DC5661 /* MainView.swift in Sources */,
