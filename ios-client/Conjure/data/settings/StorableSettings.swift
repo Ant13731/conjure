@@ -38,6 +38,7 @@ enum ConnectionMode: String, CaseIterable, Identifiable, Codable {
 enum OperationMode: String, CaseIterable, Identifiable, Codable {
     case trackpad = "Trackpad"
     case handRecognition = "Hand Recognition"
+    case handRecognitionDemoMode = "Hand Recognition (Demo Mode)"
 
     var id: String { self.rawValue }
     var description: String {
@@ -48,6 +49,9 @@ enum OperationMode: String, CaseIterable, Identifiable, Codable {
         case .handRecognition:
             return
                 "Device uses hand recognition to interpret gestures and send inputs to the server."
+        case .handRecognitionDemoMode:
+            return
+                "Device uses hand recognition in demo mode, which displays a skeleton preview on the device, but does not send any data to the server."
         }
     }
     static var defaultValue = OperationMode.trackpad
@@ -66,7 +70,7 @@ struct GeneralSettings: PersistentlyStorable {
         webRTCSettingsChannelLabel: "settings",
         queueSize: 1,
         connectionMode: .defaultValue,
-        operationMode: .defaultValue
+        operationMode: .defaultValue,
     )
     static var storageKey = "generalSettings"
 }
@@ -134,15 +138,17 @@ struct RecognitionSettings: PersistentlyStorable {
     var showFingerTips: Bool
     var showInvisibleLandmarks: Bool
 
+    var showCameraPreview: Bool
+
     static var defaultValue = RecognitionSettings(
         numHands: 1,
         landmarkDepthPixelRadius: 2,
         minDepth: 0.1,
         maxDepth: 1.5,
-        lineWidth: 2.0,
-        jointRadius: 4.0,
-        fingerTipColorNear: Color_(red: 50, green: 40, blue: 0),
-        fingerTipColorFar: Color_(red: 255, green: 200, blue: 0),
+        lineWidth: 4.0,
+        jointRadius: 12.0,
+        fingerTipColorNear: Color_(red: 0, green: 200, blue: 255),
+        fingerTipColorFar: Color_(red: 0, green: 40, blue: 50),
         jointColorNear: Color_(red: 255, green: 255, blue: 255),
         jointColorFar: Color_(red: 0, green: 0, blue: 0),
         skeletonLineColor: Color_(red: 255, green: 255, blue: 255),
@@ -153,7 +159,8 @@ struct RecognitionSettings: PersistentlyStorable {
         showSkeletonLines: true,
         showJoints: true,
         showFingerTips: true,
-        showInvisibleLandmarks: false
+        showInvisibleLandmarks: false,
+        showCameraPreview: false,
     )
     static var storageKey = "recognitionSettings"
 }

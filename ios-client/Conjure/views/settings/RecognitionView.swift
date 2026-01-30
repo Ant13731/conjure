@@ -83,7 +83,7 @@ struct RecognitionView: View {
                 )
                 Slider(
                     value: $recognitionSettings.value.lineWidth,
-                    in: 1.0...5.0,
+                    in: 1.0...15.0,
                     step: 0.05
                 )
                 Text(
@@ -91,8 +91,8 @@ struct RecognitionView: View {
                 )
                 Slider(
                     value: $recognitionSettings.value.jointRadius,
-                    in: 1.0...10.0,
-                    step: 0.05
+                    in: 1.0...30.0,
+                    step: 0.1
                 )
 
                 Text(
@@ -136,6 +136,9 @@ struct RecognitionView: View {
                     .font(.headline)
                     .padding(.top, 8)
 
+                Toggle(
+                    "Show Video Preview (for debugging)",
+                    isOn: $recognitionSettings.value.showCameraPreview)
                 Toggle("Show Skeleton Lines", isOn: $recognitionSettings.value.showSkeletonLines)
                 Toggle("Show Joints", isOn: $recognitionSettings.value.showJoints)
                 Toggle("Show Finger Tips", isOn: $recognitionSettings.value.showFingerTips)

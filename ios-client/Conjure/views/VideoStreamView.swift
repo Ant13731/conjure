@@ -107,14 +107,20 @@ struct FrontCameraView: View {
     let frameFuser: FrameFuser
 
     var body: some View {
-        ZStack {
-            CameraPreviewView(
-                previewLayer: cameraManager.previewLayer
-            )
-            .ignoresSafeArea(.all)
+        GeometryReader { geometry in
+            ZStack {
+                if recognitionSettings.value.showCameraPreview {
+                    CameraPreviewView(
+                        previewLayer: cameraManager.previewLayer
+                    )
+                }
+                // .ignoresSafeArea(.all)
 
-            SkeletonOverlayView(skeletonConsumer: skeletonOverlayConsumer)
-                .environmentObject(recognitionSettings)
+                SkeletonOverlayView(skeletonConsumer: skeletonOverlayConsumer)
+                    .environmentObject(recognitionSettings)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+            }
         }
     }
 }

@@ -182,7 +182,7 @@ actor FrameFuser {
             return FrameFuser.INVALID_DEPTH
         }
 
-        guard xStart > xEnd, yStart > yEnd else {
+        guard xStart < xEnd, yStart < yEnd else {
             print(
                 "Area search size resulted in invalid search region: x[\(xStart), \(xEnd)), y[\(yStart), \(yEnd))"
             )

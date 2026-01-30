@@ -32,7 +32,7 @@ class MediapipeManager: NSObject {
         // options.minHandDetectionConfidence = DataConfig.minHandDetectionConfidence
         // options.minHandPresenceConfidence = DataConfig.minHandPresenceConfidence
         // options.minHandTrackingConfidence = DataConfig.minHandTrackingConfidence
-        // options.numHands = DataConfig.numHands
+        options.numHands = recognitionSettings.value.numHands
         options.gestureRecognizerLiveStreamDelegate = self
 
         handLandmark = try! GestureRecognizer(options: options)

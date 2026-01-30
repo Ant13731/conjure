@@ -38,8 +38,10 @@ struct GeneralView: View {
                         Text(mode.rawValue).tag(mode)
                     }
                 }
-
                 .pickerStyle(.menu)
+                Text(
+                    generalSettings.value.connectionMode.description
+                ).font(.footnote)
 
                 Picker(
                     "Operation mode",
@@ -50,6 +52,10 @@ struct GeneralView: View {
                     }
                 }
                 .pickerStyle(.menu)
+                Text(
+                    generalSettings.value.operationMode.description
+                ).font(.footnote)
+
             }
         }
         .navigationTitle("General Settings")

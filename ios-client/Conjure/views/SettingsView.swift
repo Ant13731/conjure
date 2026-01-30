@@ -144,6 +144,8 @@ struct SettingsView: View {
                     .font(.headline)
 
                 Text(
+                    "Video preview: \(recognitionSettings.value.showCameraPreview ? "On" : "Off")")
+                Text(
                     "Skeleton lines: \(recognitionSettings.value.showSkeletonLines ? "On" : "Off")")
                 Text("Joints: \(recognitionSettings.value.showJoints ? "On" : "Off")")
                 Text("Finger tips: \(recognitionSettings.value.showFingerTips ? "On" : "Off")")
