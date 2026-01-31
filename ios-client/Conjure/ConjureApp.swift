@@ -8,6 +8,14 @@
 import Combine
 import SwiftUI
 
+enum StrError: Error {
+    case msg(String)
+
+    init(_ value: String) {
+        self = .msg(value)
+    }
+}
+
 enum Route: Hashable {
     case settings
     case settingsGeneral

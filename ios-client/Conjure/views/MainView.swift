@@ -25,6 +25,7 @@ struct MainView: View {
 
     @State private var mediapipeManager: MediapipeManager?
     @State private var skeletonOverlayConsumer: SkeletonOverlayFusedFrameConsumer?
+    @State private var webRTCClient: WebRTCClient?
 
     // Debug/functional vars
     @State private var connectionMessage: String = ""
@@ -98,7 +99,6 @@ struct MainView: View {
             && (generalSettings.value.operationMode == .handRecognition
                 || generalSettings.value.operationMode == .handRecognitionDemoMode)
         {
-            // VideoStreamView()
             FrontCameraView(frameFuser: frameFuser)
                 .environmentObject(cameraManager)
                 .environmentObject(skeletonOverlayConsumer!)
@@ -216,16 +216,19 @@ struct MainView: View {
             isActive: isConnected,
         ) {
             if generalSettings.value.operationMode == .handRecognitionDemoMode {
+                print("Connect button demo mode: toggling")
                 isConnected.toggle()
                 return
             }
-            print("Connect button not yet implemented for this operation mode")
-            // if !isConnected {
-            //     isConnected = true
-            // } else {
-            //     // TODO: If it is already connected, should we retry connection or just disconnect?
-            //     isConnected = false
-            // }
+
+            if isConnected {
+                print("Connect button: stopping connection")
+                stopConnection()
+                return
+            }
+
+            print("Connect button: starting connection")
+            startConnection()
         }
     }
     var enableStreamButton: some View {
@@ -265,6 +268,55 @@ struct MainView: View {
 
 // MARK: - Streaming helpers
 extension MainView {
+    fileprivate func stopConnection() {
+        if generalSettings.value.connectionMode == .webRTC {
+            webRTCClient?.stopConnection()
+            webRTCClient = nil
+        }
+        isConnected = false
+        connectionMessage = "Disconnected"
+    }
+
+    fileprivate func startConnection() {
+        if generalSettings.value.connectionMode == .webRTC {
+            isConnected = false
+            let webRTCClient_ = WebRTCClient(
+                generalSettings: generalSettings,
+                hostListSettings: hostListSettings,
+                trackpadSettings: trackpadSettings,
+                recognitionSettings: recognitionSettings,
+            )
+            webRTCClient = webRTCClient_
+
+            Task {
+                print("Start connection: creating offer")
+                let result = await webRTCClient_.createOffer()
+                if case .failure(let errMsg) = result {
+                    connectionMessage = "Connection Result: \(errMsg)"
+                    return
+                }
+                let offer = try! result.get()
+
+                print("Start connection: sending offer")
+                let res = await webRTCClient_.sendOffer(offer)
+                if case .failure(let errMsg) = res {
+                    connectionMessage = "Connection Result: \(errMsg)"
+                    return
+                }
+                let answer = try! res.get()
+
+                print("Start connection: adding answer")
+                if let errMsg = await webRTCClient_.addAnswer(answer) {
+                    connectionMessage = "Connection Result: \(errMsg)"
+                    return
+                }
+                isConnected = true
+            }
+            return
+        }
+        print("Connect button not yet implemented for this connection mode")
+    }
+
     fileprivate func stopStreaming() {
         // TODO: Handle streaming for trackpads
         if generalSettings.value.operationMode == .handRecognition

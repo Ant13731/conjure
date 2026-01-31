@@ -68,7 +68,7 @@ class WebRTCClient {
         )
     }
 
-    func createOffer() async -> String? {
+    func createOffer() async -> Result<RTCSessionDescription, StrError> {
         self.isConnected = false
         let constraints = RTCMediaConstraints(
             mandatoryConstraints: [
@@ -80,15 +80,17 @@ class WebRTCClient {
 
         return await withCheckedContinuation { continuation in
             peerConnection.offer(for: constraints) { sdp, error in
-                // check sdp is not nil
                 if let error = error {
                     continuation.resume(
-                        returning: "Error creating RTC offer: \(error.localizedDescription)")
+                        returning: .failure(
+                            StrError("Error creating RTC offer: \(error.localizedDescription)")))
                     return
                 }
 
                 guard let sdp = sdp else {
-                    continuation.resume(returning: "Failed to create RTC offer: no SDP returned")
+                    continuation.resume(
+                        returning: .failure(StrError("Failed to create RTC offer: no SDP returned"))
+                    )
                     return
                 }
 
@@ -96,19 +98,90 @@ class WebRTCClient {
                     if let error = error {
                         continuation.resume(
                             returning:
-                                "Error setting local description: \(error.localizedDescription)")
+                                .failure(
+                                    StrError(
+                                        "Error setting local description: \(error.localizedDescription)"
+                                    )
+                                ))
                     } else {
-                        continuation.resume(returning: nil)
+                        continuation.resume(returning: .success(sdp))
                     }
                 }
             }
         }
     }
 
-    func addAnswer(_ sdp: RTCSessionDescription) async -> String? {
+    func sendOffer(_ offer: RTCSessionDescription) async -> Result<RTCSessionDescription, StrError>
+    {
+        guard let ipAddress = hostListSettings.value.currentHost?.ipAddress,
+            let port = hostListSettings.value.currentHost?.port
+        else {
+            return .failure(StrError("No current host selected"))
+        }
+
+        guard URL(string: "http://\(ipAddress):\(port)/offer") != nil else {
+            return .failure(
+                StrError(
+                    "Malformed input http://\(ipAddress):\(port)/offer: Please check IP address and port"
+                )
+            )
+
+        }
+        let url = URL(string: "http://\(ipAddress):\(port)/offer")!
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body: [String: Any] = ["sdp": offer.sdp, "type": "offer"]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        return await withCheckedContinuation { continuation in
+            URLSession.shared.dataTask(with: request) { data, _, err in
+                if let err = err {
+                    continuation.resume(
+                        returning: .failure(
+                            StrError("Failed to send URL connection request: \(err)")))
+                    return
+                }
+
+                guard let data = data else {
+                    continuation.resume(
+                        returning: .failure(StrError("Failed to get URL response. Got \(data)")))
+                    return
+                }
+
+                guard
+                    let json = try? JSONSerialization.jsonObject(with: data)
+                        as? [String: AnyObject]
+                else {
+                    let data_str = String(bytes: data, encoding: .utf8) ?? "nil"
+                    continuation.resume(
+                        returning: .failure(
+                            StrError("Failed to parse URL response. Got \(data_str)")))
+                    return
+                }
+                guard let json_data = json["data"] as? [String: String],
+                    let sdpString = json_data["sdp"]
+                else {
+                    continuation.resume(
+                        returning: .failure(
+                            StrError(
+                                "Expected fields `sdp` and `type` are not in the json response: \(json)"
+                            )
+                        ))
+                    return
+                }
+
+                let answer = RTCSessionDescription(type: .answer, sdp: sdpString)
+                continuation.resume(returning: .success(answer))
+            }
+        }
+    }
+
+    func addAnswer(_ answer: RTCSessionDescription) async -> String? {
         return await withCheckedContinuation { continuation in
             peerConnection.setRemoteDescription(
-                sdp,
+                answer,
                 completionHandler: { error in
                     if let error = error {
                         continuation.resume(
@@ -157,6 +230,13 @@ class WebRTCClient {
             return "Failed to send landmarked frame"
         }
         return nil
+    }
+
+    func stopConnection() {
+        isConnected = false
+        streamChannel.close()
+        settingsChannel.close()
+        peerConnection.close()
     }
 
     //TODO send function for trackpad info
