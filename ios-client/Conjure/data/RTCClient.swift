@@ -135,47 +135,35 @@ class WebRTCClient {
         let body: [String: Any] = ["sdp": offer.sdp, "type": "offer"]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-        return await withCheckedContinuation { continuation in
-            URLSession.shared.dataTask(with: request) { data, _, err in
-                if let err = err {
-                    continuation.resume(
-                        returning: .failure(
-                            StrError("Failed to send URL connection request: \(err)")))
-                    return
-                }
-
-                guard let data = data else {
-                    continuation.resume(
-                        returning: .failure(StrError("Failed to get URL response. Got \(data)")))
-                    return
-                }
-
-                guard
-                    let json = try? JSONSerialization.jsonObject(with: data)
-                        as? [String: AnyObject]
-                else {
-                    let data_str = String(bytes: data, encoding: .utf8) ?? "nil"
-                    continuation.resume(
-                        returning: .failure(
-                            StrError("Failed to parse URL response. Got \(data_str)")))
-                    return
-                }
-                guard let json_data = json["data"] as? [String: String],
-                    let sdpString = json_data["sdp"]
-                else {
-                    continuation.resume(
-                        returning: .failure(
-                            StrError(
-                                "Expected fields `sdp` and `type` are not in the json response: \(json)"
-                            )
-                        ))
-                    return
-                }
-
-                let answer = RTCSessionDescription(type: .answer, sdp: sdpString)
-                continuation.resume(returning: .success(answer))
-            }
+        let data_: Data?
+        print("Send offer: sending request to \(url.absoluteString)")
+        do {
+            data_ = try await URLSession.shared.data(for: request).0
+            print("Send offer: received response")
+        } catch let error {
+            return .failure(StrError("Failed to send URL connection request: \(error)"))
         }
+
+        guard let data = data_ else {
+            return .failure(StrError("Failed to get URL response. Got \(data_)"))
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: AnyObject]
+        else {
+            let data_str = String(bytes: data, encoding: .utf8) ?? "nil"
+            return .failure(StrError("Failed to parse URL response. Got \(data_str)"))
+        }
+
+        guard let json_data = json["data"] as? [String: String],
+            let sdpString = json_data["sdp"]
+        else {
+            return .failure(
+                StrError("Expected fields `sdp` and `type` are not in the json response: \(json)"))
+        }
+
+        let answer = RTCSessionDescription(type: .answer, sdp: sdpString)
+        return .success(answer)
+
     }
 
     func addAnswer(_ answer: RTCSessionDescription) async -> String? {
