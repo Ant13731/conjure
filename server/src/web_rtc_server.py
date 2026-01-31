@@ -84,12 +84,12 @@ class WebRTCServer:
 
             @channel.on("message")
             async def on_message(message: bytes):
-                logger.info(f"Message received on data channel: {message}, {channel.label}")
+                logger.info(f"Message received on data channel: {channel.label}")
 
                 if channel.label == "stream":
-                    pass
+                    self.stream_message(message)
                 elif channel.label == "settings":
-                    pass
+                    self.settings_message(message)
                 else:
                     logger.warning(f"Unknown data channel label: {channel.label}")
 
@@ -119,3 +119,9 @@ class WebRTCServer:
         coros = [peer_connection.close() for peer_connection in self.peer_connections]
         await asyncio.gather(*coros)
         self.peer_connections.clear()
+
+    def stream_message(self, message: bytes) -> None:
+        pass
+
+    def settings_message(self, message: bytes) -> None:
+        pass

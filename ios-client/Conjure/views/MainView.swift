@@ -91,6 +91,12 @@ struct MainView: View {
         .onChange(of: generalSettings.value.operationMode) { _ in
             stopStreaming()
         }
+        .onAppear {
+            if webRTCClient != nil {
+                print("Sending config update down WebRTC channel")
+                webRTCClient!.sendConfigUpdate()
+            }
+        }
     }
 
     @ViewBuilder
@@ -140,17 +146,17 @@ struct MainView: View {
     var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Status:\n  \(displayStatus)")
+                Text(displayStatus)
                 if let currentHost = hostListSettings.value.currentHost {
-                    Text("  \(currentHost.ipAddress):\(currentHost.port)")
+                    Text("\(currentHost.ipAddress):\(currentHost.port)")
                     if let friendlyName = currentHost.friendlyName, !friendlyName.isEmpty {
-                        Text("  \(friendlyName)")
+                        Text(friendlyName)
                     }
                 }
             }
             Spacer()
         }
-        .font(.subheadline.monospaced())
+        .font(.footnote.monospaced())
         .foregroundColor(.white)
         .padding(8)
         .background(.ultraThinMaterial.opacity(0.8))
@@ -319,6 +325,9 @@ extension MainView {
                     connectionMessage = "Connection Result: \(errMsg)"
                     return
                 }
+
+                print("Sending config update down WebRTC channel")
+                webRTCClient_.sendConfigUpdate()
                 isConnected = true
             }
             return
