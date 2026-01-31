@@ -5,7 +5,7 @@ from typing import NoReturn
 
 import cv2
 from aiohttp import web
-from aiortc import RTCSessionDescription, RTCPeerConnection, MediaStreamTrack
+from aiortc import RTCSessionDescription, RTCPeerConnection, RTCDataChannel
 from aiortc.contrib.media import MediaRelay
 
 from loguru import logger
@@ -78,49 +78,20 @@ class WebRTCServer:
                 await peer_connection.close()
                 self.peer_connections.discard(peer_connection)
 
-        @peer_connection.on("stream")
-        async def stream_channel(channel):
-            logger.info(f"Stream channel received: {channel}, {type(channel)}")
-
-            @channel.on("open")
-            async def on_open(open):
-                logger.info(f"Stream channel opened: {open}, {type(open)}")
+        @peer_connection.on("datachannel")
+        async def on_data_channel(channel: RTCDataChannel):
+            logger.info(f"Data channel received: {channel.label}")
 
             @channel.on("message")
-            async def on_message(message):
-                logger.info(f"Message received on stream channel: {message}, {type(message)}")
-                try:
+            async def on_message(message: bytes):
+                logger.info(f"Message received on data channel: {message}, {channel.label}")
 
-                    try:
-                        self.queue.get_nowait()
-                    except Empty:
-                        pass
-                    self.queue.put_nowait(message)
-
-                except Exception as e:
-                    logger.error(f"Error processing message on stream channel: {e}")
-
-        @peer_connection.on("settings")
-        async def settings_channel(channel):
-            logger.info(f"Settings channel received: {channel}, {type(channel)}")
-
-            @channel.on("open")
-            async def on_open(open):
-                logger.info(f"Settings channel opened: {open}, {type(open)}")
-
-            @channel.on("message")
-            async def on_message(message):
-                logger.info(f"Message received on settings channel: {message}, {type(message)}")
-                try:
-
-                    try:
-                        self.queue.get_nowait()
-                    except Empty:
-                        pass
-                    self.queue.put_nowait(message)
-
-                except Exception as e:
-                    logger.error(f"Error processing message on settings channel: {e}")
+                if channel.label == "stream":
+                    pass
+                elif channel.label == "settings":
+                    pass
+                else:
+                    logger.warning(f"Unknown data channel label: {channel.label}")
 
         logger.info("Setting remote peer connection description...")
         await peer_connection.setRemoteDescription(rtc_offer)

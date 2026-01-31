@@ -57,14 +57,13 @@ class WebRTCClient {
             delegate: nil,
         )
 
-        let channelConfig = RTCDataChannelConfiguration()
         streamChannel = peerConnection.dataChannel(
             forLabel: generalSettings.value.webRTCStreamChannelLabel,
-            configuration: channelConfig
+            configuration: RTCDataChannelConfiguration()
         )
         settingsChannel = peerConnection.dataChannel(
             forLabel: generalSettings.value.webRTCSettingsChannelLabel,
-            configuration: channelConfig
+            configuration: RTCDataChannelConfiguration()
         )
     }
 
@@ -240,4 +239,18 @@ class WebRTCClient {
     //     return nil
     // }
 
+}
+
+class WebRTCClientFusedFrameConsumer: FusedFrameConsumer {
+    private let rtcClient: WebRTCClient
+
+    init(rtcClient: WebRTCClient) {
+        self.rtcClient = rtcClient
+    }
+
+    func consumeFusedFrame(_ frame: LandmarkedFrame) async {
+        if let errMsg = rtcClient.send(frame: frame) {
+            print("WebRTCClientFusedFrameConsumer: Error sending frame: \(errMsg)")
+        }
+    }
 }

@@ -104,8 +104,6 @@ struct FrontCameraView: View {
     @EnvironmentObject var recognitionSettings: PersistentSettings<RecognitionSettings>
     @EnvironmentObject var skeletonOverlayConsumer: SkeletonOverlayFusedFrameConsumer
 
-    let frameFuser: FrameFuser
-
     var body: some View {
         GeometryReader { geometry in
             ZStack {

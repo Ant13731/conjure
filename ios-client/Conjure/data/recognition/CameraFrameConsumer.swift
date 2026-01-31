@@ -22,7 +22,7 @@ class CameraFrameConsumer {
 }
 
 class MediapipeFrameConsumer: CameraFrameConsumer {
-    let mediapipeManager: MediapipeManager
+    private let mediapipeManager: MediapipeManager
 
     init(mediapipeManager: MediapipeManager) {
         self.mediapipeManager = mediapipeManager

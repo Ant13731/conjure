@@ -73,7 +73,8 @@ actor FrameFuser {
         }
 
         for consumer in await fusedFrameConsumers {
-            await consumer.consumeFusedFrame(landmarkedFrame)
+            print("Sending fused frame at ts \(ts) to consumer \(consumer)")
+            Task { await consumer.consumeFusedFrame(landmarkedFrame) }
         }
     }
 

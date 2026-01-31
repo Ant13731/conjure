@@ -99,7 +99,7 @@ struct MainView: View {
             && (generalSettings.value.operationMode == .handRecognition
                 || generalSettings.value.operationMode == .handRecognitionDemoMode)
         {
-            FrontCameraView(frameFuser: frameFuser)
+            FrontCameraView()
                 .environmentObject(cameraManager)
                 .environmentObject(skeletonOverlayConsumer!)
         } else {
@@ -272,6 +272,7 @@ extension MainView {
         if generalSettings.value.connectionMode == .webRTC {
             webRTCClient?.stopConnection()
             webRTCClient = nil
+            frameFuser.clearFusedFrameConsumers()
         }
         isConnected = false
         connectionMessage = "Disconnected"
@@ -287,6 +288,14 @@ extension MainView {
                 recognitionSettings: recognitionSettings,
             )
             webRTCClient = webRTCClient_
+
+            if generalSettings.value.operationMode == .handRecognition
+                || generalSettings.value.operationMode == .handRecognitionDemoMode
+            {
+                print("Adding WebRTCClientFusedFrameConsumer to frame fuser")
+                let fusedFrameConsumer = WebRTCClientFusedFrameConsumer(rtcClient: webRTCClient_)
+                frameFuser.addFusedFrameConsumer(fusedFrameConsumer)
+            }
 
             Task {
                 print("Start connection: creating offer")
@@ -378,11 +387,9 @@ extension MainView {
         let mediapipeConsumer = MediapipeFrameConsumer(mediapipeManager: mediapipe)
         let rgbConsumer = RGBFrameConsumer(frameFuser: frameFuser)
 
-        cameraManager.clearConsumers()
         cameraManager.addConsumer(mediapipeConsumer)
         cameraManager.addConsumer(rgbConsumer)
 
-        frameFuser.clearFusedFrameConsumers()
         frameFuser.addFusedFrameConsumer(skeletonOverlay)
     }
     private func resetHandRecognitionProcessingPipeline() {
