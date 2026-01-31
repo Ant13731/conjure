@@ -56,6 +56,14 @@ class Handedness(StrEnum, EnumExtention):
 
     _default = unknown  # type: ignore
 
+    def swap(self) -> Handedness:
+        if self == Handedness.left:
+            return Handedness.right
+        elif self == Handedness.right:
+            return Handedness.left
+        else:
+            return Handedness.unknown
+
 
 class LandmarkedHandIndex(IntEnum, EnumExtention):
     wrist = 0
