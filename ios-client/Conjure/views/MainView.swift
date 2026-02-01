@@ -327,6 +327,7 @@ extension MainView {
                 }
 
                 print("Sending config update down WebRTC channel")
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
                 webRTCClient_.sendConfigUpdate()
                 isConnected = true
             }
@@ -343,11 +344,6 @@ extension MainView {
             if isStreaming {
                 cameraManager.stopSession()
                 isStreaming = false
-            }
-
-            // Reset pipeline in case settings have changed
-            if isPipelineSetup {
-                resetHandRecognitionProcessingPipeline()
             }
         }
     }

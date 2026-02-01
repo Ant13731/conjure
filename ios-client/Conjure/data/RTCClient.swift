@@ -11,10 +11,6 @@ import Accelerate
 import SwiftUI
 import WebRTC
 
-enum WebRTCClientError: Error {
-    case FailedToSendFrame
-    case notConnected
-}
 
 class WebRTCClient {
     private let factory = RTCPeerConnectionFactory()
