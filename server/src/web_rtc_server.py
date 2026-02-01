@@ -1,17 +1,15 @@
-from dataclasses import dataclass, field
-from queue import Queue, Empty
 import asyncio
-from typing import NoReturn
-
-import cv2
-from aiohttp import web
-from aiortc import RTCSessionDescription, RTCPeerConnection, RTCDataChannel
-from aiortc.contrib.media import MediaRelay
+from dataclasses import dataclass, field
+import json
+from queue import Queue, Empty
+from threading import Thread, Event
 
 from loguru import logger
-from threading import Thread, Event
-from src.usb_server import Frame, run_computer_control_thread
-from src.gesture_classifier_model import GestureRecognizerCustomResult
+from aiohttp import web
+from aiortc import RTCSessionDescription, RTCPeerConnection, RTCDataChannel
+
+from src.schema import LandmarkedFrame, Settings
+from src.computer_control import ComputerControl
 
 
 @dataclass
@@ -19,8 +17,7 @@ class WebRTCServer:
     server_port: int
 
     peer_connections: set[RTCPeerConnection] = field(default_factory=set)
-    queue: Queue[GestureRecognizerCustomResult] = field(default_factory=lambda: Queue(maxsize=1))
-    computer_control_thread: Thread | None = None
+    computer_control: ComputerControl | None = None
 
     server = web.Application()
     server_thread: Thread | None = None
@@ -28,6 +25,11 @@ class WebRTCServer:
 
     def start(self) -> None:
         """Starts the http server to initiate WebRTC connections. Blocking call."""
+        print("Starting computer control...")
+        self.computer_control = ComputerControl(stop_event=self.stop_event)
+        self.computer_control.start()
+
+        print("Starting WebRTC server...")
         self.server.on_shutdown.append(self.clear_connections)
         self.server.router.add_post("/offer", self.accept_offer)
         web.run_app(self.server, port=self.server_port)
@@ -121,7 +123,19 @@ class WebRTCServer:
         self.peer_connections.clear()
 
     def stream_message(self, message: bytes) -> None:
-        pass
+        assert self.computer_control is not None, "ComputerControl should be initialized in start()"
+        frame_data = json.loads(message)
+        frame = LandmarkedFrame.from_(frame_data)
+
+        try:
+            self.computer_control.queue.get_nowait()
+        except Empty:
+            pass
+
+        self.computer_control.queue.put_nowait(frame)
 
     def settings_message(self, message: bytes) -> None:
-        pass
+        assert self.computer_control is not None, "ComputerControl should be initialized in start()"
+        settings_data = json.loads(message)
+        settings = Settings.from_(settings_data)
+        self.computer_control.update_settings(settings)

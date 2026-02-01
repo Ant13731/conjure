@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum, IntEnum, Enum
-from tokenize import String
 from typing import Any, Self, ClassVar
 
 
@@ -90,8 +89,8 @@ class LandmarkedHandIndex(IntEnum, EnumExtention):
 
     _default = wrist  # type: ignore
 
-    @property
-    def finger_tip_indices(self) -> set[LandmarkedHandIndex]:
+    @classmethod
+    def finger_tip_indices(cls) -> set[LandmarkedHandIndex]:
         return {
             LandmarkedHandIndex.thumb_tip,
             LandmarkedHandIndex.index_tip,
@@ -100,8 +99,8 @@ class LandmarkedHandIndex(IntEnum, EnumExtention):
             LandmarkedHandIndex.pinky_tip,
         }
 
-    @property
-    def connections(self) -> list[tuple[int, int]]:
+    @classmethod
+    def connections(cls) -> list[tuple[int, int]]:
         return [
             # Thumb
             (0, 1),
@@ -223,15 +222,22 @@ class TrackpadSettings:
 
 
 @dataclass
+class DepthThresholdLimit:
+    threshold: float
+    limit: float
+    near_color: list[int]
+    far_color: list[int]
+
+
+@dataclass
 class RecognitionSettings:
     num_hands: int
     landmark_depth_pixel_radius: int
     min_depth: float
     max_depth: float
-    click_depth_threshold: float
-    move_depth_threshold: float
-    click_depth_limit: float
-    move_depth_limit: float
+
+    click_depth_threshold: DepthThresholdLimit
+    move_depth_threshold: DepthThresholdLimit
 
 
 @dataclass
@@ -260,10 +266,16 @@ class Settings:
         landmark_depth_pixel_radius = recognition_settings["landmarkDepthPixelRadius"]
         min_depth = recognition_settings["minDepth"]
         max_depth = recognition_settings["maxDepth"]
+
         click_depth_threshold = recognition_settings["clickDepthThreshold"]
-        move_depth_threshold = recognition_settings["moveDepthThreshold"]
         click_depth_limit = recognition_settings["clickDepthLimit"]
+        click_depth_near_color = list(recognition_settings.get("fingerTipColorNear", {"r": 255, "g": 200, "b": 0}).values())
+        click_depth_far_color = list(recognition_settings.get("fingerTipColorFar", {"r": 50, "g": 40, "b": 0}).values())
+
+        move_depth_threshold = recognition_settings["moveDepthThreshold"]
         move_depth_limit = recognition_settings["moveDepthLimit"]
+        move_depth_near_color = list(recognition_settings.get("jointColorNear", {"r": 255, "g": 255, "b": 255}).values())
+        move_depth_far_color = list(recognition_settings.get("jointColorFar", {"r": 0, "g": 0, "b": 0}).values())
 
         return cls(
             general=GeneralSettings(
@@ -281,9 +293,19 @@ class Settings:
                 landmark_depth_pixel_radius=landmark_depth_pixel_radius,
                 min_depth=min_depth,
                 max_depth=max_depth,
-                click_depth_threshold=click_depth_threshold,
-                move_depth_threshold=move_depth_threshold,
-                click_depth_limit=click_depth_limit,
-                move_depth_limit=move_depth_limit,
+                click_depth_threshold=DepthThresholdLimit(
+                    threshold=click_depth_threshold,
+                    limit=click_depth_limit,
+                    near_color=click_depth_near_color,
+                    far_color=click_depth_far_color,
+                ),
+                move_depth_threshold=DepthThresholdLimit(
+                    threshold=move_depth_threshold,
+                    limit=move_depth_limit,
+                    near_color=move_depth_near_color,
+                    far_color=move_depth_far_color,
+                ),
             ),
         )
+
+    # TODO: add methods to update settings
