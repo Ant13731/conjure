@@ -1,7 +1,6 @@
 import asyncio
 from dataclasses import dataclass, field
 import json
-from queue import Queue, Empty
 from threading import Thread, Event
 
 from loguru import logger
