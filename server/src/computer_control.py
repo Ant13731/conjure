@@ -83,15 +83,13 @@ class ComputerControl:
         pg.moveRel(-dx, -dy, duration=0.1)
 
     def is_within_click_threshold(self, depth: float | None) -> bool:
-        if depth is None:
+        if depth is None or self.settings is None:
             return False
-        assert self.settings is not None, "Settings must be set before checking click threshold"
         return depth < self.settings.recognition.click_depth_threshold.threshold
 
     def is_within_move_threshold(self, depth: float | None) -> bool:
-        if depth is None:
+        if depth is None or self.settings is None:
             return False
-        assert self.settings is not None, "Settings must be set before checking move threshold"
         return depth < self.settings.recognition.move_depth_threshold.threshold
 
     def run(self) -> None:
@@ -107,6 +105,8 @@ class ComputerControl:
             except Empty:
                 continue
 
+            logger.info(f"Got frame: {frame}")
+
             self.decay_cursor_velocity()
             self.move_cursor_with_velocity()
 
@@ -117,6 +117,7 @@ class ComputerControl:
                 continue
 
             landmarked_hand = frame.hands[0]
+            logger.info(f"Using landmarked hand: {landmarked_hand}")
 
             self.last_n_gestures.append(landmarked_hand.gesture)
             self.last_n_left_click.append(False)
@@ -131,6 +132,7 @@ class ComputerControl:
                 self.prev_index_location = landmarked_hand.landmarks[LandmarkedHandIndex.index_tip]
                 continue
 
+            logger.info("Checkpoint 1")
             # Left Click
             if (
                 landmarked_hand.gesture == Gesture.one
@@ -142,6 +144,7 @@ class ComputerControl:
                 pg.click(button="left")
                 self.last_n_left_click.append(True)
 
+            logger.info("Checkpoint 2")
             # Right Click
             if (
                 landmarked_hand.gesture == Gesture.peace
@@ -153,6 +156,7 @@ class ComputerControl:
                 pg.click(button="right")
                 self.last_n_right_click.append(True)
 
+            logger.info("Checkpoint 3")
             # Click and hold for dragging
             if (
                 landmarked_hand.gesture in (Gesture.ok, Gesture.fist)
@@ -164,16 +168,19 @@ class ComputerControl:
                 pg.mouseDown(button="left")
                 self.is_dragging = True
 
+            logger.info("Checkpoint 4")
             if not self.is_within_click_threshold(landmarked_hand.landmarks[LandmarkedHandIndex.index_tip].z) and self.is_dragging:
                 logger.info("Ending left click drag")
                 pg.mouseUp(button="left")
                 self.is_dragging = False
 
+            logger.info("Checkpoint 5")
             # Small, absolute movements
             if landmarked_hand.gesture == Gesture.one and self.is_within_move_threshold(landmarked_hand.landmarks[LandmarkedHandIndex.index_tip].z):
                 logger.info("Moving cursor with small movements")
                 self.move_cursor(landmarked_hand.landmarks[LandmarkedHandIndex.index_tip])
 
+            logger.info("Checkpoint 6")
             # Sweeping, general movements
             if (
                 landmarked_hand.gesture in (Gesture.two_up, Gesture.two_up_inverted)
@@ -183,6 +190,7 @@ class ComputerControl:
                 logger.info("Incrementing cursor velocity")
                 self.increment_cursor_velocity(landmarked_hand.landmarks[LandmarkedHandIndex.index_tip])
 
+            logger.info("Checkpoint 7")
             self.prev_cursor_position = landmarked_hand.landmarks[LandmarkedHandIndex.index_tip]
 
     def start(self) -> None:
@@ -190,12 +198,14 @@ class ComputerControl:
         self.thread.start()
 
     def update_settings(self, settings: Settings) -> None:
+        logger.info("Receiving updated settings for computer control")
         self.settings = settings
 
     def receive_frame(self, frame: LandmarkedFrame) -> None:
-        try:
-            self.queue.get_nowait()
-        except Empty:
-            pass
+        # try:
+        #     self.queue.get_nowait()
+        # except Empty:
+        #     pass
 
+        logger.info("Receiving frame for computer control")
         self.queue.put_nowait(frame)

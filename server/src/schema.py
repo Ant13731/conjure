@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum, IntEnum, Enum
 from typing import Any, Self, ClassVar
 
+from loguru import logger
+
 
 # MARK: Hand recognition schemas
 ## Enums
@@ -14,6 +16,9 @@ class EnumExtention(Enum):
     @classmethod
     def from_(cls, value: str | int | Any) -> Self:
         try:
+            logger.info(f"Converting value '{value}' to enum '{cls.__name__}'")
+            if isinstance(value, str):
+                return cls(value.lower())
             return cls(value)
         except ValueError:
             return cls._default  # type: ignore
@@ -163,6 +168,9 @@ class LandmarkedHand:
     @classmethod
     def from_(cls, value: dict[str, Any]) -> LandmarkedHand:
         landmarks = list(map(Landmark.from_, value.get("landmarks", [])))
+
+        logger.info(f"Creating LandmarkedHand from value: {value}")
+
         return cls(
             handedness=Handedness.from_(value["handedness"]),
             landmarks=landmarks,
