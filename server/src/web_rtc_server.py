@@ -26,7 +26,7 @@ class WebRTCServer:
     def start(self) -> None:
         """Starts the http server to initiate WebRTC connections. Blocking call."""
         print("Starting computer control...")
-        self.computer_control = ComputerControl(stop_event=self.stop_event)
+        self.computer_control = ComputerControl(end_event=self.stop_event)
         self.computer_control.start()
 
         print("Starting WebRTC server...")
@@ -126,13 +126,7 @@ class WebRTCServer:
         assert self.computer_control is not None, "ComputerControl should be initialized in start()"
         frame_data = json.loads(message)
         frame = LandmarkedFrame.from_(frame_data)
-
-        try:
-            self.computer_control.queue.get_nowait()
-        except Empty:
-            pass
-
-        self.computer_control.queue.put_nowait(frame)
+        self.computer_control.receive_frame(frame)
 
     def settings_message(self, message: bytes) -> None:
         assert self.computer_control is not None, "ComputerControl should be initialized in start()"
