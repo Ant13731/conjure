@@ -280,6 +280,9 @@ extension MainView {
             webRTCClient = nil
             frameFuser.clearFusedFrameConsumers()
         }
+        if isPipelineSetup {
+            resetHandRecognitionProcessingPipeline()
+        }
         isConnected = false
         connectionMessage = "Disconnected"
     }
@@ -345,6 +348,9 @@ extension MainView {
                 cameraManager.stopSession()
                 isStreaming = false
             }
+            // if isPipelineSetup {
+            //     resetHandRecognitionProcessingPipeline()
+            // }
         }
     }
 
