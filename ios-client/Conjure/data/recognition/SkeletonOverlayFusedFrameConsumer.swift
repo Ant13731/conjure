@@ -79,17 +79,9 @@ class SkeletonOverlayFusedFrameConsumer: FusedFrameConsumer, ObservableObject {
                 let z = landmark.z ?? 0
                 let visible = landmark.visible ?? true
 
-                let (rotatedX, rotatedY) = rotateCoordinates(
-                    x: landmark.x,
-                    y: landmark.y,
-                    orientation: frame.orientation  // You already have this!
-                )
-
                 let joint = SkeletonJointData(
-                    x: rotatedX,
-                    // x: landmark.x,
-                    y: rotatedY,
-                    // y: landmark.y,
+                    x: (1 - landmark.x),
+                    y: landmark.y,
                     z: z,
                     visible: visible,
                     isTip: isTip
@@ -102,28 +94,6 @@ class SkeletonOverlayFusedFrameConsumer: FusedFrameConsumer, ObservableObject {
 
         await MainActor.run {
             self.joints = allJoints
-        }
-    }
-
-    func rotateCoordinates(x: Float, y: Float, orientation: UIDeviceOrientation_) -> (
-        Float, Float
-    ) {
-        switch orientation {
-        case .portrait:
-            previousOrientation = .portrait
-            return (y, x)
-        case .landscapeLeft:
-            previousOrientation = .landscapeLeft
-            return (x, 1 - y)
-        case .landscapeRight:
-            previousOrientation = .landscapeRight
-            return (1 - x, y)
-        default:
-            if previousOrientation != nil {
-                return rotateCoordinates(x: x, y: y, orientation: previousOrientation!)
-            }
-            return (x, y)
-
         }
     }
 }

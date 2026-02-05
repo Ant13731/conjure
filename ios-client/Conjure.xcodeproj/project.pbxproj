@@ -15,7 +15,6 @@
 		1627FB832ECD53B600C91671 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB7B2ECD53B600C91671 /* Assets.xcassets */; };
 		1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7C2ECD53B600C91671 /* CameraManager.swift */; };
 		1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB7E2ECD53B600C91671 /* ConjureApp.swift */; };
-		1627FB892ECD53B600C91671 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB802ECD53B600C91671 /* LoginView.swift */; };
 		1627FB8A2ECD53B600C91671 /* RecognitionSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1627FB812ECD53B600C91671 /* RecognitionSchema.swift */; };
 		1627FB8C2ECD5CC000C91671 /* Podfile in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB8B2ECD5CC000C91671 /* Podfile */; };
 		1627FB8E2ECD5DDA00C91671 /* hand_landmarker.task in Resources */ = {isa = PBXBuildFile; fileRef = 1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */; };
@@ -48,7 +47,6 @@
 		1627FB7C2ECD53B600C91671 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
 		1627FB7E2ECD53B600C91671 /* ConjureApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConjureApp.swift; sourceTree = "<group>"; };
 		1627FB7F2ECD53B600C91671 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		1627FB802ECD53B600C91671 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		1627FB812ECD53B600C91671 /* RecognitionSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionSchema.swift; sourceTree = "<group>"; };
 		1627FB8B2ECD5CC000C91671 /* Podfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Podfile; sourceTree = SOURCE_ROOT; };
 		1627FB8D2ECD5DDA00C91671 /* hand_landmarker.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = hand_landmarker.task; sourceTree = "<group>"; };
@@ -140,7 +138,6 @@
 				16D171372F299CE300811030 /* SkeletonOverlayView.swift */,
 				163C67152F1C683C00DC5661 /* VideoStreamView.swift */,
 				163C670D2F1C52BC00DC5661 /* MainView.swift */,
-				1627FB802ECD53B600C91671 /* LoginView.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -342,7 +339,6 @@
 				16C76E6C2F284F24002F5D0F /* SkeletonOverlayFusedFrameConsumer.swift in Sources */,
 				1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */,
 				163C671C2F1C780D00DC5661 /* HostListView.swift in Sources */,
-				1627FB892ECD53B600C91671 /* LoginView.swift in Sources */,
 				163C67162F1C684100DC5661 /* VideoStreamView.swift in Sources */,
 				16143FBC2ECE8A0300D5BDFC /* RTCClient.swift in Sources */,
 				16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */,

@@ -245,6 +245,7 @@ class WebRTCClientFusedFrameConsumer: FusedFrameConsumer {
     }
 
     func consumeFusedFrame(_ frame: LandmarkedFrame) async {
+        print("WebRTCClientFusedFrameConsumer: Sending fused frame with gesture \(frame.hands.first?.gesture ?? "blank")")
         if let errMsg = rtcClient.send(frame: frame) {
             print("WebRTCClientFusedFrameConsumer: Error sending frame: \(errMsg)")
         }
