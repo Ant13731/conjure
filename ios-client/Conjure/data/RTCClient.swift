@@ -56,8 +56,8 @@ class WebRTCClient {
         let streamConfiguration = RTCDataChannelConfiguration()
         streamConfiguration.isOrdered=false
         streamConfiguration.maxRetransmits=0
-        streamConfiguration.protocol = "udp"
-        streamConfiguration.isNegotiated = true
+        // streamConfiguration.protocol = "udp"
+        streamConfiguration.isNegotiated = false
 
         streamChannel = peerConnection.dataChannel(
             forLabel: generalSettings.value.webRTCStreamChannelLabel,
