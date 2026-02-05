@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from threading import Thread, Event
-from queue import Queue, Empty
+from queue import Full, Queue, Empty
+import time
 
 from loguru import logger
 import pyautogui as pg
@@ -27,6 +28,7 @@ class ComputerControl:
     queue: Queue[LandmarkedFrame] = field(default_factory=lambda: Queue(maxsize=1))
 
     settings: Settings | None = None
+    max_frame_age_ms: int = 100  # Drop frames older than 100ms to avoid WebRTC buffering lag
 
     cursor_velocity: tuple[float, float] = (0.0, 0.0)
     prev_cursor_position: Landmark | None = None
@@ -49,7 +51,7 @@ class ComputerControl:
     def move_cursor_with_velocity(self, stop_when_below: float = 0.1) -> None:
         if abs(self.cursor_velocity[0]) < stop_when_below and abs(self.cursor_velocity[1]) < stop_when_below:
             return
-        pg.moveRel(-self.cursor_velocity[0], -self.cursor_velocity[1], duration=0.1)
+        pg.moveRel(self.cursor_velocity[0], -self.cursor_velocity[1], duration=0.1)
 
     def decay_cursor_velocity(self, decay_factor: float = 0.8) -> None:
         vx, vy = self.cursor_velocity
@@ -80,7 +82,7 @@ class ComputerControl:
         dx *= scaling
         dy *= scaling
 
-        pg.moveRel(-dx, -dy, duration=0.1)
+        pg.moveRel(dx, -dy, duration=0.1)
 
     def is_within_click_threshold(self, depth: float | None) -> bool:
         if depth is None or self.settings is None:
@@ -105,8 +107,6 @@ class ComputerControl:
             except Empty:
                 continue
 
-            logger.info(f"Got frame: {frame}")
-
             self.decay_cursor_velocity()
             self.move_cursor_with_velocity()
 
@@ -117,7 +117,6 @@ class ComputerControl:
                 continue
 
             landmarked_hand = frame.hands[0]
-            logger.info(f"Using landmarked hand: {landmarked_hand}")
 
             self.last_n_gestures.append(landmarked_hand.gesture)
             self.last_n_left_click.append(False)
@@ -132,7 +131,6 @@ class ComputerControl:
                 self.prev_index_location = landmarked_hand.landmarks[LandmarkedHandIndex.index_tip]
                 continue
 
-            logger.info("Checkpoint 1")
             # Left Click
             if (
                 landmarked_hand.gesture == Gesture.one
@@ -144,7 +142,6 @@ class ComputerControl:
                 pg.click(button="left")
                 self.last_n_left_click.append(True)
 
-            logger.info("Checkpoint 2")
             # Right Click
             if (
                 landmarked_hand.gesture == Gesture.peace
@@ -156,7 +153,6 @@ class ComputerControl:
                 pg.click(button="right")
                 self.last_n_right_click.append(True)
 
-            logger.info("Checkpoint 3")
             # Click and hold for dragging
             if (
                 landmarked_hand.gesture in (Gesture.ok, Gesture.fist)
@@ -168,19 +164,16 @@ class ComputerControl:
                 pg.mouseDown(button="left")
                 self.is_dragging = True
 
-            logger.info("Checkpoint 4")
             if not self.is_within_click_threshold(landmarked_hand.landmarks[LandmarkedHandIndex.index_tip].z) and self.is_dragging:
                 logger.info("Ending left click drag")
                 pg.mouseUp(button="left")
                 self.is_dragging = False
 
-            logger.info("Checkpoint 5")
             # Small, absolute movements
             if landmarked_hand.gesture == Gesture.one and self.is_within_move_threshold(landmarked_hand.landmarks[LandmarkedHandIndex.index_tip].z):
                 logger.info("Moving cursor with small movements")
                 self.move_cursor(landmarked_hand.landmarks[LandmarkedHandIndex.index_tip])
 
-            logger.info("Checkpoint 6")
             # Sweeping, general movements
             if (
                 landmarked_hand.gesture in (Gesture.two_up, Gesture.two_up_inverted)
@@ -190,11 +183,10 @@ class ComputerControl:
                 logger.info("Incrementing cursor velocity")
                 self.increment_cursor_velocity(landmarked_hand.landmarks[LandmarkedHandIndex.index_tip])
 
-            logger.info("Checkpoint 7")
             self.prev_cursor_position = landmarked_hand.landmarks[LandmarkedHandIndex.index_tip]
 
     def start(self) -> None:
-        self.thread = Thread(target=self.run, args=())
+        self.thread = Thread(target=self.run, args=(), daemon=True)
         self.thread.start()
 
     def update_settings(self, settings: Settings) -> None:
@@ -202,10 +194,11 @@ class ComputerControl:
         self.settings = settings
 
     def receive_frame(self, frame: LandmarkedFrame) -> None:
-        # try:
-        #     self.queue.get_nowait()
-        # except Empty:
-        #     pass
+        # Discard old frame if queue is full to always process the newest frame
+        try:
+            self.queue.get_nowait()
+        except Empty:
+            pass
 
         logger.info("Receiving frame for computer control")
         self.queue.put_nowait(frame)

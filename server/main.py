@@ -1,4 +1,6 @@
 import argparse
+import signal
+import sys
 
 from loguru import logger
 
@@ -16,8 +18,19 @@ def main():
 
     logger.info(f"Starting WebRTC server on port {args.port}")
     webrtc_server = WebRTCServer(server_port=args.port)
-    webrtc_server.start()
-    # webrtc_server.block()
+
+    def signal_handler(sig, frame):
+        logger.info("Keyboard interrupt received, shutting down gracefully...")
+        webrtc_server.stop_event.set()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+
+    try:
+        webrtc_server.start()
+    except KeyboardInterrupt:
+        logger.info("Server interrupted")
+        webrtc_server.stop_event.set()
 
 
 if __name__ == "__main__":
