@@ -290,25 +290,32 @@ extension MainView {
     }
 
     fileprivate func startConnection() {
+        isConnected = false
         if generalSettings.value.connectionMode == .webRTC {
-            isConnected = false
-            let webRTCManager = WebRTCManager(
+            communicationManager = WebRTCManager(
                 generalSettings: generalSettings,
                 hostListSettings: hostListSettings,
                 trackpadSettings: trackpadSettings,
                 recognitionSettings: recognitionSettings,
             )
-            communicationManager = webRTCManager
 
+        } else if generalSettings.value.connectionMode == .udp {
+            communicationManager = UDPManager(
+                generalSettings: generalSettings,
+                hostListSettings: hostListSettings,
+                trackpadSettings: trackpadSettings,
+                recognitionSettings: recognitionSettings
+            )
+        }
+        if communicationManager != nil {
             if generalSettings.value.operationMode == .handRecognition
                 || generalSettings.value.operationMode == .handRecognitionDemoMode
             {
-                print("Adding WebRTCClientFusedFrameConsumer to frame fuser")
-                let fusedFrameConsumer = WebRTCClientFusedFrameConsumer(rtcClient: webRTCManager)
+                print("Adding CommunicationFusedFrameConsumer to frame fuser")
+                let fusedFrameConsumer = CommunicationFusedFrameConsumer(
+                    communicationManager: communicationManager!)
                 frameFuser.addFusedFrameConsumer(fusedFrameConsumer)
             }
-        }
-        if communicationManager != nil {
             Task {
                 if let errMsg = await communicationManager!.startConnection() {
                     connectionMessage = errMsg

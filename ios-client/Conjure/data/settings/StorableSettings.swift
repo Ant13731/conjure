@@ -13,8 +13,8 @@ import SwiftUI
 /// Possible connection modes for video streaming and processing
 enum ConnectionMode: String, CaseIterable, Identifiable, Codable {
     case webRTC = "WebRTC Data Channel"
-    case streamTCP = "TCP Stream"
-    case streamUDP = "UDP Stream"
+    case tcp = "TCP Stream"
+    case udp = "UDP Stream"
 
     var id: String { self.rawValue }
     var description: String {
@@ -22,10 +22,10 @@ enum ConnectionMode: String, CaseIterable, Identifiable, Codable {
         case .webRTC:
             return
                 "Process video frames/trackpad inputs on the device using on-device ML models. Data is transferred to the server via WebRTC."
-        case .streamTCP:
+        case .tcp:
             return
                 "Stream video frames to the server using TCP (preferably used with a USB connection)."
-        case .streamUDP:
+        case .udp:
             return
                 "Stream video frames to the server using UDP (preferably used with a USB connection)."
         }

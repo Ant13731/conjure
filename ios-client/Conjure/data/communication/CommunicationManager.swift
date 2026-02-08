@@ -4,6 +4,17 @@
 //
 //  Created by Anthony Hunt on 2026-02-08.
 //
+import ARKit
+import AVFoundation
+import Accelerate
+import SwiftUI
+import WebRTC
+
+enum PacketType: UInt8, Codable {
+    case stream = 0
+    case configUpdate = 1
+    case ack = 2
+}
 
 struct SendableConfigUpdate: Codable {
     let generalSettings: GeneralSettings
@@ -54,15 +65,33 @@ class CommunicationManager {
             trackpadSettings: trackpadSettings.value,
             recognitionSettings: recognitionSettings.value
         )
-        return sendConfigUpdate_(configUpdate: configUpdate)
+        guard var data = try? JSONEncoder().encode(configUpdate) else {
+            return "Failed to encode config update"
+        }
+
+        let packetType: UInt8 = PacketType.configUpdate.rawValue
+        data = Data([packetType]) + data
+        sendConfigUpdate_(data: data)
+        return nil
     }
 
     func send(frame: LandmarkedFrame) -> String? {
         if !isConnected {
             return "Communication client not connected"
         }
-        return send_(frame: frame)
+
+        guard var data = try? JSONEncoder().encode(frame) else {
+            return "Failed to encode landmarked frame"
+        }
+
+        let packetType: UInt8 = PacketType.stream.rawValue
+        data = Data([packetType]) + data
+        send_(data: data)
+        return nil
     }
+
+    //TODO
+    // func send(frame: TrackpadFrame) -> String? {}
 
     func startConnection_() async -> String? {
         fatalError("Not implemented")
@@ -70,13 +99,11 @@ class CommunicationManager {
     func stopConnection_() {
         fatalError("Not implemented")
     }
-    func sendConfigUpdate_(configUpdate: SendableConfigUpdate) -> String? {
+    func sendConfigUpdate_(data: Data) {
         fatalError("Not implemented")
     }
-    func send_(frame: LandmarkedFrame) -> String? {
+    func send_(data: Data) {
         fatalError("Not implemented")
     }
 
-    //TODO
-    // func send(frame: TrackpadFrame) -> String? {}
 }

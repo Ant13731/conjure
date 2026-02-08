@@ -11,19 +11,19 @@ import Accelerate
 import Combine
 import SwiftUI
 
-class WebRTCClientFusedFrameConsumer: FusedFrameConsumer {
-    private let rtcClient: WebRTCManager
+class CommunicationFusedFrameConsumer: FusedFrameConsumer {
+    private let communicationManager: CommunicationManager
 
-    init(rtcClient: WebRTCManager) {
-        self.rtcClient = rtcClient
+    init(communicationManager: CommunicationManager) {
+        self.communicationManager = communicationManager
     }
 
     func consumeFusedFrame(_ frame: LandmarkedFrame) async {
         print(
-            "WebRTCClientFusedFrameConsumer: Sending fused frame with gesture \(frame.hands.first?.gesture ?? "blank")"
+            "CommunicationFusedFrameConsumer: Sending fused frame with gesture \(frame.hands.first?.gesture ?? "blank")"
         )
-        if let errMsg = rtcClient.send(frame: frame) {
-            print("WebRTCClientFusedFrameConsumer: Error sending frame: \(errMsg)")
+        if let errMsg = communicationManager.send(frame: frame) {
+            print("CommunicationFusedFrameConsumer: Error sending frame: \(errMsg)")
         }
     }
 }

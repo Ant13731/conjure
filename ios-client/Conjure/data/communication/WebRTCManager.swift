@@ -12,7 +12,6 @@ import SwiftUI
 import WebRTC
 
 class WebRTCManager: CommunicationManager {
-    private let factory = RTCPeerConnectionFactory()
     private var peerConnection: RTCPeerConnection!
 
     // Fast, real time data channel
@@ -41,7 +40,7 @@ class WebRTCManager: CommunicationManager {
         config.sdpSemantics = .unifiedPlan
 
         let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
-        peerConnection = factory.peerConnection(
+        peerConnection = RTCPeerConnectionFactory().peerConnection(
             with: config,
             constraints: constraints,
             delegate: nil,
@@ -167,7 +166,8 @@ class WebRTCManager: CommunicationManager {
         }
 
         guard let data = data_ else {
-            return .failure(StrError("Failed to get URL response. Got \(data_)"))
+            return .failure(
+                StrError("Failed to get URL response. Got \(String(describing: data_))"))
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: AnyObject]
@@ -204,23 +204,12 @@ class WebRTCManager: CommunicationManager {
         }
     }
 
-    override func sendConfigUpdate_(configUpdate: SendableConfigUpdate) -> String? {
-        if let data = try? JSONEncoder().encode(configUpdate) {
-            settingsChannel.sendData(RTCDataBuffer(data: data, isBinary: true))
-        } else {
-            return "Failed to send config update"
-        }
-        return nil
-
+    override func sendConfigUpdate_(data: Data) {
+        settingsChannel.sendData(RTCDataBuffer(data: data, isBinary: true))
     }
 
-    override func send_(frame: LandmarkedFrame) -> String? {
-        if let data = try? JSONEncoder().encode(frame) {
-            streamChannel.sendData(RTCDataBuffer(data: data, isBinary: true))
-        } else {
-            return "Failed to send landmarked frame"
-        }
-        return nil
+    override func send_(data: Data) {
+        streamChannel.sendData(RTCDataBuffer(data: data, isBinary: true))
     }
 
     override func stopConnection_() {
