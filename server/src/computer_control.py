@@ -85,12 +85,18 @@ class ComputerControl:
         pg.moveRel(dx, -dy, duration=0.1)
 
     def is_within_click_threshold(self, depth: float | None) -> bool:
-        if depth is None or self.settings is None:
+        if self.settings is None:
+            logger.warning("Settings not received yet, cannot determine click threshold")
+            return False
+        if depth is None:
             return False
         return depth < self.settings.recognition.click_depth_threshold.threshold
 
     def is_within_move_threshold(self, depth: float | None) -> bool:
-        if depth is None or self.settings is None:
+        if self.settings is None:
+            logger.warning("Settings not received yet, cannot determine move threshold")
+            return False
+        if depth is None:
             return False
         return depth < self.settings.recognition.move_depth_threshold.threshold
 
@@ -111,6 +117,7 @@ class ComputerControl:
             self.move_cursor_with_velocity()
 
             if frame.hands == []:
+                logger.info("No hands detected, resetting cursor state")
                 self.prev_cursor_position = None
                 self.are_dragging = False
                 pg.mouseUp(button="left")
@@ -194,11 +201,8 @@ class ComputerControl:
         self.settings = settings
 
     def receive_frame(self, frame: LandmarkedFrame) -> None:
-        # Discard old frame if queue is full to always process the newest frame
-        try:
-            self.queue.get_nowait()
-        except Empty:
-            pass
-
         logger.info("Receiving frame for computer control")
-        self.queue.put_nowait(frame)
+        try:
+            self.queue.put_nowait(frame)
+        except Full:
+            logger.warning("Computer control queue is full, dropping frame")
