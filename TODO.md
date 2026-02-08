@@ -2,6 +2,7 @@ TODO Features:
 - ios-client
     - MainView:
         - trackpad should take up bottom 3/4 - 5/6 of the screen
+        - add buttons to input text or run command on main screen (eg to shutoff computer)
 - server
     - trackpad driver
 - Add voice activation for speech-to-text typing
