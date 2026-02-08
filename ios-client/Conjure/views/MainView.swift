@@ -92,6 +92,9 @@ struct MainView: View {
         .onChange(of: generalSettings.value.operationMode) { _ in
             stopStreaming()
         }
+        .onChange(of: generalSettings.value.connectionMode) { _ in
+            stopConnection()
+        }
         .onAppear {
             if communicationManager != nil {
                 print("Sending config update down WebRTC channel")

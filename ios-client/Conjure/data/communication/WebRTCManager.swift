@@ -82,10 +82,7 @@ class WebRTCManager: CommunicationManager {
         if let errMsg = await addAnswer(answer) {
             return "Connection Result: \(errMsg)"
         }
-
-        print("WebRTC Sending config update down WebRTC channel")
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
-        return sendConfigUpdate()
+        return nil
     }
 
     private func createOffer() async -> Result<RTCSessionDescription, StrError> {

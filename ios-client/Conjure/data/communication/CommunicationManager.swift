@@ -44,11 +44,18 @@ class CommunicationManager {
     }
 
     func startConnection() async -> String? {
-        let errMsg = await startConnection_()
-        if errMsg == nil {
-            isConnected = true
+        if let errMsg = await startConnection_() {
+            return errMsg
         }
-        return errMsg
+
+        print("Sending initial config update (after 2 seconds)")
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+
+        if let errMsg = sendConfigUpdate() {
+            return errMsg
+        }
+        isConnected = true
+        return nil
     }
     func stopConnection() {
         stopConnection_()

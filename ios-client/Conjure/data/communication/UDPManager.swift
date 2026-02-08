@@ -81,7 +81,7 @@ class UDPManager: CommunicationManager {
     // so we implement a retry mechanism until we receive an ACK back from the server.
     // Stream frames are send-and-forget
     func startReceiver() {
-        connection!.receiveMessage { [weak self] data, _, _, error in
+        connection?.receiveMessage { [weak self] data, _, _, error in
             guard let self else {
                 print("UDPManager: couldn't get weak ref to self in stateUpdateHandler")
                 return
