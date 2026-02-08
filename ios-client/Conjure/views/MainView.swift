@@ -25,7 +25,8 @@ struct MainView: View {
 
     @State private var mediapipeManager: MediapipeManager?
     @State private var skeletonOverlayConsumer: SkeletonOverlayFusedFrameConsumer?
-    @State private var webRTCClient: WebRTCClient?
+    // @State private var webRTCClient: WebRTCManager?
+    @State private var communicationManager: CommunicationManager?
 
     // Debug/functional vars
     @State private var connectionMessage: String = ""
@@ -92,9 +93,9 @@ struct MainView: View {
             stopStreaming()
         }
         .onAppear {
-            if webRTCClient != nil {
+            if communicationManager != nil {
                 print("Sending config update down WebRTC channel")
-                webRTCClient!.sendConfigUpdate()
+                communicationManager!.sendConfigUpdate()
             }
         }
     }
@@ -275,9 +276,10 @@ struct MainView: View {
 // MARK: - Streaming helpers
 extension MainView {
     fileprivate func stopConnection() {
+        communicationManager?.stopConnection()
+        communicationManager = nil
+
         if generalSettings.value.connectionMode == .webRTC {
-            webRTCClient?.stopConnection()
-            webRTCClient = nil
             frameFuser.clearFusedFrameConsumers()
         }
         if isPipelineSetup {
@@ -290,49 +292,28 @@ extension MainView {
     fileprivate func startConnection() {
         if generalSettings.value.connectionMode == .webRTC {
             isConnected = false
-            let webRTCClient_ = WebRTCClient(
+            let webRTCManager = WebRTCManager(
                 generalSettings: generalSettings,
                 hostListSettings: hostListSettings,
                 trackpadSettings: trackpadSettings,
                 recognitionSettings: recognitionSettings,
             )
-            webRTCClient = webRTCClient_
+            communicationManager = webRTCManager
 
             if generalSettings.value.operationMode == .handRecognition
                 || generalSettings.value.operationMode == .handRecognitionDemoMode
             {
                 print("Adding WebRTCClientFusedFrameConsumer to frame fuser")
-                let fusedFrameConsumer = WebRTCClientFusedFrameConsumer(rtcClient: webRTCClient_)
+                let fusedFrameConsumer = WebRTCClientFusedFrameConsumer(rtcClient: webRTCManager)
                 frameFuser.addFusedFrameConsumer(fusedFrameConsumer)
             }
-
+        }
+        if communicationManager != nil {
             Task {
-                print("Start connection: creating offer")
-                let result = await webRTCClient_.createOffer()
-                if case .failure(let errMsg) = result {
-                    connectionMessage = "Connection Result: \(errMsg)"
-                    return
+                if let errMsg = await communicationManager!.startConnection() {
+                    connectionMessage = errMsg
                 }
-                let offer = try! result.get()
-
-                print("Start connection: sending offer")
-                let res = await webRTCClient_.sendOffer(offer)
-                if case .failure(let errMsg) = res {
-                    connectionMessage = "Connection Result: \(errMsg)"
-                    return
-                }
-                let answer = try! res.get()
-
-                print("Start connection: adding answer")
-                if let errMsg = await webRTCClient_.addAnswer(answer) {
-                    connectionMessage = "Connection Result: \(errMsg)"
-                    return
-                }
-
-                print("Sending config update down WebRTC channel")
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                webRTCClient_.sendConfigUpdate()
-                isConnected = true
+                isConnected = communicationManager!.isConnected
             }
             return
         }

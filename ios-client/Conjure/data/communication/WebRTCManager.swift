@@ -11,8 +11,7 @@ import Accelerate
 import SwiftUI
 import WebRTC
 
-
-class WebRTCClient {
+class WebRTCManager: CommunicationManager {
     private let factory = RTCPeerConnectionFactory()
     private var peerConnection: RTCPeerConnection!
 
@@ -21,23 +20,18 @@ class WebRTCClient {
     // Slow, configuration data channel, only send data on change
     private var settingsChannel: RTCDataChannel!
 
-    var isConnected: Bool = false
-
-    private unowned let generalSettings: PersistentSettings<GeneralSettings>!
-    private unowned let hostListSettings: PersistentSettings<HostListSettings>!
-    private unowned let trackpadSettings: PersistentSettings<TrackpadSettings>!
-    private unowned let recognitionSettings: PersistentSettings<RecognitionSettings>!
-
-    init(
+    override init(
         generalSettings: PersistentSettings<GeneralSettings>,
         hostListSettings: PersistentSettings<HostListSettings>,
         trackpadSettings: PersistentSettings<TrackpadSettings>,
         recognitionSettings: PersistentSettings<RecognitionSettings>,
     ) {
-        self.generalSettings = generalSettings
-        self.hostListSettings = hostListSettings
-        self.trackpadSettings = trackpadSettings
-        self.recognitionSettings = recognitionSettings
+        super.init(
+            generalSettings: generalSettings,
+            hostListSettings: hostListSettings,
+            trackpadSettings: trackpadSettings,
+            recognitionSettings: recognitionSettings
+        )
 
         // Peer-to-peer connection settings
         // Use STUN connectivity port offered by google to find peer-to-peer connections over the internet
@@ -54,8 +48,8 @@ class WebRTCClient {
         )
 
         let streamConfiguration = RTCDataChannelConfiguration()
-        streamConfiguration.isOrdered=false
-        streamConfiguration.maxRetransmits=0
+        streamConfiguration.isOrdered = false
+        streamConfiguration.maxRetransmits = 0
         // streamConfiguration.protocol = "udp"
         streamConfiguration.isNegotiated = false
 
@@ -69,7 +63,33 @@ class WebRTCClient {
         )
     }
 
-    func createOffer() async -> Result<RTCSessionDescription, StrError> {
+    override func startConnection_() async -> String? {
+        print("WebRTC Start connection: creating offer")
+        let result = await createOffer()
+        if case .failure(let errMsg) = result {
+            return "Connection Result: \(errMsg)"
+
+        }
+        let offer = try! result.get()
+
+        print("WebRTC Start connection: sending offer")
+        let res = await sendOffer(offer)
+        if case .failure(let errMsg) = res {
+            return "Connection Result: \(errMsg)"
+        }
+        let answer = try! res.get()
+
+        print("WebRTC Start connection: adding answer")
+        if let errMsg = await addAnswer(answer) {
+            return "Connection Result: \(errMsg)"
+        }
+
+        print("WebRTC Sending config update down WebRTC channel")
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        return sendConfigUpdate()
+    }
+
+    private func createOffer() async -> Result<RTCSessionDescription, StrError> {
         self.isConnected = false
         let constraints = RTCMediaConstraints(
             mandatoryConstraints: [
@@ -112,8 +132,9 @@ class WebRTCClient {
         }
     }
 
-    func sendOffer(_ offer: RTCSessionDescription) async -> Result<RTCSessionDescription, StrError>
-    {
+    private func sendOffer(_ offer: RTCSessionDescription) async -> Result<
+        RTCSessionDescription, StrError
+    > {
         guard let ipAddress = hostListSettings.value.currentHost?.ipAddress,
             let port = hostListSettings.value.currentHost?.port
         else {
@@ -167,7 +188,7 @@ class WebRTCClient {
 
     }
 
-    func addAnswer(_ answer: RTCSessionDescription) async -> String? {
+    private func addAnswer(_ answer: RTCSessionDescription) async -> String? {
         return await withCheckedContinuation { continuation in
             peerConnection.setRemoteDescription(
                 answer,
@@ -183,23 +204,7 @@ class WebRTCClient {
         }
     }
 
-    struct RTCConfigUpdate: Codable {
-        let generalSettings: GeneralSettings
-        let hostListSettings: HostListSettings
-        let trackpadSettings: TrackpadSettings
-        let recognitionSettings: RecognitionSettings
-    }
-
-    func sendConfigUpdate() -> String? {
-        if !isConnected {
-            return "RTC client not connected"
-        }
-        let configUpdate = RTCConfigUpdate(
-            generalSettings: generalSettings.value,
-            hostListSettings: hostListSettings.value,
-            trackpadSettings: trackpadSettings.value,
-            recognitionSettings: recognitionSettings.value
-        )
+    override func sendConfigUpdate_(configUpdate: SendableConfigUpdate) -> String? {
         if let data = try? JSONEncoder().encode(configUpdate) {
             settingsChannel.sendData(RTCDataBuffer(data: data, isBinary: true))
         } else {
@@ -209,10 +214,7 @@ class WebRTCClient {
 
     }
 
-    func send(frame: LandmarkedFrame) -> String? {
-        if !isConnected {
-            return "RTC client not connected"
-        }
+    override func send_(frame: LandmarkedFrame) -> String? {
         if let data = try? JSONEncoder().encode(frame) {
             streamChannel.sendData(RTCDataBuffer(data: data, isBinary: true))
         } else {
@@ -221,8 +223,7 @@ class WebRTCClient {
         return nil
     }
 
-    func stopConnection() {
-        isConnected = false
+    override func stopConnection_() {
         streamChannel.close()
         settingsChannel.close()
         peerConnection.close()
@@ -241,19 +242,4 @@ class WebRTCClient {
     //     return nil
     // }
 
-}
-
-class WebRTCClientFusedFrameConsumer: FusedFrameConsumer {
-    private let rtcClient: WebRTCClient
-
-    init(rtcClient: WebRTCClient) {
-        self.rtcClient = rtcClient
-    }
-
-    func consumeFusedFrame(_ frame: LandmarkedFrame) async {
-        print("WebRTCClientFusedFrameConsumer: Sending fused frame with gesture \(frame.hands.first?.gesture ?? "blank")")
-        if let errMsg = rtcClient.send(frame: frame) {
-            print("WebRTCClientFusedFrameConsumer: Error sending frame: \(errMsg)")
-        }
-    }
 }

@@ -7,8 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		160B2ECF2F38FD2100933BAA /* UDPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160B2ECE2F38FD1D00933BAA /* UDPManager.swift */; };
+		160B2ED12F38FD3E00933BAA /* FusedFrameConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160B2ED02F38FD3900933BAA /* FusedFrameConsumer.swift */; };
+		160B2ED32F38FE3100933BAA /* CommunicationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160B2ED22F38FE2A00933BAA /* CommunicationManager.swift */; };
 		160C94C02F1C31ED005C9E5F /* Conjure Icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 160C94BF2F1C31ED005C9E5F /* Conjure Icon.icon */; };
-		16143FBC2ECE8A0300D5BDFC /* RTCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */; };
+		16143FBC2ECE8A0300D5BDFC /* WebRTCManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBB2ECE89FD00D5BDFC /* WebRTCManager.swift */; };
 		16143FBE2ECE965E00D5BDFC /* MediaPipeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */; };
 		16143FC02ECEA1CC00D5BDFC /* FrameFuser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16143FBF2ECEA1C900D5BDFC /* FrameFuser.swift */; };
 		16228CD52EAEBB010015672C /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 16228CD42EAEBB010015672C /* WebRTC */; };
@@ -30,7 +33,6 @@
 		16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B234042ED00BCF007D4D4C /* USBSender.swift */; };
 		16C76E652F284DF1002F5D0F /* TrackpadSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */; };
 		16C76E672F284DF7002F5D0F /* TrackpadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E662F284DF4002F5D0F /* TrackpadManager.swift */; };
-		16C76E6C2F284F24002F5D0F /* SkeletonOverlayFusedFrameConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E6B2F284F14002F5D0F /* SkeletonOverlayFusedFrameConsumer.swift */; };
 		16CCA41D2F25A2A200212709 /* CameraFrameConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */; };
 		16D171382F299CE300811030 /* SkeletonOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D171372F299CE300811030 /* SkeletonOverlayView.swift */; };
 		16F3A8EC2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task in Resources */ = {isa = PBXBuildFile; fileRef = 16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */; };
@@ -38,8 +40,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		160B2ECE2F38FD1D00933BAA /* UDPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UDPManager.swift; sourceTree = "<group>"; };
+		160B2ED02F38FD3900933BAA /* FusedFrameConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FusedFrameConsumer.swift; sourceTree = "<group>"; };
+		160B2ED22F38FE2A00933BAA /* CommunicationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunicationManager.swift; sourceTree = "<group>"; };
 		160C94BF2F1C31ED005C9E5F /* Conjure Icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Conjure Icon.icon"; sourceTree = "<group>"; };
-		16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTCClient.swift; sourceTree = "<group>"; };
+		16143FBB2ECE89FD00D5BDFC /* WebRTCManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCManager.swift; sourceTree = "<group>"; };
 		16143FBD2ECE965600D5BDFC /* MediaPipeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPipeManager.swift; sourceTree = "<group>"; };
 		16143FBF2ECEA1C900D5BDFC /* FrameFuser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameFuser.swift; sourceTree = "<group>"; };
 		1627D3C72EAE826D00836F94 /* Conjure.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Conjure.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -62,7 +67,6 @@
 		16B234042ED00BCF007D4D4C /* USBSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBSender.swift; sourceTree = "<group>"; };
 		16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadSchema.swift; sourceTree = "<group>"; };
 		16C76E662F284DF4002F5D0F /* TrackpadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadManager.swift; sourceTree = "<group>"; };
-		16C76E6B2F284F14002F5D0F /* SkeletonOverlayFusedFrameConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonOverlayFusedFrameConsumer.swift; sourceTree = "<group>"; };
 		16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFrameConsumer.swift; sourceTree = "<group>"; };
 		16D171372F299CE300811030 /* SkeletonOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonOverlayView.swift; sourceTree = "<group>"; };
 		16F3A8EB2EEA43A20078B21A /* trained_mediapipe_gesture_recognizer.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = trained_mediapipe_gesture_recognizer.task; sourceTree = "<group>"; };
@@ -84,6 +88,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		160B2ECD2F38FD0C00933BAA /* communication */ = {
+			isa = PBXGroup;
+			children = (
+				160B2ED22F38FE2A00933BAA /* CommunicationManager.swift */,
+				160B2ECE2F38FD1D00933BAA /* UDPManager.swift */,
+				16143FBB2ECE89FD00D5BDFC /* WebRTCManager.swift */,
+			);
+			path = communication;
+			sourceTree = "<group>";
+		};
 		1627D3BE2EAE826C00836F94 = {
 			isa = PBXGroup;
 			children = (
@@ -156,7 +170,7 @@
 		16C76E622F2842EB002F5D0F /* recognition */ = {
 			isa = PBXGroup;
 			children = (
-				16C76E6B2F284F14002F5D0F /* SkeletonOverlayFusedFrameConsumer.swift */,
+				160B2ED02F38FD3900933BAA /* FusedFrameConsumer.swift */,
 				1627FB7C2ECD53B600C91671 /* CameraManager.swift */,
 				16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */,
 				1627FB812ECD53B600C91671 /* RecognitionSchema.swift */,
@@ -192,10 +206,10 @@
 		16C76E6A2F284EA5002F5D0F /* data */ = {
 			isa = PBXGroup;
 			children = (
+				160B2ECD2F38FD0C00933BAA /* communication */,
 				16C76E632F284304002F5D0F /* trackpad */,
 				16C76E622F2842EB002F5D0F /* recognition */,
 				163C67102F1C52BC00DC5661 /* settings */,
-				16143FBB2ECE89FD00D5BDFC /* RTCClient.swift */,
 			);
 			path = data;
 			sourceTree = "<group>";
@@ -329,6 +343,7 @@
 				16143FBE2ECE965E00D5BDFC /* MediaPipeManager.swift in Sources */,
 				16D171382F299CE300811030 /* SkeletonOverlayView.swift in Sources */,
 				1627FB862ECD53B600C91671 /* CameraManager.swift in Sources */,
+				160B2ECF2F38FD2100933BAA /* UDPManager.swift in Sources */,
 				16C76E652F284DF1002F5D0F /* TrackpadSchema.swift in Sources */,
 				16883EC02F20619D00ADE587 /* TrackpadView.swift in Sources */,
 				163C67112F1C52BC00DC5661 /* MainView.swift in Sources */,
@@ -336,13 +351,14 @@
 				16883EBA2F2054F800ADE587 /* PersistentSettings.swift in Sources */,
 				163C671A2F1C77F900DC5661 /* RecognitionView.swift in Sources */,
 				16143FC02ECEA1CC00D5BDFC /* FrameFuser.swift in Sources */,
-				16C76E6C2F284F24002F5D0F /* SkeletonOverlayFusedFrameConsumer.swift in Sources */,
 				1627FB882ECD53B600C91671 /* ConjureApp.swift in Sources */,
+				160B2ED12F38FD3E00933BAA /* FusedFrameConsumer.swift in Sources */,
 				163C671C2F1C780D00DC5661 /* HostListView.swift in Sources */,
 				163C67162F1C684100DC5661 /* VideoStreamView.swift in Sources */,
-				16143FBC2ECE8A0300D5BDFC /* RTCClient.swift in Sources */,
+				16143FBC2ECE8A0300D5BDFC /* WebRTCManager.swift in Sources */,
 				16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */,
 				1627FB8A2ECD53B600C91671 /* RecognitionSchema.swift in Sources */,
+				160B2ED32F38FE3100933BAA /* CommunicationManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
