@@ -4,12 +4,10 @@ TODO Features:
         - trackpad should take up bottom 3/4 - 5/6 of the screen
 - server
     - trackpad driver
-
-
-Bugs:
-- gesture recognition only works in camera-to-the-right landscape mode
-    - so the ground position of the camera frame matters to mediapipe
-    - to fix, we could rotate the image 90 degrees to the right when vertical, and 180 when left landscape
-- movement is very choppy, which we didnt see when streaming through tcp/udp...
-    - skeleton overlay looks smooth though
-    - could try sending data through TCP/UDP but still do processing on-device
+- Add voice activation for speech-to-text typing
+- Add a gesture-less mode, where only hand movements control the computer
+- Rework configuration setup, allow configuration options to be stored between executions
+- Add desktop GUI
+  - Two-way communication between the phone and computer
+  - Combine configuration GUI and camera feed. Overlay camera feed on top of other windows (or display the camera feed on the phone)
+- Add application-specific controls to make use of depth information

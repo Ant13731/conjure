@@ -4,40 +4,18 @@ Welcome to Conjure, a controller-free system for controlling your computer! Requ
 
 ## Features
 <p align="center">
-  <img src="docs/images/hand_mediapipe.png" alt="Conjure in action" width="300"/>
+  <img src="docs/images/hand screen.png" alt="Conjure in action" width="200"/>
+  <img src="docs/images/disconnected screen.png" alt="Home screen" width="200"/>
 </p>
 
 - Mouse movement according to hand position, controlled using the depth and RGB sensors in your front-facing phone camera
 - Specific gestures to control common inputs ("index finger" for left click, "peace" for right click, "pinch" to click and drag)
 
-High level architecture (certain modes may work wirelessly):
-<p align="center">
-  <img src="docs/images/highLevelArch.png" alt="Conjure in action" width="500"/>
-</p>
-Mental model of the system:
-<p align="center">
-  <img src="docs/images/mentalModel.png" alt="Conjure in action" width="300"/>
-</p>
-<p align="center">
-  <img src="docs/images/index_back.jpg" alt="Conjure in action" height="130"/>
-  <img src="docs/images/index_middle.jpg" alt="Conjure in action" height="130"/>
-  <img src="docs/images/index_front.jpg" alt="Conjure in action" height="130"/>
-</p>
-
-
-### Known Bugs/Future Features
-
-- Add voice activation for speech-to-text typing
-- Add a gesture-less mode, where only hand movements control the computer
-- Rework configuration setup, allow configuration options to be stored between executions
-- Add desktop GUI
-  - Two-way communication between the phone and computer
-  - Combine configuration GUI and camera feed. Overlay camera feed on top of other windows (or display the camera feed on the phone)
-- Add application-specific controls to make use of depth information
-
 ## Usage
 
-Upload the ios-client to your iPhone, set up a [Tailscale net](https://tailscale.com/) on both your phone and computer, and run the python server file on the computer you wish to control.
+1. Upload the ios-client to your iPhone by building through XCode
+2. Set up a [Tailscale net](https://tailscale.com/) on both your phone and computer
+3. Run the python server file on the computer you wish to control
 
 ### Controls
 
@@ -53,3 +31,18 @@ The following is a table detailing the correspondence between gestures and Conju
 | Click-through Plane | One                                            | Mouse left-click                                            |
 |                     | Peace                                          | Mouse right-click                                           |
 |                     | OK (pinch)                                     | Mouse left-click and hold (for clicking+dragging)           |
+
+### Architecture
+High level architecture (certain modes may work wirelessly):
+<p align="center">
+  <img src="docs/images/highLevelArch.png" alt="Conjure in action" width="500"/>
+</p>
+Mental model of the system:
+<p align="center">
+  <img src="docs/images/mentalModel.png" alt="Conjure in action" width="300"/>
+</p>
+<p align="center">
+  <img src="docs/images/index_back.jpg" alt="Conjure in action" height="130"/>
+  <img src="docs/images/index_middle.jpg" alt="Conjure in action" height="130"/>
+  <img src="docs/images/index_front.jpg" alt="Conjure in action" height="130"/>
+</p>
