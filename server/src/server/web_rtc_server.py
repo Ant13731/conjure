@@ -19,7 +19,6 @@ class WebRTCServer:
     computer_control: ComputerControl | None = None
 
     server = web.Application()
-    server_thread: Thread | None = None
     stop_event: Event = Event()
 
     def start(self) -> None:
@@ -32,27 +31,6 @@ class WebRTCServer:
         self.server.on_shutdown.append(self.clear_connections)
         self.server.router.add_post("/offer", self.accept_offer)
         web.run_app(self.server, port=self.server_port)
-        # Separate thread doesnt work on macos...
-        # self.server_thread = Thread(target=web.run_app, args=(self.server,), kwargs={"port": self.server_port})
-        # self.server_thread.start()
-
-    def block(self) -> None:
-        """Blocks the main thread until the server is stopped."""
-
-        while True:
-            try:
-                self.stop_event.wait(timeout=3)
-                if self.stop_event.is_set():
-                    break
-            except KeyboardInterrupt:
-                logger.info("Keyboard interrupt received, stopping server...")
-                self.stop_event.set()
-                break
-
-        asyncio.run(self.server.shutdown())
-
-        if self.server_thread is not None:
-            self.server_thread.join(5)
 
     async def accept_offer(self, request: web.Request) -> web.Response:
         data = await request.json()
@@ -88,9 +66,11 @@ class WebRTCServer:
                 logger.info(f"Message received on data channel: {channel.label}")
 
                 if channel.label == "stream":
-                    self.stream_message(message)
+                    # First byte of the message is a header we can safely ignore
+                    # (the header is used for UDPServer)
+                    self.stream_message(message[1:])
                 elif channel.label == "settings":
-                    self.settings_message(message)
+                    self.settings_message(message[1:])
                 else:
                     logger.warning(f"Unknown data channel label: {channel.label}")
 
