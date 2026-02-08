@@ -30,7 +30,6 @@
 		16883EBC2F20592100ADE587 /* StorableSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16883EBB2F20591D00ADE587 /* StorableSettings.swift */; };
 		16883EC02F20619D00ADE587 /* TrackpadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16883EBE2F20619900ADE587 /* TrackpadView.swift */; };
 		16883EC32F2061AA00ADE587 /* GeneralView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16883EC12F2061A200ADE587 /* GeneralView.swift */; };
-		16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B234042ED00BCF007D4D4C /* USBSender.swift */; };
 		16C76E652F284DF1002F5D0F /* TrackpadSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */; };
 		16C76E672F284DF7002F5D0F /* TrackpadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C76E662F284DF4002F5D0F /* TrackpadManager.swift */; };
 		16CCA41D2F25A2A200212709 /* CameraFrameConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */; };
@@ -64,7 +63,6 @@
 		16883EBB2F20591D00ADE587 /* StorableSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorableSettings.swift; sourceTree = "<group>"; };
 		16883EBE2F20619900ADE587 /* TrackpadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadView.swift; sourceTree = "<group>"; };
 		16883EC12F2061A200ADE587 /* GeneralView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralView.swift; sourceTree = "<group>"; };
-		16B234042ED00BCF007D4D4C /* USBSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = USBSender.swift; sourceTree = "<group>"; };
 		16C76E642F284DEE002F5D0F /* TrackpadSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadSchema.swift; sourceTree = "<group>"; };
 		16C76E662F284DF4002F5D0F /* TrackpadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackpadManager.swift; sourceTree = "<group>"; };
 		16CCA41C2F25A29B00212709 /* CameraFrameConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFrameConsumer.swift; sourceTree = "<group>"; };
@@ -128,7 +126,6 @@
 				1627FB7E2ECD53B600C91671 /* ConjureApp.swift */,
 				163C67142F1C67CF00DC5661 /* views */,
 				16C76E6A2F284EA5002F5D0F /* data */,
-				16B234042ED00BCF007D4D4C /* USBSender.swift */,
 			);
 			path = Conjure;
 			sourceTree = "<group>";
@@ -356,7 +353,6 @@
 				163C671C2F1C780D00DC5661 /* HostListView.swift in Sources */,
 				163C67162F1C684100DC5661 /* VideoStreamView.swift in Sources */,
 				16143FBC2ECE8A0300D5BDFC /* WebRTCManager.swift in Sources */,
-				16B234052ED00BD5007D4D4C /* USBSender.swift in Sources */,
 				1627FB8A2ECD53B600C91671 /* RecognitionSchema.swift in Sources */,
 				160B2ED32F38FE3100933BAA /* CommunicationManager.swift in Sources */,
 			);
