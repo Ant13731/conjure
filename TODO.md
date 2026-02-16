@@ -12,3 +12,6 @@ TODO Features:
   - Two-way communication between the phone and computer
   - Combine configuration GUI and camera feed. Overlay camera feed on top of other windows (or display the camera feed on the phone)
 - Add application-specific controls to make use of depth information
+
+- When you point in a direction, mouse will start moving, two fingers to stop, and then tap to select
+    - hand can stay still then
